@@ -2,42 +2,42 @@ import { app, BrowserWindow } from 'electron'
 import path from 'path'
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
-    minWidth: 1000,
-    minHeight: 700,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
-    titleBarStyle: 'hiddenInset',
-    title: 'Gurktaler 2.0',
-  })
+    const mainWindow = new BrowserWindow({
+        width: 1400,
+        height: 900,
+        minWidth: 1000,
+        minHeight: 700,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js'),
+        },
+        titleBarStyle: 'hiddenInset',
+        title: 'Gurktaler 2.0',
+    })
 
-  // In development, load from Vite dev server
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:3000')
-    mainWindow.webContents.openDevTools()
-  } else {
-    // In production, load the built files
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
-  }
+    // In development, load from Vite dev server
+    if (process.env.NODE_ENV === 'development') {
+        mainWindow.loadURL('http://localhost:3000')
+        mainWindow.webContents.openDevTools()
+    } else {
+        // In production, load the built files
+        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    }
 }
 
 app.whenReady().then(() => {
-  createWindow()
+    createWindow()
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
-    }
-  })
+    app.on('activate', () => {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow()
+        }
+    })
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
 })

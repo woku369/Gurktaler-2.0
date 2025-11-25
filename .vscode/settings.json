@@ -1,15 +1,15 @@
 {
-  "css.validate": false,
-  "editor.quickSuggestions": {
-    "strings": true
-  },
-  "tailwindCSS.includeLanguages": {
-    "typescript": "javascript",
-    "typescriptreact": "javascript"
-  },
-  "files.associations": {
-    "*.css": "tailwindcss"
-  },
-  "editor.formatOnSave": true,
-  "typescript.preferences.importModuleSpecifier": "relative"
+    "css.validate": false,
+    "editor.quickSuggestions": {
+        "strings": true
+    },
+    "tailwindCSS.includeLanguages": {
+        "typescript": "javascript",
+        "typescriptreact": "javascript"
+    },
+    "files.associations": {
+        "*.css": "tailwindcss"
+    },
+    "editor.formatOnSave": true,
+    "typescript.preferences.importModuleSpecifier": "relative"
 }

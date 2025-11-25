@@ -19,10 +19,9 @@
 | Status | Aufgabe | Beschreibung |
 |--------|---------|--------------|
 | ✅ | Projekt-Setup | package.json, Dependencies |
-| 🔄 | Electron-Konfiguration | Main Process, Preload |
-| 📋 | Vite-Konfiguration | Build-Setup, Hot Reload |
-| 📋 | TypeScript-Setup | tsconfig, Typen |
-| 📋 | TailwindCSS | Styling-Framework |
+| ✅ | Vite-Konfiguration | Build-Setup, Hot Reload |
+| ✅ | TypeScript-Setup | tsconfig, Typen |
+| ✅ | TailwindCSS | Styling-Framework |
 | 📋 | ESLint/Prettier | Code-Qualität |
 
 ### Dokumentation
@@ -30,15 +29,14 @@
 |--------|---------|--------------|
 | ✅ | README.md | Projektübersicht |
 | ✅ | ROADMAP.md | Diese Datei |
-| 📋 | CHANGELOG.md | Versionshistorie |
-| 📋 | DATENMODELL.md | Schema-Dokumentation |
+| ✅ | CHANGELOG.md | Versionshistorie |
+| ✅ | DATENMODELL.md | Schema-Dokumentation |
 
 ### Datenbank
 | Status | Aufgabe | Beschreibung |
 |--------|---------|--------------|
-| 📋 | Schema-Design | Alle Entitäten definieren |
-| 📋 | SQLite-Integration | better-sqlite3 Setup |
-| 📋 | Migrations-System | Schema-Updates |
+| ✅ | Schema-Design | Alle Entitäten definieren |
+| ✅ | Storage-Service | LocalStorage + JSON für Git-Sync |
 | 📋 | Seed-Daten | Testdaten für Entwicklung |
 
 ---
@@ -48,16 +46,16 @@
 ### Layout & Navigation
 | Status | Aufgabe | Beschreibung |
 |--------|---------|--------------|
-| 📋 | App-Shell | Header, Sidebar, Content |
-| 📋 | Routing | React Router Setup |
-| 📋 | Sidebar-Navigation | Hauptmenü |
-| 📋 | Dashboard | Übersichtsseite |
+| ✅ | App-Shell | Header, Sidebar, Content |
+| ✅ | Routing | React Router Setup |
+| ✅ | Sidebar-Navigation | Hauptmenü |
+| ✅ | Dashboard | Übersichtsseite |
 
 ### Basis-Komponenten
 | Status | Aufgabe | Beschreibung |
 |--------|---------|--------------|
-| 📋 | Button, Input, Modal | UI-Grundlagen |
-| 📋 | Card-Komponente | Einheitliche Darstellung |
+| � | Button, Input, Modal | UI-Grundlagen |
+| ✅ | Card-Komponente | Einheitliche Darstellung |
 | 📋 | Table-Komponente | Listen-Ansichten |
 | 📋 | Form-Komponenten | Formulare |
 
