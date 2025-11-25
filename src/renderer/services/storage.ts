@@ -3,7 +3,7 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import type {
-    Project, Product, Recipe, Note, Tag, Contact,
+    Project, Product, Recipe, Note, Tag, TagAssignment, Contact,
     Weblink, Ingredient, Byproduct, Container
 } from '@/shared/types'
 
@@ -15,6 +15,7 @@ interface AppData {
     recipes: Recipe[]
     notes: Note[]
     tags: Tag[]
+    tag_assignments: TagAssignment[]
     contacts: Contact[]
     weblinks: Weblink[]
     ingredients: Ingredient[]
@@ -28,6 +29,7 @@ const defaultData: AppData = {
     recipes: [],
     notes: [],
     tags: [],
+    tag_assignments: [],
     contacts: [],
     weblinks: [],
     ingredients: [],
@@ -190,8 +192,28 @@ export const weblinks = {
 // Tags
 export const tags = {
     getAll: (): Tag[] => loadData().tags,
+    getById: (id: string): Tag | undefined => loadData().tags.find(t => t.id === id),
     create: (tag: Omit<Tag, 'id' | 'created_at'>) => createEntity<Tag>('tags', tag),
+    update: (id: string, updates: Partial<Tag>) => updateEntity<Tag>('tags', id, updates),
     delete: (id: string) => deleteEntity<Tag>('tags', id),
+}
+
+// Tag Assignments
+export const tagAssignments = {
+    getAll: (): TagAssignment[] => loadData().tag_assignments,
+    getByEntity: (entityType: string, entityId: string): TagAssignment[] => 
+        loadData().tag_assignments.filter(ta => ta.entity_type === entityType && ta.entity_id === entityId),
+    getByTag: (tagId: string): TagAssignment[] => 
+        loadData().tag_assignments.filter(ta => ta.tag_id === tagId),
+    create: (assignment: Omit<TagAssignment, 'id' | 'created_at'>) => createEntity<TagAssignment>('tag_assignments', assignment),
+    delete: (id: string) => deleteEntity<TagAssignment>('tag_assignments', id),
+    deleteByEntity: (entityType: string, entityId: string) => {
+        const data = loadData()
+        data.tag_assignments = data.tag_assignments.filter(
+            ta => !(ta.entity_type === entityType && ta.entity_id === entityId)
+        )
+        saveData(data)
+    },
 }
 
 // Ingredients

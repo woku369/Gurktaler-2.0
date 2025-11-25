@@ -7,6 +7,7 @@ import {
     StickyNote,
     Users,
     Globe,
+    Tag,
     Settings,
     Leaf
 } from 'lucide-react'
@@ -19,6 +20,7 @@ const navItems = [
     { to: '/notes', icon: StickyNote, label: 'Notizen' },
     { to: '/contacts', icon: Users, label: 'Kontakte' },
     { to: '/research', icon: Globe, label: 'Recherche' },
+    { to: '/tags', icon: Tag, label: 'Tags' },
 ]
 
 function Layout() {

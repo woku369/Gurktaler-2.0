@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import TagSelector from './TagSelector'
 import type { Product, ProductStatus, Project } from '@/shared/types'
 
 interface ProductFormProps {
@@ -155,6 +156,16 @@ export default function ProductForm({ product, projects, parentProduct, onSubmit
             className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent resize-none"
             placeholder="z.B. Zu süß, Rezeptur überarbeiten"
           />
+        </div>
+      )}
+
+      {/* Tags */}
+      {product && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Tags
+          </label>
+          <TagSelector entityType="product" entityId={product.id} />
         </div>
       )}
 

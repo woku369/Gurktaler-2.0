@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import TagSelector from './TagSelector'
 import type { Project, ProjectStatus } from '@/shared/types'
 
 interface ProjectFormProps {
@@ -81,6 +82,16 @@ export default function ProjectForm({ project, onSubmit, onCancel }: ProjectForm
           ))}
         </select>
       </div>
+
+      {/* Tags */}
+      {project && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Tags
+          </label>
+          <TagSelector entityType="project" entityId={project.id} />
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="flex gap-3 pt-4">

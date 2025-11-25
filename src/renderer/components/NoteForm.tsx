@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { Lightbulb, FileText, CheckSquare, BookOpen } from 'lucide-react'
+import TagSelector from './TagSelector'
 import type { Note, Project } from '@/shared/types'
 
 type NoteType = 'idea' | 'note' | 'todo' | 'research'
@@ -121,6 +122,16 @@ export default function NoteForm({ note, projects, onSubmit, onCancel }: NoteFor
           Chaosablage = keine Projekt-Zuordnung, für spontane Gedanken
         </p>
       </div>
+
+      {/* Tags */}
+      {note && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Tags
+          </label>
+          <TagSelector entityType="note" entityId={note.id} />
+        </div>
+      )}
 
       {/* Buttons */}
       <div className="flex gap-3 pt-4">
