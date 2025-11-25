@@ -35,9 +35,12 @@ export interface Product extends BaseEntity {
 }
 
 // Recipe
+export type RecipeType = 'macerate' | 'distillate' | 'blend';
+
 export interface Recipe extends BaseEntity {
     product_id: string;
     name: string;
+    type: RecipeType;
     description?: string;
     instructions?: string;
     yield_amount?: number;
