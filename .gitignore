@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-electron/
+release/
+*.exe
+*.msi
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database/*.db
+
+# Data exports (can be committed selectively)
+# data-export/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Temp
+*.tmp
+*.temp
+.cache/
+
+# TypeScript
+*.tsbuildinfo
