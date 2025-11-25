@@ -10,9 +10,45 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ## [Unreleased]
 
 ### Geplant
-- Basis-UI mit Dashboard
-- Datenbank-Integration
-- Projekt-Verwaltung
+- Rezeptur-Verwaltung
+- Notizen & Chaosablage
+- Recherche-Links
+- Volltext-Suche
+
+---
+
+## [0.3.0] - 2024-11-25
+
+### Hinzugefügt
+- **ProductForm**: Formular-Komponente für Produkte mit Versionierungs-Support
+- **Produkt-CRUD**: Create/Read/Update/Delete für Produkte
+- **Versionierung**: Hierarchische Produkt-Struktur (X → X1 → X1.1)
+  - Neue Version aus bestehendem Produkt erstellen
+  - parent_id verlinkt Versionen
+  - Baum-Ansicht mit Root-Produkten und Versionen
+- **Archivierung**: Produkte mit Begründung archivieren
+- **Projekt-Zuordnung**: Produkte optional Projekten zuweisen
+- **Such-Filterung**: Echtzeit-Suche in Produktnamen
+- **Status-Management**: Entwurf, In Test, Freigegeben, Archiviert
+
+---
+
+## [0.2.0] - 2024-11-25
+
+### Hinzugefügt
+- **Layout**: App-Shell mit Sidebar-Navigation und Gurktaler-Branding
+- **Routing**: React Router DOM Setup für Navigation
+- **Dashboard**: Übersichtsseite mit Statistiken und letzten Aktivitäten
+- **Projekt-CRUD**: Vollständige Projektverwaltung
+  - ProjectForm Komponente
+  - Liste, Erstellen, Bearbeiten, Löschen
+  - Status-Verwaltung (Aktiv/Abgeschlossen/Archiviert)
+  - Such-Filterung
+- **Modal**: Wiederverwendbare Modal-Komponente
+- **Storage-Service**: LocalStorage-basierte Datenpersistenz mit JSON Export/Import
+
+### Geändert
+- Datenbank von SQLite zu LocalStorage gewechselt (keine Build-Tools erforderlich)
 
 ---
 

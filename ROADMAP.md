@@ -81,9 +81,11 @@
 
 | Status | Aufgabe           | Beschreibung                         |
 | ------ | ----------------- | ------------------------------------ |
-| 📋     | Produkt-Baum      | Hierarchische Ansicht (X → X1)       |
-| 📋     | Version erstellen | Neue Version aus bestehendem Produkt |
-| 📋     | Archivierung      | Mit Kommentar archivieren            |
+| ✅     | Produkt-Baum      | Hierarchische Ansicht (X → X1)       |
+| ✅     | Version erstellen | Neue Version aus bestehendem Produkt |
+| ✅     | Archivierung      | Mit Kommentar archivieren            |
+| ✅     | Produkt-CRUD      | Create/Read/Update/Delete            |
+| ✅     | Projekt-Zuordnung | Produkte zu Projekten zuweisen       |
 | 📋     | Versionsvergleich | Unterschiede anzeigen                |
 
 ---
