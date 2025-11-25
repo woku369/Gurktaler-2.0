@@ -1,0 +1,103 @@
+import { useState, FormEvent } from 'react'
+import type { Project, ProjectStatus } from '@/shared/types'
+
+interface ProjectFormProps {
+  project?: Project
+  onSubmit: (data: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => void
+  onCancel: () => void
+}
+
+const statusOptions: { value: ProjectStatus; label: string }[] = [
+  { value: 'active', label: 'Aktiv' },
+  { value: 'paused', label: 'Pausiert' },
+  { value: 'completed', label: 'Abgeschlossen' },
+  { value: 'archived', label: 'Archiviert' },
+]
+
+export default function ProjectForm({ project, onSubmit, onCancel }: ProjectFormProps) {
+  const [name, setName] = useState(project?.name || '')
+  const [description, setDescription] = useState(project?.description || '')
+  const [status, setStatus] = useState<ProjectStatus>(project?.status || 'active')
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!name.trim()) return
+
+    onSubmit({
+      name: name.trim(),
+      description: description.trim() || undefined,
+      status,
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Name */}
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">
+          Projektname *
+        </label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+          placeholder="z.B. Weihnachts-Spezial 2024"
+          required
+        />
+      </div>
+
+      {/* Description */}
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-slate-700 mb-1">
+          Beschreibung
+        </label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent resize-none"
+          placeholder="Kurze Beschreibung des Projekts..."
+        />
+      </div>
+
+      {/* Status */}
+      <div>
+        <label htmlFor="status" className="block text-sm font-medium text-slate-700 mb-1">
+          Status
+        </label>
+        <select
+          id="status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as ProjectStatus)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+        >
+          {statusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+        >
+          Abbrechen
+        </button>
+        <button
+          type="submit"
+          className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+        >
+          {project ? 'Speichern' : 'Erstellen'}
+        </button>
+      </div>
+    </form>
+  )
+}
