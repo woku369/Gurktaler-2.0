@@ -178,6 +178,15 @@ export const contacts = {
     delete: (id: string) => deleteEntity<Contact>('contacts', id),
 }
 
+// Weblinks
+export const weblinks = {
+    getAll: (): Weblink[] => loadData().weblinks,
+    getById: (id: string): Weblink | undefined => loadData().weblinks.find(w => w.id === id),
+    create: (weblink: Omit<Weblink, 'id' | 'created_at'>) => createEntity<Weblink>('weblinks', weblink),
+    update: (id: string, updates: Partial<Weblink>) => updateEntity<Weblink>('weblinks', id, updates),
+    delete: (id: string) => deleteEntity<Weblink>('weblinks', id),
+}
+
 // Tags
 export const tags = {
     getAll: (): Tag[] => loadData().tags,

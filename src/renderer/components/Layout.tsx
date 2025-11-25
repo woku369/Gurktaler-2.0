@@ -6,6 +6,7 @@ import {
     FlaskConical,
     StickyNote,
     Users,
+    Globe,
     Settings,
     Leaf
 } from 'lucide-react'
@@ -17,6 +18,7 @@ const navItems = [
     { to: '/recipes', icon: FlaskConical, label: 'Rezepturen' },
     { to: '/notes', icon: StickyNote, label: 'Notizen' },
     { to: '/contacts', icon: Users, label: 'Kontakte' },
+    { to: '/research', icon: Globe, label: 'Recherche' },
 ]
 
 function Layout() {
