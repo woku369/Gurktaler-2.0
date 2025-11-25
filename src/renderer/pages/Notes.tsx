@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Lightbulb, FileText, CheckSquare, BookOpen, Trash2 } from 'lucide-react'
+import { Plus, Search, Lightbulb, FileText, CheckSquare, BookOpen, Trash2, Edit2 } from 'lucide-react'
+import Modal from '@/renderer/components/Modal'
+import NoteForm from '@/renderer/components/NoteForm'
 import { notes as notesService, projects as projectsService } from '@/renderer/services/storage'
 import type { Note, Project } from '@/shared/types'
 
@@ -27,44 +29,60 @@ const typeLabels = {
 }
 
 function Notes() {
-    const [notes, setNotes] = useState<Note[]>([])
-    const [projects, setProjects] = useState<Project[]>([])
-    const [quickNote, setQuickNote] = useState('')
-    const [selectedType, setSelectedType] = useState<NoteType>('note')
-    const [searchQuery, setSearchQuery] = useState('')
-    const [filterTab, setFilterTab] = useState<'all' | 'chaos' | 'project'>('all')
+  const [notes, setNotes] = useState<Note[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [quickNote, setQuickNote] = useState('')
+  const [selectedType, setSelectedType] = useState<NoteType>('note')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterTab, setFilterTab] = useState<'all' | 'chaos' | 'project'>('all')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingNote, setEditingNote] = useState<Note | null>(null)
 
-    useEffect(() => {
-        loadData()
-    }, [])
+  useEffect(() => {
+    loadData()
+  }, [])
 
-    const loadData = () => {
-        setNotes(notesService.getAll())
-        setProjects(projectsService.getAll())
+  const loadData = () => {
+    setNotes(notesService.getAll())
+    setProjects(projectsService.getAll())
+  }
+
+  const handleQuickSave = () => {
+    if (!quickNote.trim()) return
+
+    notesService.create({
+      title: quickNote.substring(0, 50) + (quickNote.length > 50 ? '...' : ''),
+      content: quickNote,
+      type: selectedType,
+      project_id: undefined
+    })
+
+    setQuickNote('')
+    loadData()
+  }
+
+  const handleEdit = (note: Note) => {
+    setEditingNote(note)
+    setIsModalOpen(true)
+  }
+
+  const handleUpdate = (data: Omit<Note, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editingNote) {
+      notesService.update(editingNote.id, data)
+    } else {
+      notesService.create(data)
     }
+    loadData()
+    setIsModalOpen(false)
+    setEditingNote(null)
+  }
 
-    const handleQuickSave = () => {
-        if (!quickNote.trim()) return
-
-        notesService.create({
-            title: quickNote.substring(0, 50) + (quickNote.length > 50 ? '...' : ''),
-            content: quickNote,
-            type: selectedType,
-            project_id: undefined
-        })
-
-        setQuickNote('')
-        loadData()
+  const handleDelete = (id: string) => {
+    if (confirm('Notiz wirklich löschen?')) {
+      notesService.delete(id)
+      loadData()
     }
-
-    const handleDelete = (id: string) => {
-        if (confirm('Notiz wirklich löschen?')) {
-            notesService.delete(id)
-            loadData()
-        }
-    }
-
-    // Filter notes
+  }    // Filter notes
     const filteredNotes = notes.filter(note => {
         // Search filter
         const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -225,6 +243,13 @@ function Notes() {
                                 <div className="flex items-center gap-1">
                                     <span className="text-xs text-slate-400">{formatDate(note.created_at)}</span>
                                     <button
+                                        onClick={() => handleEdit(note)}
+                                        className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Bearbeiten"
+                                    >
+                                        <Edit2 className="w-4 h-4 text-slate-500" />
+                                    </button>
+                                    <button
                                         onClick={() => handleDelete(note.id)}
                                         className="p-1 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                                         title="Löschen"
@@ -248,6 +273,29 @@ function Notes() {
                     )
                 })}
             </div>
+
+            {/* Edit Modal */}
+            {isModalOpen && (
+                <Modal
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false)
+                        setEditingNote(null)
+                    }}
+                    title={editingNote ? 'Notiz bearbeiten' : 'Neue Notiz'}
+                    size="lg"
+                >
+                    <NoteForm
+                        note={editingNote || undefined}
+                        projects={projects}
+                        onSubmit={handleUpdate}
+                        onCancel={() => {
+                            setIsModalOpen(false)
+                            setEditingNote(null)
+                        }}
+                    />
+                </Modal>
+            )}
         </div>
     )
 }

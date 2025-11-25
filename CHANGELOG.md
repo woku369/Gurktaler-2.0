@@ -10,6 +10,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ## [Unreleased]
 
 ### Geplant
+
 - Rezeptur-Verwaltung mit Zutaten
 - Weblinks & Recherche
 - Volltext-Suche
@@ -20,6 +21,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ## [0.3.0] - 2024-11-25
 
 ### Hinzugefügt
+
 - **ProductForm**: Formular-Komponente für Produkte mit Versionierungs-Support
 - **Produkt-CRUD**: Create/Read/Update/Delete für Produkte
 - **Versionierung**: Hierarchische Produkt-Struktur (X → X1 → X1.1)
@@ -29,7 +31,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - **Archivierung**: Produkte mit Begründung archivieren
 - **Projekt-Zuordnung**: Produkte optional Projekten zuweisen
 - **Status-Management**: Entwurf, In Test, Freigegeben, Archiviert
-- **Notizen & Chaosablage**: 
+- **Notizen & Chaosablage**:
   - Quick-Entry mit Strg+Enter
   - Notiz-Typen: Idee, Notiz, Aufgabe, Recherche
   - Filter-Tabs (Alle, Chaosablage, Mit Projekt)
