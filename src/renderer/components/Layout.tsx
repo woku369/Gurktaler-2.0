@@ -8,6 +8,7 @@ import {
     Users,
     Globe,
     Tag,
+    Search,
     Settings,
     Leaf
 } from 'lucide-react'
@@ -21,6 +22,7 @@ const navItems = [
     { to: '/contacts', icon: Users, label: 'Kontakte' },
     { to: '/research', icon: Globe, label: 'Recherche' },
     { to: '/tags', icon: Tag, label: 'Tags' },
+    { to: '/search', icon: Search, label: 'Suche' },
 ]
 
 function Layout() {

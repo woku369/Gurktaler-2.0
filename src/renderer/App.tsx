@@ -8,6 +8,7 @@ import Notes from './pages/Notes'
 import Contacts from './pages/Contacts'
 import Research from './pages/Research'
 import Tags from './pages/Tags'
+import GlobalSearch from './pages/GlobalSearch'
 import Settings from './pages/Settings'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
                 <Route path="contacts" element={<Contacts />} />
                 <Route path="research" element={<Research />} />
                 <Route path="tags" element={<Tags />} />
+                <Route path="search" element={<GlobalSearch />} />
                 <Route path="settings" element={<Settings />} />
             </Route>
         </Routes>
