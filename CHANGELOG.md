@@ -10,18 +10,16 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ## [Unreleased]
 
 ### Geplant
-
-- Rezeptur-Verwaltung
-- Notizen & Chaosablage
-- Recherche-Links
+- Rezeptur-Verwaltung mit Zutaten
+- Weblinks & Recherche
 - Volltext-Suche
+- Bild-Upload für Produkte/Notizen
 
 ---
 
 ## [0.3.0] - 2024-11-25
 
 ### Hinzugefügt
-
 - **ProductForm**: Formular-Komponente für Produkte mit Versionierungs-Support
 - **Produkt-CRUD**: Create/Read/Update/Delete für Produkte
 - **Versionierung**: Hierarchische Produkt-Struktur (X → X1 → X1.1)
@@ -30,8 +28,22 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   - Baum-Ansicht mit Root-Produkten und Versionen
 - **Archivierung**: Produkte mit Begründung archivieren
 - **Projekt-Zuordnung**: Produkte optional Projekten zuweisen
-- **Such-Filterung**: Echtzeit-Suche in Produktnamen
 - **Status-Management**: Entwurf, In Test, Freigegeben, Archiviert
+- **Notizen & Chaosablage**: 
+  - Quick-Entry mit Strg+Enter
+  - Notiz-Typen: Idee, Notiz, Aufgabe, Recherche
+  - Filter-Tabs (Alle, Chaosablage, Mit Projekt)
+  - Chronologische Sortierung
+- **Kontakte-Verwaltung**:
+  - ContactForm Komponente
+  - Kontakt-Typen: Lieferant, Partner, Kunde, Sonstiges
+  - Klickbare E-Mail/Telefon-Links
+  - Filter nach Typ
+- **Settings-Seite**:
+  - JSON-Export (Download)
+  - JSON-Import (File-Upload mit Warnung)
+  - LocalStorage-Größenanzeige
+  - Status-Feedback
 
 ---
 

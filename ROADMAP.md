@@ -115,8 +115,10 @@
 
 | Status | Aufgabe           | Beschreibung            |
 | ------ | ----------------- | ----------------------- |
-| 📋     | Quick-Entry       | Schnelle Notiz-Eingabe  |
-| 📋     | Notiz-Liste       | Chronologisch/Nach Tags |
+| ✅     | Quick-Entry       | Schnelle Notiz-Eingabe  |
+| ✅     | Notiz-Liste       | Chronologisch/Nach Tags |
+| ✅     | Notiz-Typen       | Idee, Notiz, TODO, Recherche |
+| ✅     | Filter-Tabs       | Alle, Chaosablage, Mit Projekt |
 | 📋     | Projekt-Zuordnung | Nachträgliches Zuordnen |
 | 📋     | Rich-Text-Editor  | Formatierte Notizen     |
 | 📋     | Bild-Upload       | Bilder zu Notizen       |
@@ -137,7 +139,9 @@
 
 | Status | Aufgabe             | Beschreibung          |
 | ------ | ------------------- | --------------------- |
-| 📋     | Kontakt-Verwaltung  | Name, Firma, Notizen  |
+| ✅     | Kontakt-Verwaltung  | Name, Firma, Notizen  |
+| ✅     | Kontakt-Typen       | Lieferant, Partner, Kunde |
+| ✅     | Filter nach Typ     | Schnellfilter         |
 | 📋     | Kontakt-Verknüpfung | Zu Projekten zuordnen |
 
 ### By-Products
@@ -164,8 +168,9 @@
 
 | Status | Aufgabe           | Beschreibung           |
 | ------ | ----------------- | ---------------------- |
-| 📋     | JSON-Export       | Alle Daten exportieren |
-| 📋     | JSON-Import       | Daten importieren      |
+| ✅     | JSON-Export       | Alle Daten exportieren |
+| ✅     | JSON-Import       | Daten importieren      |
+| ✅     | Settings-UI       | Export/Import Buttons  |
 | 📋     | Git-Integration   | Automatischer Sync     |
 | 📋     | Konflikt-Handling | Bei Sync-Konflikten    |
 
