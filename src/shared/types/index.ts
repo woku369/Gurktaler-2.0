@@ -85,11 +85,15 @@ export interface TagAssignment extends BaseEntity {
 }
 
 // Contact
+export type ContactType = 'supplier' | 'partner' | 'customer' | 'other';
+
 export interface Contact extends BaseEntity {
     name: string;
+    type: ContactType;
     company?: string;
     email?: string;
     phone?: string;
+    address?: string;
     notes?: string;
 }
 
