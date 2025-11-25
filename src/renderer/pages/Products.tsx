@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, GitBranch, Edit2, Trash2, Package } from 'lucide-react'
 import Modal from '@/renderer/components/Modal'
 import ProductForm from '@/renderer/components/ProductForm'
-import { products as productsService, projects as projectsService } from '@/renderer/services/storage'
-import type { Product, Project } from '@/shared/types'
+import { products as productsService, projects as projectsService, tags as tagsService, tagAssignments as tagAssignmentsService } from '@/renderer/services/storage'
+import type { Product, Project, Tag } from '@/shared/types'
 
 const statusColors = {
     draft: 'bg-slate-100 text-slate-700',
@@ -22,10 +22,12 @@ const statusLabels = {
 function Products() {
   const [products, setProducts] = useState<Product[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [versioningProduct, setVersioningProduct] = useState<Product | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTagId, setSelectedTagId] = useState<string>('')
 
   useEffect(() => {
     loadData()
@@ -34,6 +36,7 @@ function Products() {
   const loadData = () => {
     setProducts(productsService.getAll())
     setProjects(projectsService.getAll())
+    setTags(tagsService.getAll())
   }
 
   const handleSubmit = (data: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
@@ -82,9 +85,18 @@ function Products() {
   }
 
   const productTree = buildProductTree()
-  const filteredTree = productTree.filter(item =>
-    item.root.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredTree = productTree.filter(item => {
+    const matchesSearch = item.root.name.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    let matchesTag = true
+    if (selectedTagId) {
+      const rootAssignments = tagAssignmentsService.getByEntity('product', item.root.id)
+      const versionAssignments = item.versions.flatMap(v => tagAssignmentsService.getByEntity('product', v.id))
+      matchesTag = [...rootAssignments, ...versionAssignments].some(a => a.tag_id === selectedTagId)
+    }
+    
+    return matchesSearch && matchesTag
+  })
 
   return (
     <div className="p-8">
@@ -103,9 +115,9 @@ function Products() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Search and Tag Filter */}
+      <div className="mb-6 flex gap-4">
+        <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -115,6 +127,16 @@ function Products() {
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
           />
         </div>
+        <select
+          value={selectedTagId}
+          onChange={(e) => setSelectedTagId(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+        >
+          <option value="">Alle Tags</option>
+          {tags.map(tag => (
+            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Empty State */}
@@ -161,6 +183,23 @@ function Products() {
                   {product.root.archive_reason && (
                     <p className="text-sm text-red-600 italic mb-2">Archiviert: {product.root.archive_reason}</p>
                   )}
+                  {(() => {
+                    const productAssignments = tagAssignmentsService.getByEntity('product', product.root.id)
+                    const productTags = productAssignments.map(a => tags.find(t => t.id === a.tag_id)).filter((t): t is Tag => t !== undefined)
+                    return productTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {productTags.map(tag => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                            style={{ backgroundColor: tag.color }}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
                   {product.root.project_id && (
                     <p className="text-xs text-slate-500">
                       Projekt: {projects.find(p => p.id === product.root.project_id)?.name || 'Unbekannt'}

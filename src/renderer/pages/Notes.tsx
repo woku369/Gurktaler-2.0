@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Lightbulb, FileText, CheckSquare, BookOpen, Trash2, Edit2 } from 'lucide-react'
 import Modal from '@/renderer/components/Modal'
 import NoteForm from '@/renderer/components/NoteForm'
-import { notes as notesService, projects as projectsService } from '@/renderer/services/storage'
-import type { Note, Project } from '@/shared/types'
+import { notes as notesService, projects as projectsService, tags as tagsService, tagAssignments as tagAssignmentsService } from '@/renderer/services/storage'
+import type { Note, Project, Tag } from '@/shared/types'
 
 type NoteType = 'idea' | 'note' | 'todo' | 'research'
 
@@ -31,10 +31,12 @@ const typeLabels = {
 function Notes() {
   const [notes, setNotes] = useState<Note[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [quickNote, setQuickNote] = useState('')
   const [selectedType, setSelectedType] = useState<NoteType>('note')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterTab, setFilterTab] = useState<'all' | 'chaos' | 'project'>('all')
+  const [selectedTagId, setSelectedTagId] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
 
@@ -45,6 +47,7 @@ function Notes() {
   const loadData = () => {
     setNotes(notesService.getAll())
     setProjects(projectsService.getAll())
+    setTags(tagsService.getAll())
   }
 
   const handleQuickSave = () => {
@@ -96,7 +99,14 @@ function Notes() {
             matchesTab = !!note.project_id
         }
 
-        return matchesSearch && matchesTab
+        // Tag filter
+        let matchesTag = true
+        if (selectedTagId) {
+            const noteAssignments = tagAssignmentsService.getByEntity('note', note.id)
+            matchesTag = noteAssignments.some(a => a.tag_id === selectedTagId)
+        }
+
+        return matchesSearch && matchesTab && matchesTag
     }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
     const formatDate = (dateString: string) => {
@@ -196,9 +206,9 @@ function Notes() {
                 </button>
             </div>
 
-            {/* Search */}
-            <div className="mb-6">
-                <div className="relative max-w-md">
+            {/* Search and Tag Filter */}
+            <div className="mb-6 flex gap-4">
+                <div className="relative flex-1 max-w-md">
                     <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
@@ -208,6 +218,16 @@ function Notes() {
                         className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
                     />
                 </div>
+                <select
+                    value={selectedTagId}
+                    onChange={(e) => setSelectedTagId(e.target.value)}
+                    className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                >
+                    <option value="">Alle Tags</option>
+                    {tags.map(tag => (
+                        <option key={tag.id} value={tag.id}>{tag.name}</option>
+                    ))}
+                </select>
             </div>
 
             {/* Empty State */}
@@ -230,6 +250,9 @@ function Notes() {
                 {filteredNotes.map((note) => {
                     const Icon = typeIcons[note.type as NoteType]
                     const project = note.project_id ? projects.find(p => p.id === note.project_id) : null
+                    const noteAssignments = tagAssignmentsService.getByEntity('note', note.id)
+                    const noteTags = noteAssignments.map(a => tags.find(t => t.id === a.tag_id)).filter((t): t is Tag => t !== undefined)
+                    
                     return (
                         <div
                             key={note.id}
@@ -260,6 +283,21 @@ function Notes() {
                             </div>
                             <h3 className="font-medium text-slate-800 mb-2">{note.title}</h3>
                             <p className="text-sm text-slate-500 line-clamp-3 whitespace-pre-wrap">{note.content}</p>
+                            
+                            {noteTags.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-1">
+                                    {noteTags.map(tag => (
+                                        <span
+                                            key={tag.id}
+                                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                                            style={{ backgroundColor: tag.color }}
+                                        >
+                                            {tag.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            
                             {project ? (
                                 <div className="mt-3 pt-3 border-t border-slate-100">
                                     <span className="text-xs text-slate-500">📁 {project.name}</span>

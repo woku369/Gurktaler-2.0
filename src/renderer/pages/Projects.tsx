@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Filter, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2 } from 'lucide-react'
 import Modal from '@/renderer/components/Modal'
 import ProjectForm from '@/renderer/components/ProjectForm'
-import { projects as projectsService } from '@/renderer/services/storage'
-import type { Project } from '@/shared/types'
+import { projects as projectsService, tags as tagsService, tagAssignments as tagAssignmentsService } from '@/renderer/services/storage'
+import type { Project, Tag } from '@/shared/types'
 
 const statusColors = {
     active: 'bg-green-100 text-green-700',
@@ -21,9 +21,11 @@ const statusLabels = {
 
 function Projects() {
   const [projects, setProjects] = useState<Project[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTagId, setSelectedTagId] = useState<string>('')
 
   // Load projects on mount
   useEffect(() => {
@@ -32,6 +34,7 @@ function Projects() {
 
   const loadProjects = () => {
     setProjects(projectsService.getAll())
+    setTags(tagsService.getAll())
   }
 
   const handleCreate = (data: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
@@ -66,9 +69,17 @@ function Projects() {
     setEditingProject(null)
   }
 
-  const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    let matchesTag = true
+    if (selectedTagId) {
+      const projectAssignments = tagAssignmentsService.getByEntity('project', project.id)
+      matchesTag = projectAssignments.some(a => a.tag_id === selectedTagId)
+    }
+    
+    return matchesSearch && matchesTag
+  })
 
   const getProductCount = (_projectId: string) => {
     // TODO: Implement when products are ready
@@ -92,7 +103,7 @@ function Projects() {
         </button>
       </div>
 
-      {/* Search & Filter */}
+      {/* Search & Tag Filter */}
       <div className="flex gap-4 mb-6">
         <div className="flex-1 relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
@@ -104,10 +115,16 @@ function Projects() {
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-          <Filter className="w-5 h-5 text-slate-500" />
-          Filter
-        </button>
+        <select
+          value={selectedTagId}
+          onChange={(e) => setSelectedTagId(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+        >
+          <option value="">Alle Tags</option>
+          {tags.map(tag => (
+            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Project List */}
@@ -125,7 +142,24 @@ function Projects() {
                     {statusLabels[project.status as keyof typeof statusLabels]}
                   </span>
                 </div>
-                <p className="text-slate-500 mb-4">{project.description}</p>
+                <p className="text-slate-500 mb-3">{project.description}</p>
+                {(() => {
+                  const projectAssignments = tagAssignmentsService.getByEntity('project', project.id)
+                  const projectTags = projectAssignments.map(a => tags.find(t => t.id === a.tag_id)).filter((t): t is Tag => t !== undefined)
+                  return projectTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {projectTags.map(tag => (
+                        <span
+                          key={tag.id}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                          style={{ backgroundColor: tag.color }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                })()}
                 <div className="flex items-center gap-4 text-sm text-slate-500">
                   <span>{getProductCount(project.id)} Produkte</span>
                 </div>
