@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, GitBranch, Edit2, Trash2, Package } from "lucide-react";
+import { Plus, Search, GitBranch, Edit2, Trash2, Package, Star } from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import ProductForm from "@/renderer/components/ProductForm";
 import {
@@ -8,6 +8,7 @@ import {
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
   images as imagesService,
+  favorites as favoritesService,
 } from "@/renderer/services/storage";
 import type { Product, Project, Tag } from "@/shared/types";
 
@@ -299,6 +300,20 @@ function Products() {
                     <Plus className="w-5 h-5 text-gurktaler-600" />
                   </button>
                   <button
+                    onClick={() => {
+                      favoritesService.toggle('product', product.root.id)
+                      loadData()
+                    }}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    title={favoritesService.isFavorite('product', product.root.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  >
+                    <Star className={`w-5 h-5 ${
+                      favoritesService.isFavorite('product', product.root.id)
+                        ? 'text-yellow-500 fill-yellow-500'
+                        : 'text-slate-400'
+                    }`} />
+                  </button>
+                  <button
                     onClick={() => handleEdit(product.root)}
                     className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                     title="Bearbeiten"
@@ -366,6 +381,20 @@ function Products() {
                           title="Unterversion erstellen"
                         >
                           <Plus className="w-4 h-4 text-gurktaler-600" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            favoritesService.toggle('product', version.id)
+                            loadData()
+                          }}
+                          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                          title={favoritesService.isFavorite('product', version.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                        >
+                          <Star className={`w-4 h-4 ${
+                            favoritesService.isFavorite('product', version.id)
+                              ? 'text-yellow-500 fill-yellow-500'
+                              : 'text-slate-400'
+                          }`} />
                         </button>
                         <button
                           onClick={() => handleEdit(version)}

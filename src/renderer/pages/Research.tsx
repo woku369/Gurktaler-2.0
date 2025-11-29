@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, ExternalLink, Edit2, Trash2, Globe, ShoppingCart, Users, FileText } from 'lucide-react'
+import { Plus, Search, ExternalLink, Edit2, Trash2, Globe, ShoppingCart, Users, FileText, Star } from 'lucide-react'
 import Modal from '@/renderer/components/Modal'
 import WeblinkForm from '@/renderer/components/WeblinkForm'
-import { weblinks as weblinksService, projects as projectsService } from '@/renderer/services/storage'
+import { weblinks as weblinksService, projects as projectsService, favorites as favoritesService } from '@/renderer/services/storage'
 import type { Weblink, Project } from '@/shared/types'
 
 const typeIcons = {
@@ -186,6 +186,20 @@ function Research() {
                   {typeLabels[weblink.type]}
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      favoritesService.toggle('weblink', weblink.id)
+                      loadWeblinks()
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded"
+                    title={favoritesService.isFavorite('weblink', weblink.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  >
+                    <Star className={`w-4 h-4 ${
+                      favoritesService.isFavorite('weblink', weblink.id)
+                        ? 'text-yellow-500 fill-yellow-500'
+                        : 'text-slate-400'
+                    }`} />
+                  </button>
                   <button
                     onClick={() => handleEdit(weblink)}
                     className="p-1 hover:bg-slate-100 rounded"

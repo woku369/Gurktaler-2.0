@@ -10,6 +10,7 @@ import {
   FlaskConical,
   Beaker,
   Archive,
+  Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,6 +22,7 @@ import {
   recipes as recipesService,
   ingredients as ingredientsService,
   containers as containersService,
+  favorites as favoritesService,
 } from "@/renderer/services/storage";
 import type {
   Project,
@@ -54,6 +56,7 @@ export default function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -239,7 +242,14 @@ export default function GlobalSearch() {
       }
     });
 
-    setResults(allResults);
+    // Filter by favorites if enabled
+    const filteredResults = showOnlyFavorites
+      ? allResults.filter((result) =>
+          favoritesService.isFavorite(result.type, result.id)
+        )
+      : allResults;
+
+    setResults(filteredResults);
   };
 
   const getIcon = (type: string) => {
@@ -356,7 +366,7 @@ export default function GlobalSearch() {
         </div>
 
         {/* Search Input */}
-        <div className="mb-6">
+        <div className="mb-6 space-y-3">
           <div className="relative">
             <Search className="w-6 h-6 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
@@ -368,6 +378,23 @@ export default function GlobalSearch() {
               autoFocus
             />
           </div>
+          
+          {/* Favorites Filter */}
+          <label className="flex items-center gap-2 cursor-pointer w-fit">
+            <input
+              type="checkbox"
+              checked={showOnlyFavorites}
+              onChange={(e) => {
+                setShowOnlyFavorites(e.target.checked)
+                if (query.trim()) {
+                  performSearch(query)
+                }
+              }}
+              className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-500"
+            />
+            <Star className={`w-4 h-4 ${showOnlyFavorites ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} />
+            <span className="text-sm text-gray-700">Nur Favoriten anzeigen</span>
+          </label>
         </div>
 
         {/* Results */}

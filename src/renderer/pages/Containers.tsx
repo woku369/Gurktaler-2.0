@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit2, Trash2, Package } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Package, Star } from "lucide-react";
 import {
   containers as containersService,
   images as imagesService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
+  favorites as favoritesService,
 } from "@/renderer/services/storage";
 import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
@@ -353,6 +354,20 @@ function Containers() {
                   {containerTypeLabels[container.type]}
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => {
+                      favoritesService.toggle('container', container.id)
+                      loadData()
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded"
+                    title={favoritesService.isFavorite('container', container.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  >
+                    <Star className={`w-4 h-4 ${
+                      favoritesService.isFavorite('container', container.id)
+                        ? 'text-yellow-500 fill-yellow-500'
+                        : 'text-slate-400'
+                    }`} />
+                  </button>
                   <button
                     onClick={() => handleEdit(container)}
                     className="p-1 hover:bg-slate-100 rounded"

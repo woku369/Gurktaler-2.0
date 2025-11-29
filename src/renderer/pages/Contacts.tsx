@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, Users } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Mail, Phone, Building2, MapPin, Users, Star } from 'lucide-react'
 import Modal from '@/renderer/components/Modal'
 import ContactForm from '@/renderer/components/ContactForm'
-import { contacts as contactsService } from '@/renderer/services/storage'
+import { contacts as contactsService, favorites as favoritesService } from '@/renderer/services/storage'
 import type { Contact } from '@/shared/types'
 
 const typeLabels = {
@@ -160,6 +160,20 @@ function Contacts() {
                 {typeLabels[contact.type]}
               </span>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => {
+                    favoritesService.toggle('contact', contact.id)
+                    loadContacts()
+                  }}
+                  className="p-1 hover:bg-slate-100 rounded"
+                  title={favoritesService.isFavorite('contact', contact.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                >
+                  <Star className={`w-4 h-4 ${
+                    favoritesService.isFavorite('contact', contact.id)
+                      ? 'text-yellow-500 fill-yellow-500'
+                      : 'text-slate-400'
+                  }`} />
+                </button>
                 <button
                   onClick={() => handleEdit(contact)}
                   className="p-1 hover:bg-slate-100 rounded"

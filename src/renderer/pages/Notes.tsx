@@ -8,6 +8,7 @@ import {
   BookOpen,
   Trash2,
   Edit2,
+  Star,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Modal from "@/renderer/components/Modal";
@@ -18,6 +19,7 @@ import {
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
   images as imagesService,
+  favorites as favoritesService,
 } from "@/renderer/services/storage";
 import type { Note, Project, Tag } from "@/shared/types";
 
@@ -316,6 +318,20 @@ function Notes() {
                   <span className="text-xs text-slate-400">
                     {formatDate(note.created_at)}
                   </span>
+                  <button
+                    onClick={() => {
+                      favoritesService.toggle('note', note.id)
+                      loadData()
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    title={favoritesService.isFavorite('note', note.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  >
+                    <Star className={`w-4 h-4 ${
+                      favoritesService.isFavorite('note', note.id)
+                        ? 'text-yellow-500 fill-yellow-500'
+                        : 'text-slate-400'
+                    }`} />
+                  </button>
                   <button
                     onClick={() => handleEdit(note)}
                     className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"

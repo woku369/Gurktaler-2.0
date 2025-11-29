@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderKanban, Package, FlaskConical, StickyNote, Plus } from 'lucide-react'
-import { projects, products, recipes, notes } from '@/renderer/services/storage'
+import { FolderKanban, Package, FlaskConical, StickyNote, Plus, Star, ExternalLink, Users, Beaker, Archive } from 'lucide-react'
+import { projects, products, recipes, notes, favorites, contacts, weblinks, ingredients, containers } from '@/renderer/services/storage'
+import type { Favorite } from '@/shared/types'
 
 type RecentItem = {
   type: 'project' | 'product' | 'recipe' | 'note'
@@ -19,6 +20,7 @@ function Dashboard() {
     { label: 'Notizen', value: 0, icon: StickyNote, color: 'bg-purple-500' },
   ])
   const [recentItems, setRecentItems] = useState<RecentItem[]>([])
+  const [favoriteItems, setFavoriteItems] = useState<Array<{ favorite: Favorite; name: string; icon: any; route: string }>>([])
 
   useEffect(() => {
     loadDashboardData()
@@ -74,6 +76,69 @@ function Dashboard() {
     }).slice(0, 10)
 
     setRecentItems(sortedItems)
+
+    // Load favorites
+    const allFavorites = favorites.getAll()
+    const favItems = allFavorites.slice(0, 8).map(fav => {
+      let name = ''
+      let icon = Star
+      let route = '/'
+      
+      switch (fav.entity_type) {
+        case 'project':
+          const proj = allProjects.find(p => p.id === fav.entity_id)
+          name = proj?.name || 'Unbekanntes Projekt'
+          icon = FolderKanban
+          route = '/projects'
+          break
+        case 'product':
+          const prod = allProducts.find(p => p.id === fav.entity_id)
+          name = prod?.name || 'Unbekanntes Produkt'
+          icon = Package
+          route = '/products'
+          break
+        case 'recipe':
+          const rec = allRecipes.find(r => r.id === fav.entity_id)
+          name = rec?.name || 'Unbekannte Rezeptur'
+          icon = FlaskConical
+          route = '/recipes'
+          break
+        case 'note':
+          const note = allNotes.find(n => n.id === fav.entity_id)
+          name = note?.title || 'Unbekannte Notiz'
+          icon = StickyNote
+          route = '/notes'
+          break
+        case 'contact':
+          const cont = contacts.getAll().find(c => c.id === fav.entity_id)
+          name = cont?.name || 'Unbekannter Kontakt'
+          icon = Users
+          route = '/contacts'
+          break
+        case 'weblink':
+          const web = weblinks.getAll().find(w => w.id === fav.entity_id)
+          name = web?.title || 'Unbekannter Link'
+          icon = ExternalLink
+          route = '/research'
+          break
+        case 'ingredient':
+          const ing = ingredients.getAll().find(i => i.id === fav.entity_id)
+          name = ing?.name || 'Unbekannte Zutat'
+          icon = Beaker
+          route = '/ingredients'
+          break
+        case 'container':
+          const con = containers.getAll().find(c => c.id === fav.entity_id)
+          name = con?.name || 'Unbekanntes Gebinde'
+          icon = Archive
+          route = '/containers'
+          break
+      }
+      
+      return { favorite: fav, name, icon, route }
+    })
+    
+    setFavoriteItems(favItems)
   }
 
   const handleQuickAction = (route: string) => {
@@ -134,7 +199,7 @@ function Dashboard() {
                     </div>
                 </div>
 
-                <div>
+                <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                         <h2 className="font-semibold text-slate-800 mb-4">Schnellzugriff</h2>
                         <div className="space-y-2">
@@ -161,6 +226,31 @@ function Dashboard() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Favorites Widget */}
+                    {favoriteItems.length > 0 && (
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                                <h2 className="font-semibold text-slate-800">Favoriten</h2>
+                            </div>
+                            <div className="space-y-1">
+                                {favoriteItems.map((item, index) => {
+                                    const Icon = item.icon
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleQuickAction(item.route)}
+                                            className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 rounded-lg transition-colors"
+                                        >
+                                            <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                                            <span className="text-sm text-slate-700 truncate">{item.name}</span>
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

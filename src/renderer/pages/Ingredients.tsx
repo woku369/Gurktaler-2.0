@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit2, Trash2, Beaker } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, Beaker, Star } from "lucide-react";
 import {
   ingredients as ingredientsService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
+  favorites as favoritesService,
 } from "@/renderer/services/storage";
 import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
@@ -396,6 +397,20 @@ function Ingredients() {
                     {ingredient.notes || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => {
+                        favoritesService.toggle('ingredient', ingredient.id)
+                        loadData()
+                      }}
+                      className="mr-3"
+                      title={favoritesService.isFavorite('ingredient', ingredient.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                    >
+                      <Star className={`w-4 h-4 ${
+                        favoritesService.isFavorite('ingredient', ingredient.id)
+                          ? 'text-yellow-500 fill-yellow-500'
+                          : 'text-slate-400'
+                      }`} />
+                    </button>
                     <button
                       onClick={() => handleEdit(ingredient)}
                       className="text-gurktaler-600 hover:text-gurktaler-700 mr-3"

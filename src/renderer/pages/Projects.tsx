@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Star } from 'lucide-react'
 import Modal from '@/renderer/components/Modal'
 import ProjectForm from '@/renderer/components/ProjectForm'
-import { projects as projectsService, tags as tagsService, tagAssignments as tagAssignmentsService } from '@/renderer/services/storage'
+import { projects as projectsService, tags as tagsService, tagAssignments as tagAssignmentsService, favorites as favoritesService } from '@/renderer/services/storage'
 import type { Project, Tag } from '@/shared/types'
 
 const statusColors = {
@@ -165,6 +165,20 @@ function Projects() {
                 </div>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    favoritesService.toggle('project', project.id)
+                    loadData()
+                  }}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  title={favoritesService.isFavorite('project', project.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                >
+                  <Star className={`w-4 h-4 ${
+                    favoritesService.isFavorite('project', project.id)
+                      ? 'text-yellow-500 fill-yellow-500'
+                      : 'text-slate-400'
+                  }`} />
+                </button>
                 <button
                   onClick={() => handleEdit(project)}
                   className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
