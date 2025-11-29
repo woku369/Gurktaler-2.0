@@ -12,6 +12,7 @@ import {
   Tag,
   Search,
   Bot,
+  BookOpen,
   Settings,
   Leaf,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const navItems = [
   { to: "/ai-assistant", icon: Bot, label: "KI-Assistent" },
   { to: "/tags", icon: Tag, label: "Tags" },
   { to: "/search", icon: Search, label: "Suche" },
+  { to: "/documentation", icon: BookOpen, label: "Anleitungen" },
 ];
 
 function Layout() {

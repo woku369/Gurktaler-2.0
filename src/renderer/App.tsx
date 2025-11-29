@@ -12,6 +12,7 @@ import Research from "./pages/Research";
 import Tags from "./pages/Tags";
 import GlobalSearch from "./pages/GlobalSearch";
 import AIAssistant from "./pages/AIAssistant";
+import Documentation from "./pages/Documentation";
 import Settings from "./pages/Settings";
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
         <Route path="tags" element={<Tags />} />
         <Route path="search" element={<GlobalSearch />} />
         <Route path="ai-assistant" element={<AIAssistant />} />
+        <Route path="documentation" element={<Documentation />} />
         <Route path="settings" element={<Settings />} />
       </Route>
     </Routes>

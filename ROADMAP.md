@@ -160,7 +160,8 @@
 | ✅     | Volltext-Suche | Über alle 8 Bereiche (inkl. Rezepturen, Zutaten, Gebinde)|
 | ✅     | Tag-System     | Vollständig implementiert                         |
 | ✅     | Filter         | Tag-Filter in allen Views (inkl. Recipes, Gebinde)|
-| 📋     | Favoriten      | Schnellzugriff                                    |
+| ✅     | Dokumentation  | Anleitungs-Seite mit allen Features               |
+| 🔄     | Favoriten      | System definiert, UI-Integration ausstehend       |
 
 ---
 
