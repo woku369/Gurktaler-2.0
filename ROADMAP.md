@@ -153,7 +153,7 @@
 
 ---
 
-## Phase 7: Suche & Tags (v0.7.x)
+## Phase 7: Suche & Tags (v0.7.x) ✅
 
 | Status | Aufgabe        | Beschreibung                                      |
 | ------ | -------------- | ------------------------------------------------- |
@@ -161,7 +161,7 @@
 | ✅     | Tag-System     | Vollständig implementiert                         |
 | ✅     | Filter         | Tag-Filter in allen Views (inkl. Recipes, Gebinde)|
 | ✅     | Dokumentation  | Anleitungs-Seite mit allen Features               |
-| 🔄     | Favoriten      | System definiert, UI-Integration ausstehend       |
+| ✅     | Favoriten      | Star-Icons, Dashboard-Widget, GlobalSearch-Filter |
 
 ---
 

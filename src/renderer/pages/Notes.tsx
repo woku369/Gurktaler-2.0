@@ -320,17 +320,23 @@ function Notes() {
                   </span>
                   <button
                     onClick={() => {
-                      favoritesService.toggle('note', note.id)
-                      loadData()
+                      favoritesService.toggle("note", note.id);
+                      loadData();
                     }}
                     className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    title={favoritesService.isFavorite('note', note.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                    title={
+                      favoritesService.isFavorite("note", note.id)
+                        ? "Aus Favoriten entfernen"
+                        : "Zu Favoriten hinzufügen"
+                    }
                   >
-                    <Star className={`w-4 h-4 ${
-                      favoritesService.isFavorite('note', note.id)
-                        ? 'text-yellow-500 fill-yellow-500'
-                        : 'text-slate-400'
-                    }`} />
+                    <Star
+                      className={`w-4 h-4 ${
+                        favoritesService.isFavorite("note", note.id)
+                          ? "text-yellow-500 fill-yellow-500"
+                          : "text-slate-400"
+                      }`}
+                    />
                   </button>
                   <button
                     onClick={() => handleEdit(note)}

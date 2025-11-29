@@ -1,5 +1,13 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, GitBranch, Edit2, Trash2, Package, Star } from "lucide-react";
+import {
+  Plus,
+  Search,
+  GitBranch,
+  Edit2,
+  Trash2,
+  Package,
+  Star,
+} from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import ProductForm from "@/renderer/components/ProductForm";
 import {
@@ -301,17 +309,23 @@ function Products() {
                   </button>
                   <button
                     onClick={() => {
-                      favoritesService.toggle('product', product.root.id)
-                      loadData()
+                      favoritesService.toggle("product", product.root.id);
+                      loadData();
                     }}
                     className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    title={favoritesService.isFavorite('product', product.root.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                    title={
+                      favoritesService.isFavorite("product", product.root.id)
+                        ? "Aus Favoriten entfernen"
+                        : "Zu Favoriten hinzufügen"
+                    }
                   >
-                    <Star className={`w-5 h-5 ${
-                      favoritesService.isFavorite('product', product.root.id)
-                        ? 'text-yellow-500 fill-yellow-500'
-                        : 'text-slate-400'
-                    }`} />
+                    <Star
+                      className={`w-5 h-5 ${
+                        favoritesService.isFavorite("product", product.root.id)
+                          ? "text-yellow-500 fill-yellow-500"
+                          : "text-slate-400"
+                      }`}
+                    />
                   </button>
                   <button
                     onClick={() => handleEdit(product.root)}
@@ -384,17 +398,23 @@ function Products() {
                         </button>
                         <button
                           onClick={() => {
-                            favoritesService.toggle('product', version.id)
-                            loadData()
+                            favoritesService.toggle("product", version.id);
+                            loadData();
                           }}
                           className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                          title={favoritesService.isFavorite('product', version.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                          title={
+                            favoritesService.isFavorite("product", version.id)
+                              ? "Aus Favoriten entfernen"
+                              : "Zu Favoriten hinzufügen"
+                          }
                         >
-                          <Star className={`w-4 h-4 ${
-                            favoritesService.isFavorite('product', version.id)
-                              ? 'text-yellow-500 fill-yellow-500'
-                              : 'text-slate-400'
-                          }`} />
+                          <Star
+                            className={`w-4 h-4 ${
+                              favoritesService.isFavorite("product", version.id)
+                                ? "text-yellow-500 fill-yellow-500"
+                                : "text-slate-400"
+                            }`}
+                          />
                         </button>
                         <button
                           onClick={() => handleEdit(version)}

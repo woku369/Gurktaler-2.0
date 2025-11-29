@@ -1,90 +1,104 @@
-import { useState, useEffect } from 'react'
-import { Plus, Search, Edit2, Trash2, Star } from 'lucide-react'
-import Modal from '@/renderer/components/Modal'
-import ProjectForm from '@/renderer/components/ProjectForm'
-import { projects as projectsService, tags as tagsService, tagAssignments as tagAssignmentsService, favorites as favoritesService } from '@/renderer/services/storage'
-import type { Project, Tag } from '@/shared/types'
+import { useState, useEffect } from "react";
+import { Plus, Search, Edit2, Trash2, Star } from "lucide-react";
+import Modal from "@/renderer/components/Modal";
+import ProjectForm from "@/renderer/components/ProjectForm";
+import {
+  projects as projectsService,
+  tags as tagsService,
+  tagAssignments as tagAssignmentsService,
+  favorites as favoritesService,
+} from "@/renderer/services/storage";
+import type { Project, Tag } from "@/shared/types";
 
 const statusColors = {
-    active: 'bg-green-100 text-green-700',
-    paused: 'bg-yellow-100 text-yellow-700',
-    completed: 'bg-blue-100 text-blue-700',
-    archived: 'bg-slate-100 text-slate-700',
-}
+  active: "bg-green-100 text-green-700",
+  paused: "bg-yellow-100 text-yellow-700",
+  completed: "bg-blue-100 text-blue-700",
+  archived: "bg-slate-100 text-slate-700",
+};
 
 const statusLabels = {
-    active: 'Aktiv',
-    paused: 'Pausiert',
-    completed: 'Abgeschlossen',
-    archived: 'Archiviert',
-}
+  active: "Aktiv",
+  paused: "Pausiert",
+  completed: "Abgeschlossen",
+  archived: "Archiviert",
+};
 
 function Projects() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [tags, setTags] = useState<Tag[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingProject, setEditingProject] = useState<Project | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedTagId, setSelectedTagId] = useState<string>('')
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTagId, setSelectedTagId] = useState<string>("");
 
   // Load projects on mount
   useEffect(() => {
-    loadProjects()
-  }, [])
+    loadProjects();
+  }, []);
 
   const loadProjects = () => {
-    setProjects(projectsService.getAll())
-    setTags(tagsService.getAll())
-  }
+    setProjects(projectsService.getAll());
+    setTags(tagsService.getAll());
+  };
 
-  const handleCreate = (data: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
-    projectsService.create(data)
-    loadProjects()
-    setIsModalOpen(false)
-  }
+  const handleCreate = (
+    data: Omit<Project, "id" | "created_at" | "updated_at">
+  ) => {
+    projectsService.create(data);
+    loadProjects();
+    setIsModalOpen(false);
+  };
 
   const handleEdit = (project: Project) => {
-    setEditingProject(project)
-    setIsModalOpen(true)
-  }
+    setEditingProject(project);
+    setIsModalOpen(true);
+  };
 
-  const handleUpdate = (data: Omit<Project, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleUpdate = (
+    data: Omit<Project, "id" | "created_at" | "updated_at">
+  ) => {
     if (editingProject) {
-      projectsService.update(editingProject.id, data)
-      loadProjects()
-      setIsModalOpen(false)
-      setEditingProject(null)
+      projectsService.update(editingProject.id, data);
+      loadProjects();
+      setIsModalOpen(false);
+      setEditingProject(null);
     }
-  }
+  };
 
   const handleDelete = (id: string) => {
-    if (confirm('Projekt wirklich löschen?')) {
-      projectsService.delete(id)
-      loadProjects()
+    if (confirm("Projekt wirklich löschen?")) {
+      projectsService.delete(id);
+      loadProjects();
     }
-  }
+  };
 
   const handleModalClose = () => {
-    setIsModalOpen(false)
-    setEditingProject(null)
-  }
+    setIsModalOpen(false);
+    setEditingProject(null);
+  };
 
   const filteredProjects = projects.filter((project) => {
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    let matchesTag = true
+    const matchesSearch = project.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    let matchesTag = true;
     if (selectedTagId) {
-      const projectAssignments = tagAssignmentsService.getByEntity('project', project.id)
-      matchesTag = projectAssignments.some(a => a.tag_id === selectedTagId)
+      const projectAssignments = tagAssignmentsService.getByEntity(
+        "project",
+        project.id
+      );
+      matchesTag = projectAssignments.some((a) => a.tag_id === selectedTagId);
     }
-    
-    return matchesSearch && matchesTag
-  })
+
+    return matchesSearch && matchesTag;
+  });
 
   const getProductCount = (_projectId: string) => {
     // TODO: Implement when products are ready
-    return 0
-  }
+    return 0;
+  };
 
   return (
     <div className="p-8">
@@ -92,9 +106,11 @@ function Projects() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Projekte</h1>
-          <p className="text-slate-500">Verwalte deine Produktentwicklungs-Projekte</p>
+          <p className="text-slate-500">
+            Verwalte deine Produktentwicklungs-Projekte
+          </p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
         >
@@ -121,8 +137,10 @@ function Projects() {
           className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
         >
           <option value="">Alle Tags</option>
-          {tags.map(tag => (
-            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
+            </option>
           ))}
         </select>
       </div>
@@ -137,28 +155,41 @@ function Projects() {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold text-slate-800">{project.name}</h3>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[project.status as keyof typeof statusColors]}`}>
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    {project.name}
+                  </h3>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      statusColors[project.status as keyof typeof statusColors]
+                    }`}
+                  >
                     {statusLabels[project.status as keyof typeof statusLabels]}
                   </span>
                 </div>
                 <p className="text-slate-500 mb-3">{project.description}</p>
                 {(() => {
-                  const projectAssignments = tagAssignmentsService.getByEntity('project', project.id)
-                  const projectTags = projectAssignments.map(a => tags.find(t => t.id === a.tag_id)).filter((t): t is Tag => t !== undefined)
-                  return projectTags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {projectTags.map(tag => (
-                        <span
-                          key={tag.id}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                          style={{ backgroundColor: tag.color }}
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  )
+                  const projectAssignments = tagAssignmentsService.getByEntity(
+                    "project",
+                    project.id
+                  );
+                  const projectTags = projectAssignments
+                    .map((a) => tags.find((t) => t.id === a.tag_id))
+                    .filter((t): t is Tag => t !== undefined);
+                  return (
+                    projectTags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {projectTags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                            style={{ backgroundColor: tag.color }}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  );
                 })()}
                 <div className="flex items-center gap-4 text-sm text-slate-500">
                   <span>{getProductCount(project.id)} Produkte</span>
@@ -167,17 +198,23 @@ function Projects() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    favoritesService.toggle('project', project.id)
-                    loadData()
+                    favoritesService.toggle("project", project.id);
+                    loadData();
                   }}
                   className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                  title={favoritesService.isFavorite('project', project.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                  title={
+                    favoritesService.isFavorite("project", project.id)
+                      ? "Aus Favoriten entfernen"
+                      : "Zu Favoriten hinzufügen"
+                  }
                 >
-                  <Star className={`w-4 h-4 ${
-                    favoritesService.isFavorite('project', project.id)
-                      ? 'text-yellow-500 fill-yellow-500'
-                      : 'text-slate-400'
-                  }`} />
+                  <Star
+                    className={`w-4 h-4 ${
+                      favoritesService.isFavorite("project", project.id)
+                        ? "text-yellow-500 fill-yellow-500"
+                        : "text-slate-400"
+                    }`}
+                  />
                 </button>
                 <button
                   onClick={() => handleEdit(project)}
@@ -206,16 +243,15 @@ function Projects() {
             <Plus className="w-8 h-8 text-slate-400" />
           </div>
           <h3 className="text-lg font-medium text-slate-800 mb-2">
-            {projects.length === 0 ? 'Keine Projekte' : 'Keine Suchergebnisse'}
+            {projects.length === 0 ? "Keine Projekte" : "Keine Suchergebnisse"}
           </h3>
           <p className="text-slate-500 mb-4">
-            {projects.length === 0 
-              ? 'Erstelle dein erstes Projekt, um loszulegen.'
-              : 'Versuche es mit anderen Suchbegriffen.'
-            }
+            {projects.length === 0
+              ? "Erstelle dein erstes Projekt, um loszulegen."
+              : "Versuche es mit anderen Suchbegriffen."}
           </p>
           {projects.length === 0 && (
-            <button 
+            <button
               onClick={() => setIsModalOpen(true)}
               className="px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
             >
@@ -229,7 +265,7 @@ function Projects() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        title={editingProject ? 'Projekt bearbeiten' : 'Neues Projekt'}
+        title={editingProject ? "Projekt bearbeiten" : "Neues Projekt"}
       >
         <ProjectForm
           project={editingProject || undefined}
@@ -238,7 +274,7 @@ function Projects() {
         />
       </Modal>
     </div>
-  )
+  );
 }
 
-export default Projects
+export default Projects;

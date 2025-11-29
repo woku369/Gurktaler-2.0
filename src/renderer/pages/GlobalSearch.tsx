@@ -378,22 +378,30 @@ export default function GlobalSearch() {
               autoFocus
             />
           </div>
-          
+
           {/* Favorites Filter */}
           <label className="flex items-center gap-2 cursor-pointer w-fit">
             <input
               type="checkbox"
               checked={showOnlyFavorites}
               onChange={(e) => {
-                setShowOnlyFavorites(e.target.checked)
+                setShowOnlyFavorites(e.target.checked);
                 if (query.trim()) {
-                  performSearch(query)
+                  performSearch(query);
                 }
               }}
               className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-500"
             />
-            <Star className={`w-4 h-4 ${showOnlyFavorites ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'}`} />
-            <span className="text-sm text-gray-700">Nur Favoriten anzeigen</span>
+            <Star
+              className={`w-4 h-4 ${
+                showOnlyFavorites
+                  ? "text-yellow-500 fill-yellow-500"
+                  : "text-gray-400"
+              }`}
+            />
+            <span className="text-sm text-gray-700">
+              Nur Favoriten anzeigen
+            </span>
           </label>
         </div>
 

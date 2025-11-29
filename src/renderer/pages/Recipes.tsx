@@ -235,17 +235,23 @@ function Recipes() {
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => {
-                      favoritesService.toggle('recipe', recipe.id)
-                      loadData()
+                      favoritesService.toggle("recipe", recipe.id);
+                      loadData();
                     }}
                     className="p-1 hover:bg-slate-100 rounded"
-                    title={favoritesService.isFavorite('recipe', recipe.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                    title={
+                      favoritesService.isFavorite("recipe", recipe.id)
+                        ? "Aus Favoriten entfernen"
+                        : "Zu Favoriten hinzufügen"
+                    }
                   >
-                    <Star className={`w-4 h-4 ${
-                      favoritesService.isFavorite('recipe', recipe.id)
-                        ? 'text-yellow-500 fill-yellow-500'
-                        : 'text-slate-400'
-                    }`} />
+                    <Star
+                      className={`w-4 h-4 ${
+                        favoritesService.isFavorite("recipe", recipe.id)
+                          ? "text-yellow-500 fill-yellow-500"
+                          : "text-slate-400"
+                      }`}
+                    />
                   </button>
                   <button
                     onClick={() => handleEdit(recipe)}

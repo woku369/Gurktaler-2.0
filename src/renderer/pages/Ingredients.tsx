@@ -399,17 +399,26 @@ function Ingredients() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => {
-                        favoritesService.toggle('ingredient', ingredient.id)
-                        loadData()
+                        favoritesService.toggle("ingredient", ingredient.id);
+                        loadData();
                       }}
                       className="mr-3"
-                      title={favoritesService.isFavorite('ingredient', ingredient.id) ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                      title={
+                        favoritesService.isFavorite("ingredient", ingredient.id)
+                          ? "Aus Favoriten entfernen"
+                          : "Zu Favoriten hinzufügen"
+                      }
                     >
-                      <Star className={`w-4 h-4 ${
-                        favoritesService.isFavorite('ingredient', ingredient.id)
-                          ? 'text-yellow-500 fill-yellow-500'
-                          : 'text-slate-400'
-                      }`} />
+                      <Star
+                        className={`w-4 h-4 ${
+                          favoritesService.isFavorite(
+                            "ingredient",
+                            ingredient.id
+                          )
+                            ? "text-yellow-500 fill-yellow-500"
+                            : "text-slate-400"
+                        }`}
+                      />
                     </button>
                     <button
                       onClick={() => handleEdit(ingredient)}
