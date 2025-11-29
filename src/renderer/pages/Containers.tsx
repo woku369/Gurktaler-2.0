@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Package } from "lucide-react";
 import { containers as containersService } from "@/renderer/services/storage";
+import Modal from "@/renderer/components/Modal";
+import ImageUpload from "@/renderer/components/ImageUpload";
+import TagSelector from "@/renderer/components/TagSelector";
 import type { Container, ContainerType } from "@/shared/types";
 
 const containerTypeLabels: Record<ContainerType, string> = {
@@ -15,7 +18,7 @@ function Containers() {
   const [containers, setContainers] = useState<Container[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingContainer, setEditingContainer] = useState<Container | null>(null);
   const [formData, setFormData] = useState<Partial<Container>>({
     name: "",
     type: "bottle",
@@ -36,12 +39,23 @@ function Containers() {
     e.preventDefault();
     if (!formData.name?.trim()) return;
 
-    if (editingId) {
-      containersService.update(editingId, formData);
+    if (editingContainer) {
+      containersService.update(editingContainer.id, formData);
     } else {
-      containersService.create(
+      const newContainer = containersService.create(
         formData as Omit<Container, "id" | "created_at">
       );
+      // Open the newly created container for editing (to add images/tags)
+      setEditingContainer(newContainer);
+      setFormData({
+        name: newContainer.name,
+        type: newContainer.type,
+        volume: newContainer.volume,
+        notes: newContainer.notes,
+        price: newContainer.price,
+      });
+      loadData();
+      return; // Keep form open for images/tags
     }
 
     resetForm();
@@ -49,6 +63,7 @@ function Containers() {
   };
 
   const handleEdit = (container: Container) => {
+    setEditingContainer(container);
     setFormData({
       name: container.name,
       type: container.type,
@@ -56,7 +71,6 @@ function Containers() {
       notes: container.notes,
       price: container.price,
     });
-    setEditingId(container.id);
     setShowForm(true);
   };
 
@@ -75,7 +89,7 @@ function Containers() {
       notes: "",
       price: undefined,
     });
-    setEditingId(null);
+    setEditingContainer(null);
     setShowForm(false);
   };
 
@@ -119,14 +133,12 @@ function Containers() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-800">
-                {editingId ? "Gebinde bearbeiten" : "Neues Gebinde"}
-              </h2>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <Modal
+          isOpen={showForm}
+          title={editingContainer ? "Gebinde bearbeiten" : "Neues Gebinde"}
+          onClose={resetForm}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Name *
@@ -220,28 +232,48 @@ function Containers() {
                     setFormData({ ...formData, notes: e.target.value })
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 resize-none"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Tags (only when editing) */}
+              {editingContainer && (
+                <div className="border-t border-slate-200 pt-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Tags
+                  </label>
+                  <TagSelector entityType="container" entityId={editingContainer.id} />
+                </div>
+              )}
+
+              {/* Images (only when editing) */}
+              {editingContainer && (
+                <div className="border-t border-slate-200 pt-4">
+                  <ImageUpload
+                    entityType="container"
+                    entityId={editingContainer.id}
+                    maxImages={3}
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
                 >
-                  {editingId ? "Speichern" : "Erstellen"}
+                  {editingContainer ? "Speichern" : "Erstellen"}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   Abbrechen
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </Modal>
       )}
 
       {/* Empty State */}

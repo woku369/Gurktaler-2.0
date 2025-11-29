@@ -16,7 +16,12 @@ import {
 } from "@/renderer/services/storage";
 import RecipeForm from "@/renderer/components/RecipeForm";
 import Modal from "@/renderer/components/Modal";
-import type { Recipe, Product, RecipeIngredient, Ingredient } from "@/shared/types";
+import type {
+  Recipe,
+  Product,
+  RecipeIngredient,
+  Ingredient,
+} from "@/shared/types";
 
 const typeIcons = {
   macerate: Droplet,
@@ -39,7 +44,9 @@ const typeColors = {
 function Recipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [recipeIngredients, setRecipeIngredients] = useState<RecipeIngredient[]>([]);
+  const [recipeIngredients, setRecipeIngredients] = useState<
+    RecipeIngredient[]
+  >([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -237,7 +244,8 @@ function Recipes() {
                 return ingredientCount > 0 ? (
                   <div className="mb-2">
                     <span className="text-xs font-medium text-gurktaler-600">
-                      📋 {ingredientCount} Zutat{ingredientCount !== 1 ? "en" : ""}
+                      📋 {ingredientCount} Zutat
+                      {ingredientCount !== 1 ? "en" : ""}
                     </span>
                   </div>
                 ) : null;
@@ -246,7 +254,8 @@ function Recipes() {
               {recipe.yield_amount && (
                 <div className="mb-2">
                   <span className="text-xs text-slate-600">
-                    ⚗️ Ausbeute: {recipe.yield_amount} {recipe.yield_unit || "ml"}
+                    ⚗️ Ausbeute: {recipe.yield_amount}{" "}
+                    {recipe.yield_unit || "ml"}
                   </span>
                 </div>
               )}

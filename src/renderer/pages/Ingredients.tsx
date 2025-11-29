@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Beaker } from "lucide-react";
 import { ingredients as ingredientsService } from "@/renderer/services/storage";
+import Modal from "@/renderer/components/Modal";
+import ImageUpload from "@/renderer/components/ImageUpload";
+import TagSelector from "@/renderer/components/TagSelector";
 import type { Ingredient } from "@/shared/types";
 
 function Ingredients() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
   const [formData, setFormData] = useState<Partial<Ingredient>>({
     name: "",
     alcohol_percentage: undefined,
@@ -29,12 +32,24 @@ function Ingredients() {
     e.preventDefault();
     if (!formData.name?.trim()) return;
 
-    if (editingId) {
-      ingredientsService.update(editingId, formData);
+    if (editingIngredient) {
+      ingredientsService.update(editingIngredient.id, formData);
     } else {
-      ingredientsService.create(
+      const newIngredient = ingredientsService.create(
         formData as Omit<Ingredient, "id" | "created_at">
       );
+      // Open the newly created ingredient for editing (to add images/tags)
+      setEditingIngredient(newIngredient);
+      setFormData({
+        name: newIngredient.name,
+        alcohol_percentage: newIngredient.alcohol_percentage,
+        category: newIngredient.category,
+        price_per_unit: newIngredient.price_per_unit,
+        unit: newIngredient.unit,
+        notes: newIngredient.notes,
+      });
+      loadData();
+      return; // Keep form open for images/tags
     }
 
     resetForm();
@@ -42,6 +57,7 @@ function Ingredients() {
   };
 
   const handleEdit = (ingredient: Ingredient) => {
+    setEditingIngredient(ingredient);
     setFormData({
       name: ingredient.name,
       alcohol_percentage: ingredient.alcohol_percentage,
@@ -50,7 +66,6 @@ function Ingredients() {
       unit: ingredient.unit,
       notes: ingredient.notes,
     });
-    setEditingId(ingredient.id);
     setShowForm(true);
   };
 
@@ -70,7 +85,7 @@ function Ingredients() {
       unit: "liter",
       notes: "",
     });
-    setEditingId(null);
+    setEditingIngredient(null);
     setShowForm(false);
   };
 
@@ -113,14 +128,12 @@ function Ingredients() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-800">
-                {editingId ? "Zutat bearbeiten" : "Neue Zutat"}
-              </h2>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <Modal
+          isOpen={showForm}
+          title={editingIngredient ? "Zutat bearbeiten" : "Neue Zutat"}
+          onClose={resetForm}
+        >
+          <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Name der Zutat *
@@ -227,28 +240,48 @@ function Ingredients() {
                     setFormData({ ...formData, notes: e.target.value })
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 resize-none"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Tags (only when editing) */}
+              {editingIngredient && (
+                <div className="border-t border-slate-200 pt-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Tags
+                  </label>
+                  <TagSelector entityType="ingredient" entityId={editingIngredient.id} />
+                </div>
+              )}
+
+              {/* Images (only when editing) */}
+              {editingIngredient && (
+                <div className="border-t border-slate-200 pt-4">
+                  <ImageUpload
+                    entityType="ingredient"
+                    entityId={editingIngredient.id}
+                    maxImages={3}
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t border-slate-200">
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
                 >
-                  {editingId ? "Speichern" : "Erstellen"}
+                  {editingIngredient ? "Speichern" : "Erstellen"}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   Abbrechen
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </Modal>
       )}
 
       {/* Empty State */}

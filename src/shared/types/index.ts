@@ -107,7 +107,7 @@ export interface Tag extends BaseEntity {
 // Tag Assignment
 export interface TagAssignment extends BaseEntity {
     tag_id: string;
-    entity_type: 'project' | 'product' | 'note' | 'recipe';
+    entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container';
     entity_id: string;
 }
 
