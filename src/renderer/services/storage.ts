@@ -4,7 +4,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
-    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient
+    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite
 } from '@/shared/types'
 
 const STORAGE_KEY = 'gurktaler_data'
@@ -24,6 +24,7 @@ interface AppData {
     byproducts: Byproduct[]
     containers: Container[]
     images: Image[]
+    favorites: Favorite[]
 }
 
 const defaultData: AppData = {
@@ -41,6 +42,7 @@ const defaultData: AppData = {
     byproducts: [],
     containers: [],
     images: [],
+    favorites: [],
 }
 
 // Load data from localStorage
@@ -287,6 +289,38 @@ export const images = {
         const data = loadData()
         data.images = data.images.filter(
             i => !(i.entity_type === entityType && i.entity_id === entityId)
+        )
+        saveData(data)
+    },
+}
+
+// Favorites
+export const favorites = {
+    getAll: (): Favorite[] => loadData().favorites.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+    getById: (id: string): Favorite | undefined => loadData().favorites.find(f => f.id === id),
+    getByEntity: (entityType: string, entityId: string): Favorite | undefined =>
+        loadData().favorites.find(f => f.entity_type === entityType && f.entity_id === entityId),
+    isFavorite: (entityType: string, entityId: string): boolean =>
+        loadData().favorites.some(f => f.entity_type === entityType && f.entity_id === entityId),
+    create: (favorite: Omit<Favorite, 'id' | 'created_at'>) => createEntity<Favorite>('favorites', favorite),
+    toggle: (entityType: string, entityId: string): boolean => {
+        const existing = loadData().favorites.find(
+            f => f.entity_type === entityType && f.entity_id === entityId
+        )
+        if (existing) {
+            deleteEntity<Favorite>('favorites', existing.id)
+            return false // Removed from favorites
+        } else {
+            createEntity<Favorite>('favorites', { entity_type: entityType, entity_id: entityId })
+            return true // Added to favorites
+        }
+    },
+    update: (id: string, updates: Partial<Favorite>) => updateEntity<Favorite>('favorites', id, updates),
+    delete: (id: string) => deleteEntity<Favorite>('favorites', id),
+    deleteByEntity: (entityType: string, entityId: string) => {
+        const data = loadData()
+        data.favorites = data.favorites.filter(
+            f => !(f.entity_type === entityType && f.entity_id === entityId)
         )
         saveData(data)
     },

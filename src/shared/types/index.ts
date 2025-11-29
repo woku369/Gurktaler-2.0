@@ -168,6 +168,13 @@ export interface Image extends BaseEntity {
     caption?: string;
 }
 
+// Favorite
+export interface Favorite extends BaseEntity {
+    entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container' | 'contact' | 'weblink';
+    entity_id: string;
+    sort_order?: number; // Optional: Für benutzerdefinierte Sortierung
+}
+
 // Export Format
 export interface DataExport {
     export_date: string;
@@ -187,5 +194,6 @@ export interface DataExport {
         byproducts: Byproduct[];
         containers: Container[];
         images: Image[];
+        favorites: Favorite[];
     };
 }
