@@ -20,12 +20,13 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 ### Implementiert ✅
 - **Projekt-Verwaltung**: Vollständiges CRUD, Status-Tracking, Tag-Zuordnung
 - **Produkt-Versionierung**: Hierarchische Struktur (X → X1 → X2), Archivierung mit Begründung
-- **Notizen & Chaosablage**: Quick-Entry, Markdown-Editor mit Live-Preview, Projekt-Zuordnung
-- **Kontakte**: Verwaltung mit Typen, Projekt-Verknüpfung mit Rollen
+- **Notizen & Chaosablage**: Quick-Entry, Markdown-Editor mit Live-Preview, Projekt-Zuordnung, Bild-Upload
+- **Kontakte**: Verwaltung mit Typen, Projekt-Verknüpfung mit Rollen, vCard-Import (Google Contacts)
 - **Weblinks & Recherche**: URL-Sammlung, Kategorisierung, Konkurrenz-Tracking
 - **Tag-System**: Flexible Kategorisierung mit Farben, Filter in allen Bereichen
+- **KI-Assistenten**: ChatGPT, Claude, Qwen & DeepSeek Integration für Recherche und Produktentwicklung
+- **Bild-Upload**: Vollständig integriert in Notizen & Produkte (Base64-Speicherung)
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
-- **Bild-Upload**: Komponente mit Drag & Drop (bereit für Integration)
 
 ### In Entwicklung 🔄
 - Rezeptur-Editor mit Zutaten-Verwaltung
@@ -33,6 +34,7 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - Git-Integration (aktuell manuell via JSON)
 
 ### Geplant 📋
+- Google Contacts OAuth Integration (Live-Sync)
 - Android-Companion-App (PWA)
 - Dashboard mit Statistiken
 - By-Products & Gebinde-Verwaltung
@@ -136,5 +138,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 0.4.0 (Phase 5-6 abgeschlossen)  
-**Letztes Update**: 28. November 2024
+**Aktuelle Version**: 0.5.0 (KI-Assistenten & vCard-Import)  
+**Letztes Update**: 29. November 2024

@@ -166,13 +166,15 @@
 
 ## Phase 8: Sync & Export (v0.8.x)
 
-| Status | Aufgabe           | Beschreibung           |
-| ------ | ----------------- | ---------------------- |
-| ✅     | JSON-Export       | Alle Daten exportieren |
-| ✅     | JSON-Import       | Daten importieren      |
-| ✅     | Settings-UI       | Export/Import Buttons  |
-| 📋     | Git-Integration   | Automatischer Sync     |
-| 📋     | Konflikt-Handling | Bei Sync-Konflikten    |
+| Status | Aufgabe                     | Beschreibung                        |
+| ------ | --------------------------- | ----------------------------------- |
+| ✅     | JSON-Export                 | Alle Daten exportieren              |
+| ✅     | JSON-Import                 | Daten importieren                   |
+| ✅     | Settings-UI                 | Export/Import Buttons               |
+| ✅     | vCard-Import                | Google Contacts importieren (.vcf)  |
+| 📋     | Google Contacts OAuth API   | Direkter Sync (für v0.9.x)          |
+| 📋     | Git-Integration             | Automatischer Sync                  |
+| 📋     | Konflikt-Handling           | Bei Sync-Konflikten                 |
 
 ---
 
@@ -207,6 +209,11 @@
 - [ ] Kostenkalkulation
 - [ ] Produktionsplanung
 - [ ] Mehrsprachigkeit (DE/EN)
+- [ ] **Google Contacts OAuth Integration** - Live-Sync statt manueller vCard-Import (geplant für v0.9.x)
+  - OAuth 2.0 Authentifizierung
+  - Google People API Integration
+  - Automatische Synchronisation
+  - Conflict Resolution bei Updates
 
 ---
 
@@ -216,4 +223,4 @@ Siehe [CHANGELOG.md](./CHANGELOG.md) für detaillierte Versionshistorie.
 
 ---
 
-_Letzte Aktualisierung: 28. November 2024_
+**Letzte Aktualisierung:** 29. November 2024

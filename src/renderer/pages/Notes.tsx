@@ -17,6 +17,7 @@ import {
   projects as projectsService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
+  images as imagesService,
 } from "@/renderer/services/storage";
 import type { Note, Project, Tag } from "@/shared/types";
 
@@ -332,6 +333,30 @@ function Notes() {
                 </div>
               </div>
               <h3 className="font-medium text-slate-800 mb-2">{note.title}</h3>
+
+              {(() => {
+                const noteImages = imagesService.getByEntity("note", note.id);
+                return (
+                  noteImages.length > 0 && (
+                    <div className="mb-3 flex gap-2 overflow-x-auto">
+                      {noteImages.slice(0, 3).map((img) => (
+                        <img
+                          key={img.id}
+                          src={img.data_url}
+                          alt={img.caption || ""}
+                          className="w-16 h-16 object-cover rounded border border-slate-200"
+                        />
+                      ))}
+                      {noteImages.length > 3 && (
+                        <div className="w-16 h-16 flex items-center justify-center bg-slate-100 rounded border border-slate-200 text-xs text-slate-500">
+                          +{noteImages.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )
+                );
+              })()}
+
               <div className="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none">
                 <ReactMarkdown>{note.content}</ReactMarkdown>
               </div>

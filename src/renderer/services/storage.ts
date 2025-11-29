@@ -4,7 +4,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
-    Weblink, Ingredient, Byproduct, Container
+    Weblink, Ingredient, Byproduct, Container, Image
 } from '@/shared/types'
 
 const STORAGE_KEY = 'gurktaler_data'
@@ -22,6 +22,7 @@ interface AppData {
     ingredients: Ingredient[]
     byproducts: Byproduct[]
     containers: Container[]
+    images: Image[]
 }
 
 const defaultData: AppData = {
@@ -37,6 +38,7 @@ const defaultData: AppData = {
     ingredients: [],
     byproducts: [],
     containers: [],
+    images: [],
 }
 
 // Load data from localStorage
@@ -246,4 +248,22 @@ export const ingredients = {
     create: (ingredient: Omit<Ingredient, 'id' | 'created_at'>) => createEntity<Ingredient>('ingredients', ingredient),
     update: (id: string, updates: Partial<Ingredient>) => updateEntity<Ingredient>('ingredients', id, updates),
     delete: (id: string) => deleteEntity<Ingredient>('ingredients', id),
+}
+
+// Images
+export const images = {
+    getAll: (): Image[] => loadData().images,
+    getById: (id: string): Image | undefined => loadData().images.find(i => i.id === id),
+    getByEntity: (entityType: string, entityId: string): Image[] =>
+        loadData().images.filter(i => i.entity_type === entityType && i.entity_id === entityId),
+    create: (image: Omit<Image, 'id' | 'created_at'>) => createEntity<Image>('images', image),
+    update: (id: string, updates: Partial<Image>) => updateEntity<Image>('images', id, updates),
+    delete: (id: string) => deleteEntity<Image>('images', id),
+    deleteByEntity: (entityType: string, entityId: string) => {
+        const data = loadData()
+        data.images = data.images.filter(
+            i => !(i.entity_type === entityType && i.entity_id === entityId)
+        )
+        saveData(data)
+    },
 }

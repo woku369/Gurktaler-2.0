@@ -1,80 +1,95 @@
-import { useState, useRef } from 'react'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { useState, useRef, useEffect } from "react";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { images as imagesService } from "@/renderer/services/storage";
+import type { Image } from "@/shared/types";
 
 interface ImageUploadProps {
-  entityType: 'project' | 'product' | 'note' | 'recipe'
-  entityId: string
-  maxImages?: number
-  onUpload?: () => void
+  entityType: "project" | "product" | "note" | "recipe";
+  entityId: string;
+  maxImages?: number;
+  onUpload?: () => void;
 }
 
-interface UploadedImage {
-  id: string
-  dataUrl: string
-  caption?: string
-  fileName: string
-}
+export default function ImageUpload({
+  entityType,
+  entityId,
+  maxImages = 5,
+  onUpload,
+}: ImageUploadProps) {
+  const [images, setImages] = useState<Image[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-export default function ImageUpload({ entityType, entityId, maxImages = 5, onUpload }: ImageUploadProps) {
-  const [images, setImages] = useState<UploadedImage[]>([])
-  const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  // Load existing images on mount
+  useEffect(() => {
+    loadImages();
+  }, [entityId]);
+
+  const loadImages = () => {
+    const existingImages = imagesService.getByEntity(entityType, entityId);
+    setImages(existingImages);
+  };
 
   const handleFileSelect = async (files: FileList | null) => {
-    if (!files) return
+    if (!files) return;
 
-    const newImages: UploadedImage[] = []
-    
-    for (let i = 0; i < Math.min(files.length, maxImages - images.length); i++) {
-      const file = files[i]
-      
+    const filesToProcess = Math.min(files.length, maxImages - images.length);
+    let processedCount = 0;
+
+    for (let i = 0; i < filesToProcess; i++) {
+      const file = files[i];
+
       // Only accept images
-      if (!file.type.startsWith('image/')) continue
+      if (!file.type.startsWith("image/")) continue;
 
       // Convert to base64 data URL
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const dataUrl = e.target?.result as string
-        newImages.push({
-          id: `${Date.now()}_${i}`,
-          dataUrl,
-          fileName: file.name,
-          caption: '',
-        })
+        const dataUrl = e.target?.result as string;
 
-        if (newImages.length === Math.min(files.length, maxImages - images.length)) {
-          setImages([...images, ...newImages])
-          onUpload?.()
+        // Save to storage
+        imagesService.create({
+          entity_type: entityType,
+          entity_id: entityId,
+          data_url: dataUrl,
+          file_name: file.name,
+          caption: "",
+        });
+
+        processedCount++;
+        if (processedCount === filesToProcess) {
+          loadImages();
+          onUpload?.();
         }
-      }
-      reader.readAsDataURL(file)
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    handleFileSelect(e.dataTransfer.files)
-  }
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    setIsDragging(true);
+  };
 
   const handleDragLeave = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+  };
 
   const removeImage = (id: string) => {
-    setImages(images.filter(img => img.id !== id))
-  }
+    imagesService.delete(id);
+    loadImages();
+  };
 
   const updateCaption = (id: string, caption: string) => {
-    setImages(images.map(img => 
-      img.id === id ? { ...img, caption } : img
-    ))
-  }
+    imagesService.update(id, { caption });
+    loadImages();
+  };
 
   return (
     <div>
@@ -91,8 +106,8 @@ export default function ImageUpload({ entityType, entityId, maxImages = 5, onUpl
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
             isDragging
-              ? 'border-gurktaler-500 bg-gurktaler-50'
-              : 'border-slate-300 hover:border-slate-400 bg-slate-50'
+              ? "border-gurktaler-500 bg-gurktaler-50"
+              : "border-slate-300 hover:border-slate-400 bg-slate-50"
           }`}
         >
           <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
@@ -117,12 +132,15 @@ export default function ImageUpload({ entityType, entityId, maxImages = 5, onUpl
       {images.length > 0 && (
         <div className="mt-4 space-y-3">
           {images.map((image) => (
-            <div key={image.id} className="relative border border-slate-200 rounded-lg p-3 bg-white">
+            <div
+              key={image.id}
+              className="relative border border-slate-200 rounded-lg p-3 bg-white"
+            >
               <div className="flex gap-3">
                 <div className="flex-shrink-0 w-20 h-20 bg-slate-100 rounded overflow-hidden">
                   <img
-                    src={image.dataUrl}
-                    alt={image.caption || 'Hochgeladenes Bild'}
+                    src={image.data_url}
+                    alt={image.caption || "Hochgeladenes Bild"}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -134,7 +152,9 @@ export default function ImageUpload({ entityType, entityId, maxImages = 5, onUpl
                     placeholder="Bildunterschrift (optional)"
                     className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-gurktaler-500"
                   />
-                  <p className="text-xs text-slate-500 mt-1">{image.fileName}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {image.file_name}
+                  </p>
                 </div>
                 <button
                   onClick={() => removeImage(image.id)}
@@ -163,5 +183,5 @@ export default function ImageUpload({ entityType, entityId, maxImages = 5, onUpl
           - or cloud storage (for sync across devices)
       */}
     </div>
-  )
+  );
 }

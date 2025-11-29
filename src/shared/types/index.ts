@@ -136,9 +136,10 @@ export interface Container extends BaseEntity {
 
 // Image
 export interface Image extends BaseEntity {
-    entity_type: string;
+    entity_type: 'project' | 'product' | 'note' | 'recipe';
     entity_id: string;
-    file_path: string;
+    data_url: string; // Base64 encoded image
+    file_name: string;
     caption?: string;
 }
 

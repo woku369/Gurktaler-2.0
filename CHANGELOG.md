@@ -14,7 +14,59 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 - Rezeptur-Verwaltung mit Zutaten
 - Volltext-Suche über alle Bereiche
 - Git-Integration für automatischen Sync
+- Google Contacts OAuth Integration (Live-Sync)
 - Android-PWA
+
+---
+
+## [0.5.0] - 2024-11-29
+
+### Hinzugefügt
+
+- **KI-Assistenten Integration**:
+  - Neuer Sidebar-Tab "KI-Assistent" mit Chat-Interface
+  - Support für 4 AI-Provider: ChatGPT (OpenAI), Claude (Anthropic), Qwen (Alibaba), DeepSeek
+  - Chat-Verlauf mit User/Assistant Messages
+  - Provider-Auswahl per Dropdown
+  - API-Key Management in Settings mit Verschlüsselung
+  - Show/Hide Toggle für API-Keys
+  - Fehlerbehandlung mit detaillierten Meldungen
+  - Tastatur-Shortcuts (Enter = Senden, Shift+Enter = Neue Zeile)
+- **Google Contacts vCard Import**:
+  - vCard Parser (.vcf) für Google Contacts Export
+  - ContactImportDialog mit selektiver Auswahl
+  - Automatische Duplikat-Erkennung (E-Mail & Name)
+  - Typ-Zuordnung beim Import (Lieferant/Partner/Kunde/Sonstiges)
+  - "Alle auswählen" Toggle
+  - Duplikate ein-/ausblenden
+  - Import-Counter und Status-Feedback
+- **Bild-Upload vollständig integriert**:
+  - ImageUpload-Komponente mit Persistenz in LocalStorage
+  - Base64-Speicherung (Git-freundlich)
+  - Integration in NoteForm und ProductForm
+  - Bild-Thumbnails in Notes.tsx und Products.tsx
+  - Max. 5 Bilder pro Produkt, unbegrenzt für Notizen
+  - "+X mehr" Anzeige bei vielen Bildern
+
+### Verbessert
+
+- Settings-Seite erweitert um:
+  - KI-Assistenten API-Key Verwaltung
+  - vCard Import-Button mit Hilfe-Text
+  - Links zu API-Provider-Portalen
+- Layout: Bot-Icon für KI-Assistent in Sidebar
+- Type-Safety für AI Provider und Messages
+
+### Technisch
+
+- Neue Services:
+  - `aiAssistant.ts` für AI-API-Calls und Key-Management
+  - `vcardParser.ts` für Google Contacts Import
+- Neue Komponenten:
+  - `AIChat.tsx` - Chat-Interface
+  - `ContactImportDialog.tsx` - Import-Auswahl-Dialog
+- Neue Page: `AIAssistant.tsx`
+- API-Key Storage mit Base64-Encoding in LocalStorage
 
 ---
 

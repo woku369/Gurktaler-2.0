@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TagSelector from "./TagSelector";
+import ImageUpload from "./ImageUpload";
 import type { Note, Project } from "@/shared/types";
 
 type NoteType = "idea" | "note" | "todo" | "research";
@@ -182,6 +183,13 @@ export default function NoteForm({
             Tags
           </label>
           <TagSelector entityType="note" entityId={note.id} />
+        </div>
+      )}
+
+      {/* Images */}
+      {note && (
+        <div>
+          <ImageUpload entityType="note" entityId={note.id} maxImages={3} />
         </div>
       )}
 
