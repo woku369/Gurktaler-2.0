@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Search, FolderKanban, Package, StickyNote, Users, Globe, ExternalLink } from 'lucide-react'
+import { Search, FolderKanban, Package, StickyNote, Users, Globe, ExternalLink, FlaskConical, Beaker, Archive } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import {
   projects as projectsService,
@@ -7,11 +7,14 @@ import {
   notes as notesService,
   contacts as contactsService,
   weblinks as weblinksService,
+  recipes as recipesService,
+  ingredients as ingredientsService,
+  containers as containersService,
 } from '@/renderer/services/storage'
-import type { Project, Product, Note, Contact, Weblink } from '@/shared/types'
+import type { Project, Product, Note, Contact, Weblink, Recipe, Ingredient, Container } from '@/shared/types'
 
 type SearchResult = {
-  type: 'project' | 'product' | 'note' | 'contact' | 'weblink'
+  type: 'project' | 'product' | 'note' | 'contact' | 'weblink' | 'recipe' | 'ingredient' | 'container'
   id: string
   title: string
   subtitle?: string
@@ -136,6 +139,64 @@ export default function GlobalSearch() {
       }
     })
 
+    // Search Recipes
+    const recipes = recipesService.getAll()
+    recipes.forEach((recipe: Recipe) => {
+      if (
+        recipe.name.toLowerCase().includes(lowerQuery) ||
+        recipe.instructions?.toLowerCase().includes(lowerQuery) ||
+        recipe.notes?.toLowerCase().includes(lowerQuery)
+      ) {
+        const typeLabels = { macerate: 'Mazerat', distillate: 'Destillat', blend: 'Ausmischung' }
+        allResults.push({
+          type: 'recipe',
+          id: recipe.id,
+          title: recipe.name,
+          subtitle: typeLabels[recipe.type],
+          description: recipe.instructions,
+          metadata: recipe.yield_amount ? `Ausbeute: ${recipe.yield_amount} ${recipe.yield_unit || 'ml'}` : undefined,
+        })
+      }
+    })
+
+    // Search Ingredients
+    const ingredients = ingredientsService.getAll()
+    ingredients.forEach((ingredient: Ingredient) => {
+      if (
+        ingredient.name.toLowerCase().includes(lowerQuery) ||
+        ingredient.category?.toLowerCase().includes(lowerQuery) ||
+        ingredient.notes?.toLowerCase().includes(lowerQuery)
+      ) {
+        allResults.push({
+          type: 'ingredient',
+          id: ingredient.id,
+          title: ingredient.name,
+          subtitle: ingredient.category,
+          description: ingredient.notes,
+          metadata: ingredient.alcohol_percentage ? `${ingredient.alcohol_percentage}% vol.` : undefined,
+        })
+      }
+    })
+
+    // Search Containers
+    const containers = containersService.getAll()
+    containers.forEach((container: Container) => {
+      if (
+        container.name.toLowerCase().includes(lowerQuery) ||
+        container.notes?.toLowerCase().includes(lowerQuery)
+      ) {
+        const typeLabels = { bottle: 'Flasche', label: 'Etikett', cap: 'Verschluss', box: 'Verpackung', other: 'Sonstiges' }
+        allResults.push({
+          type: 'container',
+          id: container.id,
+          title: container.name,
+          subtitle: typeLabels[container.type],
+          description: container.notes,
+          metadata: container.volume ? `${container.volume} ml` : undefined,
+        })
+      }
+    })
+
     setResults(allResults)
   }
 
@@ -151,6 +212,12 @@ export default function GlobalSearch() {
         return Users
       case 'weblink':
         return Globe
+      case 'recipe':
+        return FlaskConical
+      case 'ingredient':
+        return Beaker
+      case 'container':
+        return Archive
       default:
         return Search
     }
@@ -168,6 +235,12 @@ export default function GlobalSearch() {
         return 'Kontakt'
       case 'weblink':
         return 'Weblink'
+      case 'recipe':
+        return 'Rezeptur'
+      case 'ingredient':
+        return 'Zutat'
+      case 'container':
+        return 'Gebinde'
       default:
         return type
     }
@@ -185,6 +258,12 @@ export default function GlobalSearch() {
         return 'bg-purple-100 text-purple-700'
       case 'weblink':
         return 'bg-pink-100 text-pink-700'
+      case 'recipe':
+        return 'bg-gurktaler-100 text-gurktaler-700'
+      case 'ingredient':
+        return 'bg-teal-100 text-teal-700'
+      case 'container':
+        return 'bg-orange-100 text-orange-700'
       default:
         return 'bg-gray-100 text-gray-700'
     }
@@ -209,6 +288,15 @@ export default function GlobalSearch() {
           window.open(result.subtitle, '_blank')
         }
         break
+      case 'recipe':
+        navigate('/recipes')
+        break
+      case 'ingredient':
+        navigate('/ingredients')
+        break
+      case 'container':
+        navigate('/containers')
+        break
     }
   }
 
@@ -217,7 +305,7 @@ export default function GlobalSearch() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Globale Suche</h1>
-          <p className="text-gray-600">Durchsuche alle Bereiche: Projekte, Produkte, Notizen, Kontakte und Weblinks</p>
+          <p className="text-gray-600">Durchsuche alle Bereiche: Projekte, Produkte, Notizen, Kontakte, Weblinks, Rezepturen, Zutaten und Gebinde</p>
         </div>
 
         {/* Search Input */}
@@ -300,13 +388,16 @@ export default function GlobalSearch() {
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Gib einen Suchbegriff ein</h3>
             <p className="text-gray-500">Die Suche durchsucht automatisch alle Bereiche deiner Daten</p>
             
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-4 max-w-2xl mx-auto">
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
               {[
                 { icon: FolderKanban, label: 'Projekte', color: 'bg-blue-50 text-blue-600' },
                 { icon: Package, label: 'Produkte', color: 'bg-green-50 text-green-600' },
                 { icon: StickyNote, label: 'Notizen', color: 'bg-yellow-50 text-yellow-600' },
                 { icon: Users, label: 'Kontakte', color: 'bg-purple-50 text-purple-600' },
                 { icon: Globe, label: 'Weblinks', color: 'bg-pink-50 text-pink-600' },
+                { icon: FlaskConical, label: 'Rezepturen', color: 'bg-gurktaler-50 text-gurktaler-600' },
+                { icon: Beaker, label: 'Zutaten', color: 'bg-teal-50 text-teal-600' },
+                { icon: Archive, label: 'Gebinde', color: 'bg-orange-50 text-orange-600' },
               ].map((item) => (
                 <div key={item.label} className={`p-4 rounded-lg ${item.color}`}>
                   <item.icon className="w-8 h-8 mx-auto mb-2" />

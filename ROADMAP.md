@@ -157,7 +157,7 @@
 
 | Status | Aufgabe        | Beschreibung                                      |
 | ------ | -------------- | ------------------------------------------------- |
-| 📋     | Volltext-Suche | Über alle Bereiche                                |
+| ✅     | Volltext-Suche | Über alle 8 Bereiche (inkl. Rezepturen, Zutaten, Gebinde)|
 | ✅     | Tag-System     | Vollständig implementiert                         |
 | ✅     | Filter         | Tag-Filter in allen Views (inkl. Recipes, Gebinde)|
 | 📋     | Favoriten      | Schnellzugriff                                    |
