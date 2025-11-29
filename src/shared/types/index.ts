@@ -100,6 +100,13 @@ export interface Contact extends BaseEntity {
     notes?: string;
 }
 
+// Contact-Project Assignment (junction table)
+export interface ContactProjectAssignment extends BaseEntity {
+    contact_id: string;
+    project_id: string;
+    role?: string; // Optional: role description like "Hauptlieferant", "Berater", etc.
+}
+
 // Weblink / Research
 export interface Weblink extends BaseEntity {
     project_id?: string;
@@ -149,6 +156,7 @@ export interface DataExport {
         tags: Tag[];
         tag_assignments: TagAssignment[];
         contacts: Contact[];
+        contact_project_assignments: ContactProjectAssignment[];
         weblinks: Weblink[];
         byproducts: Byproduct[];
         containers: Container[];

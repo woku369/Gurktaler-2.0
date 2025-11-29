@@ -3,7 +3,7 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import type {
-    Project, Product, Recipe, Note, Tag, TagAssignment, Contact,
+    Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
     Weblink, Ingredient, Byproduct, Container
 } from '@/shared/types'
 
@@ -17,6 +17,7 @@ interface AppData {
     tags: Tag[]
     tag_assignments: TagAssignment[]
     contacts: Contact[]
+    contact_project_assignments: ContactProjectAssignment[]
     weblinks: Weblink[]
     ingredients: Ingredient[]
     byproducts: Byproduct[]
@@ -31,6 +32,7 @@ const defaultData: AppData = {
     tags: [],
     tag_assignments: [],
     contacts: [],
+    contact_project_assignments: [],
     weblinks: [],
     ingredients: [],
     byproducts: [],
@@ -211,6 +213,27 @@ export const tagAssignments = {
         const data = loadData()
         data.tag_assignments = data.tag_assignments.filter(
             ta => !(ta.entity_type === entityType && ta.entity_id === entityId)
+        )
+        saveData(data)
+    },
+}
+
+// Contact-Project Assignments
+export const contactProjectAssignments = {
+    getAll: (): ContactProjectAssignment[] => loadData().contact_project_assignments,
+    getByContact: (contactId: string): ContactProjectAssignment[] =>
+        loadData().contact_project_assignments.filter(cpa => cpa.contact_id === contactId),
+    getByProject: (projectId: string): ContactProjectAssignment[] =>
+        loadData().contact_project_assignments.filter(cpa => cpa.project_id === projectId),
+    create: (assignment: Omit<ContactProjectAssignment, 'id' | 'created_at'>) => 
+        createEntity<ContactProjectAssignment>('contact_project_assignments', assignment),
+    update: (id: string, updates: Partial<ContactProjectAssignment>) => 
+        updateEntity<ContactProjectAssignment>('contact_project_assignments', id, updates),
+    delete: (id: string) => deleteEntity<ContactProjectAssignment>('contact_project_assignments', id),
+    deleteByContact: (contactId: string) => {
+        const data = loadData()
+        data.contact_project_assignments = data.contact_project_assignments.filter(
+            cpa => cpa.contact_id !== contactId
         )
         saveData(data)
     },

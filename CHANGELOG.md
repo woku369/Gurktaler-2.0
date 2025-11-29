@@ -12,9 +12,47 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 ### Geplant
 
 - Rezeptur-Verwaltung mit Zutaten
-- Weblinks & Recherche
-- Volltext-Suche
-- Bild-Upload für Produkte/Notizen
+- Volltext-Suche über alle Bereiche
+- Git-Integration für automatischen Sync
+- Android-PWA
+
+---
+
+## [0.4.0] - 2024-11-28
+
+### Hinzugefügt
+
+- **Tag-System vollständig implementiert**:
+  - TagSelector-Komponente für Projekte, Produkte und Notizen
+  - Tag-Anzeige in allen Listen-Views
+  - Tag-Filter in Projects, Products und Notes
+  - Tag-Verwaltungsseite mit Farbauswahl
+- **Weblinks & Recherche**:
+  - Vollständige Weblink-Verwaltung
+  - Typen: Konkurrenz, Lieferant, Recherche, Sonstiges
+  - Projekt-Zuordnung möglich
+  - Domain-Extraktion aus URLs
+- **Kontakt-Projekt-Verknüpfung**:
+  - ContactProjectAssignment-Junction-Table
+  - ContactProjectSelector-Komponente
+  - Rollenbasierte Zuordnung (z.B. "Hauptlieferant")
+  - Integration in ContactForm
+- **Rich-Text-Editor für Notizen**:
+  - Markdown-Unterstützung mit Live-Preview
+  - Edit/Preview-Toggle
+  - Rendering mit react-markdown
+  - Prose-Styling für optimale Lesbarkeit
+- **Bild-Upload-Infrastruktur**:
+  - ImageUpload-Komponente
+  - Drag & Drop Support
+  - Bildunterschriften
+  - Base64-Speicherung (bereit für File-System-Integration)
+
+### Verbessert
+
+- Notizen können nachträglich Projekten zugeordnet werden
+- Markdown-Rendering in Notiz-Karten
+- Bessere Visualisierung von Zuordnungen
 
 ---
 

@@ -1,0 +1,167 @@
+import { useState, useRef } from 'react'
+import { Upload, X, Image as ImageIcon } from 'lucide-react'
+
+interface ImageUploadProps {
+  entityType: 'project' | 'product' | 'note' | 'recipe'
+  entityId: string
+  maxImages?: number
+  onUpload?: () => void
+}
+
+interface UploadedImage {
+  id: string
+  dataUrl: string
+  caption?: string
+  fileName: string
+}
+
+export default function ImageUpload({ entityType, entityId, maxImages = 5, onUpload }: ImageUploadProps) {
+  const [images, setImages] = useState<UploadedImage[]>([])
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files) return
+
+    const newImages: UploadedImage[] = []
+    
+    for (let i = 0; i < Math.min(files.length, maxImages - images.length); i++) {
+      const file = files[i]
+      
+      // Only accept images
+      if (!file.type.startsWith('image/')) continue
+
+      // Convert to base64 data URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string
+        newImages.push({
+          id: `${Date.now()}_${i}`,
+          dataUrl,
+          fileName: file.name,
+          caption: '',
+        })
+
+        if (newImages.length === Math.min(files.length, maxImages - images.length)) {
+          setImages([...images, ...newImages])
+          onUpload?.()
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    handleFileSelect(e.dataTransfer.files)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragging(false)
+  }
+
+  const removeImage = (id: string) => {
+    setImages(images.filter(img => img.id !== id))
+  }
+
+  const updateCaption = (id: string, caption: string) => {
+    setImages(images.map(img => 
+      img.id === id ? { ...img, caption } : img
+    ))
+  }
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-2">
+        Bilder ({images.length}/{maxImages})
+      </label>
+
+      {/* Upload Area */}
+      {images.length < maxImages && (
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => fileInputRef.current?.click()}
+          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+            isDragging
+              ? 'border-gurktaler-500 bg-gurktaler-50'
+              : 'border-slate-300 hover:border-slate-400 bg-slate-50'
+          }`}
+        >
+          <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+          <p className="text-sm text-slate-600 mb-1">
+            Bilder hochladen oder hierher ziehen
+          </p>
+          <p className="text-xs text-slate-500">
+            PNG, JPG, GIF bis 5MB pro Bild
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+          />
+        </div>
+      )}
+
+      {/* Image Preview Grid */}
+      {images.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {images.map((image) => (
+            <div key={image.id} className="relative border border-slate-200 rounded-lg p-3 bg-white">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 w-20 h-20 bg-slate-100 rounded overflow-hidden">
+                  <img
+                    src={image.dataUrl}
+                    alt={image.caption || 'Hochgeladenes Bild'}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={image.caption}
+                    onChange={(e) => updateCaption(image.id, e.target.value)}
+                    placeholder="Bildunterschrift (optional)"
+                    className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-gurktaler-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">{image.fileName}</p>
+                </div>
+                <button
+                  onClick={() => removeImage(image.id)}
+                  className="flex-shrink-0 p-1 hover:bg-red-50 rounded transition-colors"
+                  title="Bild entfernen"
+                >
+                  <X className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Info Text */}
+      {images.length === 0 && (
+        <p className="text-xs text-slate-500 mt-2">
+          <ImageIcon className="w-3 h-3 inline mr-1" />
+          Noch keine Bilder hochgeladen
+        </p>
+      )}
+
+      {/* Note: In a real implementation, images would be saved to:
+          - localStorage as base64 (current simple approach)
+          - or file system paths (better for Electron app)
+          - or cloud storage (for sync across devices)
+      */}
+    </div>
+  )
+}

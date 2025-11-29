@@ -18,17 +18,24 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 ## Features
 
 ### Implementiert ✅
-- [ ] *Noch keine Features implementiert - Projekt in Entwicklung*
+- **Projekt-Verwaltung**: Vollständiges CRUD, Status-Tracking, Tag-Zuordnung
+- **Produkt-Versionierung**: Hierarchische Struktur (X → X1 → X2), Archivierung mit Begründung
+- **Notizen & Chaosablage**: Quick-Entry, Markdown-Editor mit Live-Preview, Projekt-Zuordnung
+- **Kontakte**: Verwaltung mit Typen, Projekt-Verknüpfung mit Rollen
+- **Weblinks & Recherche**: URL-Sammlung, Kategorisierung, Konkurrenz-Tracking
+- **Tag-System**: Flexible Kategorisierung mit Farben, Filter in allen Bereichen
+- **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
+- **Bild-Upload**: Komponente mit Drag & Drop (bereit für Integration)
+
+### In Entwicklung 🔄
+- Rezeptur-Editor mit Zutaten-Verwaltung
+- Volltext-Suche über alle Bereiche
+- Git-Integration (aktuell manuell via JSON)
 
 ### Geplant 📋
-- Projekt-Dashboard mit Statusübersicht
-- Produkt-Versionierung (X → X1 → X2)
-- Rezeptur-Editor mit Zutaten-Verwaltung
-- Chaosablage für schnelle Notizen
-- Tag-System für flexible Kategorisierung
-- Volltext-Suche
-- Git-basierte Datensynchronisation
 - Android-Companion-App (PWA)
+- Dashboard mit Statistiken
+- By-Products & Gebinde-Verwaltung
 
 ## Tech-Stack
 
@@ -129,5 +136,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 0.1.0 (Entwicklungsstart)  
-**Letztes Update**: 25. November 2024
+**Aktuelle Version**: 0.4.0 (Phase 5-6 abgeschlossen)  
+**Letztes Update**: 28. November 2024

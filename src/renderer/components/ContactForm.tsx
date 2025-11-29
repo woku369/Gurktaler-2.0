@@ -1,34 +1,39 @@
-import { useState, FormEvent } from 'react'
-import type { Contact } from '@/shared/types'
+import { useState, FormEvent } from "react";
+import ContactProjectSelector from "./ContactProjectSelector";
+import type { Contact } from "@/shared/types";
 
 interface ContactFormProps {
-  contact?: Contact
-  onSubmit: (data: Omit<Contact, 'id' | 'created_at' | 'updated_at'>) => void
-  onCancel: () => void
+  contact?: Contact;
+  onSubmit: (data: Omit<Contact, "id" | "created_at" | "updated_at">) => void;
+  onCancel: () => void;
 }
 
 const typeOptions = [
-  { value: 'supplier', label: 'Lieferant' },
-  { value: 'partner', label: 'Partner' },
-  { value: 'customer', label: 'Kunde' },
-  { value: 'other', label: 'Sonstiges' },
-]
+  { value: "supplier", label: "Lieferant" },
+  { value: "partner", label: "Partner" },
+  { value: "customer", label: "Kunde" },
+  { value: "other", label: "Sonstiges" },
+];
 
-export default function ContactForm({ contact, onSubmit, onCancel }: ContactFormProps) {
-  const [name, setName] = useState(contact?.name || '')
-  const [type, setType] = useState(contact?.type || 'supplier')
-  const [company, setCompany] = useState(contact?.company || '')
-  const [email, setEmail] = useState(contact?.email || '')
-  const [phone, setPhone] = useState(contact?.phone || '')
-  const [address, setAddress] = useState(contact?.address || '')
-  const [notes, setNotes] = useState(contact?.notes || '')
+export default function ContactForm({
+  contact,
+  onSubmit,
+  onCancel,
+}: ContactFormProps) {
+  const [name, setName] = useState(contact?.name || "");
+  const [type, setType] = useState(contact?.type || "supplier");
+  const [company, setCompany] = useState(contact?.company || "");
+  const [email, setEmail] = useState(contact?.email || "");
+  const [phone, setPhone] = useState(contact?.phone || "");
+  const [address, setAddress] = useState(contact?.address || "");
+  const [notes, setNotes] = useState(contact?.notes || "");
 
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!name.trim()) {
-      alert('Bitte Namen eingeben')
-      return
+      alert("Bitte Namen eingeben");
+      return;
     }
 
     onSubmit({
@@ -39,8 +44,8 @@ export default function ContactForm({ contact, onSubmit, onCancel }: ContactForm
       phone: phone.trim() || undefined,
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
-    })
-  }
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -147,13 +152,20 @@ export default function ContactForm({ contact, onSubmit, onCancel }: ContactForm
         />
       </div>
 
+      {/* Project Assignments */}
+      {contact && (
+        <div>
+          <ContactProjectSelector contactId={contact.id} />
+        </div>
+      )}
+
       {/* Buttons */}
       <div className="flex gap-3 pt-4">
         <button
           type="submit"
           className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
         >
-          {contact ? 'Speichern' : 'Erstellen'}
+          {contact ? "Speichern" : "Erstellen"}
         </button>
         <button
           type="button"
@@ -164,5 +176,5 @@ export default function ContactForm({ contact, onSubmit, onCancel }: ContactForm
         </button>
       </div>
     </form>
-  )
+  );
 }

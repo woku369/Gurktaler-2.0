@@ -119,9 +119,9 @@
 | ✅     | Notiz-Liste       | Chronologisch/Nach Tags        |
 | ✅     | Notiz-Typen       | Idee, Notiz, TODO, Recherche   |
 | ✅     | Filter-Tabs       | Alle, Chaosablage, Mit Projekt |
-| 📋     | Projekt-Zuordnung | Nachträgliches Zuordnen        |
-| 📋     | Rich-Text-Editor  | Formatierte Notizen            |
-| 📋     | Bild-Upload       | Bilder zu Notizen              |
+| ✅     | Projekt-Zuordnung | Nachträgliches Zuordnen        |
+| ✅     | Rich-Text-Editor  | Markdown mit Live-Preview      |
+| ✅     | Bild-Upload       | Komponente bereit              |
 
 ---
 
@@ -131,8 +131,8 @@
 
 | Status | Aufgabe            | Beschreibung           |
 | ------ | ------------------ | ---------------------- |
-| 📋     | Webseiten-Sammlung | URL + Screenshot/Notiz |
-| 📋     | Marktbegleiter     | Konkurrenzprodukte     |
+| ✅     | Webseiten-Sammlung | URL + Notiz/Kategorien |
+| ✅     | Marktbegleiter     | Konkurrenzprodukte     |
 | 📋     | Dokumente          | PDF-Ablage             |
 
 ### Kontakte
@@ -142,7 +142,7 @@
 | ✅     | Kontakt-Verwaltung  | Name, Firma, Notizen      |
 | ✅     | Kontakt-Typen       | Lieferant, Partner, Kunde |
 | ✅     | Filter nach Typ     | Schnellfilter             |
-| 📋     | Kontakt-Verknüpfung | Zu Projekten zuordnen     |
+| ✅     | Kontakt-Verknüpfung | Zu Projekten zuordnen     |
 
 ### By-Products
 
@@ -158,8 +158,8 @@
 | Status | Aufgabe        | Beschreibung             |
 | ------ | -------------- | ------------------------ |
 | 📋     | Volltext-Suche | Über alle Bereiche       |
-| 📋     | Tag-System     | Flexible Kategorisierung |
-| 📋     | Filter         | Kombinierte Filter       |
+| ✅     | Tag-System     | Vollständig implementiert|
+| ✅     | Filter         | Tag-Filter in allen Views|
 | 📋     | Favoriten      | Schnellzugriff           |
 
 ---
@@ -216,4 +216,4 @@ Siehe [CHANGELOG.md](./CHANGELOG.md) für detaillierte Versionshistorie.
 
 ---
 
-_Letzte Aktualisierung: 25. November 2024_
+_Letzte Aktualisierung: 28. November 2024_

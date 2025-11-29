@@ -10,15 +10,16 @@
         "dev": "vite",
         "build": "tsc && vite build && electron-builder",
         "preview": "vite preview",
-        "electron:dev": "concurrently \"vite\" \"electron .\"",
+        "electron:dev": "vite",
         "lint": "eslint src --ext ts,tsx"
     },
     "dependencies": {
+        "date-fns": "^2.30.0",
+        "lucide-react": "^0.294.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
+        "react-markdown": "^10.1.0",
         "react-router-dom": "^6.20.0",
-        "lucide-react": "^0.294.0",
-        "date-fns": "^2.30.0",
         "uuid": "^9.0.1"
     },
     "devDependencies": {
@@ -36,7 +37,8 @@
         "tailwindcss": "^3.3.6",
         "typescript": "^5.3.2",
         "vite": "^5.0.4",
-        "vite-plugin-electron": "^0.15.4"
+        "vite-plugin-electron": "^0.15.6",
+        "vite-plugin-electron-renderer": "^0.14.6"
     },
     "build": {
         "appId": "com.gurktaler.zweipunktnull",
