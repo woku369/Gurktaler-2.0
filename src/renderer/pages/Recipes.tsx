@@ -11,10 +11,12 @@ import {
 import {
   recipes as recipesService,
   products as productsService,
+  recipeIngredients as recipeIngredientsService,
+  ingredients as ingredientsService,
 } from "@/renderer/services/storage";
 import RecipeForm from "@/renderer/components/RecipeForm";
 import Modal from "@/renderer/components/Modal";
-import type { Recipe, Product } from "@/shared/types";
+import type { Recipe, Product, RecipeIngredient, Ingredient } from "@/shared/types";
 
 const typeIcons = {
   macerate: Droplet,
@@ -37,6 +39,8 @@ const typeColors = {
 function Recipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [recipeIngredients, setRecipeIngredients] = useState<RecipeIngredient[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
@@ -48,6 +52,8 @@ function Recipes() {
   const loadData = () => {
     setRecipes(recipesService.getAll());
     setProducts(productsService.getAll());
+    setRecipeIngredients(recipeIngredientsService.getAll());
+    setIngredients(ingredientsService.getAll());
   };
 
   const handleSubmit = (
@@ -220,6 +226,27 @@ function Recipes() {
                 <div className="mb-2">
                   <span className="text-xs text-slate-500">
                     🔗 {product.name}
+                  </span>
+                </div>
+              )}
+
+              {(() => {
+                const ingredientCount = recipeIngredients.filter(
+                  (ri) => ri.recipe_id === recipe.id
+                ).length;
+                return ingredientCount > 0 ? (
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-gurktaler-600">
+                      📋 {ingredientCount} Zutat{ingredientCount !== 1 ? "en" : ""}
+                    </span>
+                  </div>
+                ) : null;
+              })()}
+
+              {recipe.yield_amount && (
+                <div className="mb-2">
+                  <span className="text-xs text-slate-600">
+                    ⚗️ Ausbeute: {recipe.yield_amount} {recipe.yield_unit || "ml"}
                   </span>
                 </div>
               )}

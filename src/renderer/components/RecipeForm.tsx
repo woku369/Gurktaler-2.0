@@ -1,6 +1,8 @@
 import { useState, FormEvent, useEffect } from "react";
 import { products as productsService } from "@/renderer/services/storage";
 import RecipeIngredientEditor from "./RecipeIngredientEditor";
+import ImageUpload from "./ImageUpload";
+import TagSelector from "./TagSelector";
 import type { Recipe, RecipeType, Product } from "@/shared/types";
 
 interface RecipeFormProps {
@@ -197,6 +199,23 @@ export default function RecipeForm({
       {recipe && (
         <div className="border-t border-slate-200 pt-6">
           <RecipeIngredientEditor recipeId={recipe.id} />
+        </div>
+      )}
+
+      {/* Tags (only when editing) */}
+      {recipe && (
+        <div className="border-t border-slate-200 pt-6">
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Tags
+          </label>
+          <TagSelector entityType="recipe" entityId={recipe.id} />
+        </div>
+      )}
+
+      {/* Images (only when editing) */}
+      {recipe && (
+        <div className="border-t border-slate-200 pt-6">
+          <ImageUpload entityType="recipe" entityId={recipe.id} maxImages={5} />
         </div>
       )}
 
