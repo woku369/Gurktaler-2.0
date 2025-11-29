@@ -130,6 +130,7 @@ function Recipes() {
       {/* Recipe Form Modal */}
       {showForm && (
         <Modal
+          isOpen={showForm}
           title={editingRecipe ? "Rezeptur bearbeiten" : "Neue Rezeptur"}
           onClose={handleCancel}
         >
