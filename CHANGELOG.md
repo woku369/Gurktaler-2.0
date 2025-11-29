@@ -11,11 +11,42 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Geplant
 
-- Rezeptur-Verwaltung mit Zutaten
+- Kostenrechnung pro Produkt inkl. Gebinde- und Zutatenkalkulation
 - Volltext-Suche über alle Bereiche
 - Git-Integration für automatischen Sync
 - Google Contacts OAuth Integration (Live-Sync)
 - Android-PWA
+
+---
+
+## [0.6.0] - 2025-06-XX
+
+### Hinzugefügt
+
+- **Rezeptur-Verwaltung - Phase 4 komplett**:
+  - Zutatendatenbank mit Name, Alkoholgehalt (% vol.), Kategorie, Preis pro Einheit (Liter/Kg), Bemerkung
+  - Gebindedatenbank für Flaschen, Etiketten, Verschlüsse, Kartons mit Typ, Volumen (ml), Preis, Bemerkung
+  - Rezeptur-Editor mit vollständiger Zutatenverwaltung:
+    - Mazerate, Destillate & Ausmischungen als Typen
+    - Zutatenliste mit Menge, Einheit, Notiz und Sortierung
+    - Anleitung/Herstellungsschritte als Textfeld
+    - Ausbeute (Yield) mit Menge und Einheit
+    - Optionale Verknüpfung mit Produkten
+  - RecipeIngredient Junction-Table für M:N-Beziehung mit sort_order
+  - Container-Auswahl im ProductForm mit Auto-Fill der Gebindegröße
+  - Alkoholsteuerberechnung im ProductForm:
+    - Automatische Berechnung: 12 € pro Liter reinem Alkohol
+    - Live-Anzeige des Steuerbetrags
+    - Checkbox zur Berücksichtigung in der Preisfindung
+    - Gespeichert als `include_alcohol_tax` und `alcohol_tax_amount`
+  - Neue Sidebar-Navigation: "Zutaten" und "Gebinde"
+  - Vollständige CRUD-Operationen für Ingredients, Containers, Recipes und RecipeIngredients
+  - Type-Definition Extensions: Product, Ingredient, Container, Image (entity_type)
+  - calculateAlcoholTax() Utility-Funktion in shared/types
+
+### Geändert
+
+- Recipe.product_id ist jetzt optional (Rezeptur kann ohne Produkt existieren)
 
 ---
 

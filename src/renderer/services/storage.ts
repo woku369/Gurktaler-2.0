@@ -4,7 +4,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
-    Weblink, Ingredient, Byproduct, Container, Image
+    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient
 } from '@/shared/types'
 
 const STORAGE_KEY = 'gurktaler_data'
@@ -13,6 +13,7 @@ interface AppData {
     projects: Project[]
     products: Product[]
     recipes: Recipe[]
+    recipe_ingredients: RecipeIngredient[]
     notes: Note[]
     tags: Tag[]
     tag_assignments: TagAssignment[]
@@ -29,6 +30,7 @@ const defaultData: AppData = {
     projects: [],
     products: [],
     recipes: [],
+    recipe_ingredients: [],
     notes: [],
     tags: [],
     tag_assignments: [],
@@ -248,6 +250,28 @@ export const ingredients = {
     create: (ingredient: Omit<Ingredient, 'id' | 'created_at'>) => createEntity<Ingredient>('ingredients', ingredient),
     update: (id: string, updates: Partial<Ingredient>) => updateEntity<Ingredient>('ingredients', id, updates),
     delete: (id: string) => deleteEntity<Ingredient>('ingredients', id),
+}
+
+// Containers
+export const containers = {
+    getAll: (): Container[] => loadData().containers,
+    getById: (id: string): Container | undefined => loadData().containers.find(c => c.id === id),
+    create: (container: Omit<Container, 'id' | 'created_at'>) => createEntity<Container>('containers', container),
+    update: (id: string, updates: Partial<Container>) => updateEntity<Container>('containers', id, updates),
+    delete: (id: string) => deleteEntity<Container>('containers', id),
+}
+
+// Recipe Ingredients (Junction table)
+export const recipeIngredients = {
+    getAll: (): RecipeIngredient[] => loadData().recipe_ingredients,
+    getById: (id: string): RecipeIngredient | undefined => loadData().recipe_ingredients.find(ri => ri.id === id),
+    getByRecipe: (recipeId: string): RecipeIngredient[] => 
+        loadData().recipe_ingredients.filter(ri => ri.recipe_id === recipeId),
+    create: (recipeIngredient: Omit<RecipeIngredient, 'id' | 'created_at'>) => 
+        createEntity<RecipeIngredient>('recipe_ingredients', recipeIngredient),
+    update: (id: string, updates: Partial<RecipeIngredient>) => 
+        updateEntity<RecipeIngredient>('recipe_ingredients', id, updates),
+    delete: (id: string) => deleteEntity<RecipeIngredient>('recipe_ingredients', id),
 }
 
 // Images

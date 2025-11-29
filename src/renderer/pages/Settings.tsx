@@ -29,7 +29,6 @@ import {
 import { parseVCard } from "@/renderer/services/vcardParser";
 import ContactImportDialog from "@/renderer/components/ContactImportDialog";
 import type { ParsedContact } from "@/renderer/services/vcardParser";
-import type { Contact } from "@/shared/types";
 
 function Settings() {
   const [exportStatus, setExportStatus] = useState<

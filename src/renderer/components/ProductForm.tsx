@@ -1,7 +1,13 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import TagSelector from "./TagSelector";
 import ImageUpload from "./ImageUpload";
-import type { Product, ProductStatus, Project } from "@/shared/types";
+import { containers as containersService } from "@/renderer/services/storage";
+import type {
+  Product,
+  ProductStatus,
+  Project,
+  Container,
+} from "@/shared/types";
 
 interface ProductFormProps {
   product?: Product;
@@ -37,8 +43,37 @@ export default function ProductForm({
   const [archiveReason, setArchiveReason] = useState(
     product?.archive_reason || ""
   );
+  const [containerSize, setContainerSize] = useState(
+    product?.container_size?.toString() || ""
+  );
+  const [alcoholPercentage, setAlcoholPercentage] = useState(
+    product?.alcohol_percentage?.toString() || ""
+  );
+  const [includeAlcoholTax, setIncludeAlcoholTax] = useState(
+    product?.include_alcohol_tax || false
+  );
+  const [containerId, setContainerId] = useState(product?.container_id || "");
+  const [notes, setNotes] = useState(product?.notes || "");
+  const [containers, setContainers] = useState<Container[]>([]);
 
   const isVersioning = !!parentProduct;
+
+  // Load containers on mount
+  useEffect(() => {
+    setContainers(containersService.getAll());
+  }, []);
+
+  // Calculate alcohol tax: 12 EUR per liter of pure alcohol
+  const calculateAlcoholTax = (): number => {
+    const size = parseFloat(containerSize) || 0;
+    const alcohol = parseFloat(alcoholPercentage) || 0;
+    if (size <= 0 || alcohol <= 0) return 0;
+    const liters = size / 1000; // Convert ml to liters
+    const pureAlcohol = liters * (alcohol / 100);
+    return pureAlcohol * 12;
+  };
+
+  const alcoholTax = calculateAlcoholTax();
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -55,6 +90,13 @@ export default function ProductForm({
         status === "archived" && archiveReason.trim()
           ? archiveReason.trim()
           : undefined,
+      container_size: containerSize ? parseFloat(containerSize) : undefined,
+      alcohol_percentage: alcoholPercentage
+        ? parseFloat(alcoholPercentage)
+        : undefined,
+      include_alcohol_tax: includeAlcoholTax,
+      container_id: containerId || undefined,
+      notes: notes.trim() || undefined,
     });
   };
 
@@ -194,6 +236,128 @@ export default function ProductForm({
           />
         </div>
       )}
+
+      {/* Container Selection */}
+      <div>
+        <label
+          htmlFor="container"
+          className="block text-sm font-medium text-slate-700 mb-1"
+        >
+          Gebinde (optional)
+        </label>
+        <select
+          id="container"
+          value={containerId}
+          onChange={(e) => {
+            const selectedId = e.target.value;
+            setContainerId(selectedId);
+            // Auto-fill container size if container is selected
+            if (selectedId) {
+              const container = containers.find((c) => c.id === selectedId);
+              if (container?.volume) {
+                setContainerSize(container.volume.toString());
+              }
+            }
+          }}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+        >
+          <option value="">Kein Gebinde</option>
+          {containers.map((container) => (
+            <option key={container.id} value={container.id}>
+              {container.name}
+              {container.volume ? ` (${container.volume} ml)` : ""}
+              {container.price ? ` - €${container.price.toFixed(2)}` : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Container Size (manual override) */}
+      <div>
+        <label
+          htmlFor="containerSize"
+          className="block text-sm font-medium text-slate-700 mb-1"
+        >
+          Gebindegröße (ml)
+        </label>
+        <input
+          id="containerSize"
+          type="number"
+          step="1"
+          min="0"
+          value={containerSize}
+          onChange={(e) => setContainerSize(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+          placeholder="z.B. 700"
+        />
+        <p className="text-xs text-slate-500 mt-1">
+          Wird automatisch ausgefüllt, wenn ein Gebinde gewählt wird
+        </p>
+      </div>
+
+      {/* Alcohol Percentage */}
+      <div>
+        <label
+          htmlFor="alcoholPercentage"
+          className="block text-sm font-medium text-slate-700 mb-1"
+        >
+          Alkoholgehalt (%vol.)
+        </label>
+        <input
+          id="alcoholPercentage"
+          type="number"
+          step="0.1"
+          min="0"
+          max="100"
+          value={alcoholPercentage}
+          onChange={(e) => setAlcoholPercentage(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+          placeholder="z.B. 40.0"
+        />
+      </div>
+
+      {/* Alcohol Tax Calculation */}
+      {alcoholTax > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-900">
+              Alkoholsteuer (12 €/L reiner Alkohol)
+            </span>
+            <span className="text-lg font-bold text-blue-900">
+              €{alcoholTax.toFixed(2)}
+            </span>
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeAlcoholTax}
+              onChange={(e) => setIncludeAlcoholTax(e.target.checked)}
+              className="w-4 h-4 text-gurktaler-600 border-slate-300 rounded focus:ring-2 focus:ring-gurktaler-500"
+            />
+            <span className="text-sm text-blue-800">
+              Alkoholsteuer in Preisfindung berücksichtigen
+            </span>
+          </label>
+        </div>
+      )}
+
+      {/* Notes */}
+      <div>
+        <label
+          htmlFor="notes"
+          className="block text-sm font-medium text-slate-700 mb-1"
+        >
+          Bemerkung
+        </label>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent resize-none"
+          placeholder="Weitere Notizen zum Produkt..."
+        />
+      </div>
 
       {/* Tags */}
       {product && (

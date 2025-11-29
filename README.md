@@ -26,10 +26,12 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **Tag-System**: Flexible Kategorisierung mit Farben, Filter in allen Bereichen
 - **KI-Assistenten**: ChatGPT, Claude, Qwen & DeepSeek Integration für Recherche und Produktentwicklung
 - **Bild-Upload**: Vollständig integriert in Notizen & Produkte (Base64-Speicherung)
+- **Rezeptur-Verwaltung**: Zutaten-DB mit Alkohol%/Preisen, Gebinde-Management, Rezept-Editor mit Zutatenliste
+- **Alkoholsteuer-Berechnung**: Automatische Berechnung (12€/L reiner Alkohol) im Produktformular
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
 
 ### In Entwicklung 🔄
-- Rezeptur-Editor mit Zutaten-Verwaltung
+- Kostenkalkulationen und Preisfindung
 - Volltext-Suche über alle Bereiche
 - Git-Integration (aktuell manuell via JSON)
 
@@ -37,7 +39,6 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - Google Contacts OAuth Integration (Live-Sync)
 - Android-Companion-App (PWA)
 - Dashboard mit Statistiken
-- By-Products & Gebinde-Verwaltung
 
 ## Tech-Stack
 

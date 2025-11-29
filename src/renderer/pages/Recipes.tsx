@@ -1,68 +1,112 @@
-import { useState, useEffect } from 'react'
-import { Plus, Search, Edit2, Trash2, FlaskConical, Droplet, Beaker } from 'lucide-react'
-import { recipes as recipesService, products as productsService } from '@/renderer/services/storage'
-import type { Recipe, Product } from '@/shared/types'
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  FlaskConical,
+  Droplet,
+  Beaker,
+} from "lucide-react";
+import {
+  recipes as recipesService,
+  products as productsService,
+} from "@/renderer/services/storage";
+import RecipeForm from "@/renderer/components/RecipeForm";
+import Modal from "@/renderer/components/Modal";
+import type { Recipe, Product } from "@/shared/types";
 
 const typeIcons = {
   macerate: Droplet,
   distillate: Beaker,
   blend: FlaskConical,
-}
+};
 
 const typeLabels = {
-  macerate: 'Mazerat',
-  distillate: 'Destillat',
-  blend: 'Ausmischung',
-}
+  macerate: "Mazerat",
+  distillate: "Destillat",
+  blend: "Ausmischung",
+};
 
 const typeColors = {
-  macerate: 'bg-green-100 text-green-700',
-  distillate: 'bg-blue-100 text-blue-700',
-  blend: 'bg-amber-100 text-amber-700',
-}
+  macerate: "bg-green-100 text-green-700",
+  distillate: "bg-blue-100 text-blue-700",
+  blend: "bg-amber-100 text-amber-700",
+};
 
 function Recipes() {
-  const [recipes, setRecipes] = useState<Recipe[]>([])
-  const [products, setProducts] = useState<Product[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const loadData = () => {
-    setRecipes(recipesService.getAll())
-    setProducts(productsService.getAll())
-  }
+    setRecipes(recipesService.getAll());
+    setProducts(productsService.getAll());
+  };
+
+  const handleSubmit = (
+    data: Omit<Recipe, "id" | "created_at" | "updated_at">
+  ) => {
+    if (editingRecipe) {
+      recipesService.update(editingRecipe.id, data);
+    } else {
+      recipesService.create(data);
+    }
+    setShowForm(false);
+    setEditingRecipe(null);
+    loadData();
+  };
+
+  const handleEdit = (recipe: Recipe) => {
+    setEditingRecipe(recipe);
+    setShowForm(true);
+  };
 
   const handleDelete = (id: string) => {
-    if (confirm('Rezeptur wirklich löschen?')) {
-      recipesService.delete(id)
-      loadData()
+    if (confirm("Rezeptur wirklich löschen?")) {
+      recipesService.delete(id);
+      loadData();
     }
-  }
+  };
 
-  const filteredRecipes = recipes.filter(recipe =>
-    recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingRecipe(null);
+  };
+
+  const filteredRecipes = recipes.filter(
+    (recipe) =>
+      recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  }
+    const date = new Date(dateString);
+    return date.toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Rezepturen</h1>
-          <p className="text-slate-500">Mazerate, Destillate und Ausmischungen</p>
+          <p className="text-slate-500">
+            Mazerate, Destillate und Ausmischungen
+          </p>
         </div>
         <button
+          onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
-          disabled
-          title="Rezeptur-Editor in Entwicklung"
         >
           <Plus className="w-5 h-5" />
           Neue Rezeptur
@@ -83,49 +127,71 @@ function Recipes() {
         </div>
       </div>
 
-      {/* Info Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-        <p className="text-sm text-amber-800">
-          <strong>🚧 In Entwicklung:</strong> Der Rezeptur-Editor mit Zutaten-Verwaltung und Mengenberechnung wird in Phase 4 implementiert.
-          Aktuell sind nur Lese-Ansichten verfügbar.
-        </p>
-      </div>
+      {/* Recipe Form Modal */}
+      {showForm && (
+        <Modal
+          title={editingRecipe ? "Rezeptur bearbeiten" : "Neue Rezeptur"}
+          onClose={handleCancel}
+        >
+          <RecipeForm
+            recipe={editingRecipe || undefined}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+          />
+        </Modal>
+      )}
 
       {/* Empty State */}
       {filteredRecipes.length === 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
           <FlaskConical className="w-16 h-16 mx-auto text-slate-300 mb-4" />
           <h3 className="text-lg font-semibold text-slate-800 mb-2">
-            {recipes.length === 0 ? 'Noch keine Rezepturen' : 'Keine Ergebnisse'}
-          </h3>
-          <p className="text-slate-600">
             {recipes.length === 0
-              ? 'Der Rezeptur-Editor ist in Entwicklung.'
-              : 'Keine Rezepturen gefunden für deine Suche.'}
+              ? "Noch keine Rezepturen"
+              : "Keine Ergebnisse"}
+          </h3>
+          <p className="text-slate-600 mb-6">
+            {recipes.length === 0
+              ? "Erstelle deine erste Rezeptur mit Zutaten und Anleitung."
+              : "Keine Rezepturen gefunden für deine Suche."}
           </p>
+          {recipes.length === 0 && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-6 py-2 bg-gurktaler-500 text-white rounded-lg hover:bg-gurktaler-600 transition-colors"
+            >
+              Erste Rezeptur erstellen
+            </button>
+          )}
         </div>
       )}
 
       {/* Recipes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredRecipes.map((recipe) => {
-          const Icon = typeIcons[recipe.type]
-          const product = recipe.product_id ? products.find(p => p.id === recipe.product_id) : null
+          const Icon = typeIcons[recipe.type];
+          const product = recipe.product_id
+            ? products.find((p) => p.id === recipe.product_id)
+            : null;
           return (
             <div
               key={recipe.id}
               className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-colors group"
             >
               <div className="flex items-start justify-between mb-3">
-                <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${typeColors[recipe.type]}`}>
+                <span
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                    typeColors[recipe.type]
+                  }`}
+                >
                   <Icon className="w-3 h-3" />
                   {typeLabels[recipe.type]}
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    disabled
-                    className="p-1 hover:bg-slate-100 rounded opacity-50 cursor-not-allowed"
-                    title="Bearbeitung in Entwicklung"
+                    onClick={() => handleEdit(recipe)}
+                    className="p-1 hover:bg-slate-100 rounded"
+                    title="Bearbeiten"
                   >
                     <Edit2 className="w-4 h-4 text-slate-500" />
                   </button>
@@ -139,15 +205,21 @@ function Recipes() {
                 </div>
               </div>
 
-              <h3 className="font-semibold text-slate-800 mb-2">{recipe.name}</h3>
+              <h3 className="font-semibold text-slate-800 mb-2">
+                {recipe.name}
+              </h3>
 
               {recipe.instructions && (
-                <p className="text-sm text-slate-600 mb-3 line-clamp-3">{recipe.instructions}</p>
+                <p className="text-sm text-slate-600 mb-3 line-clamp-3">
+                  {recipe.instructions}
+                </p>
               )}
 
               {product && (
                 <div className="mb-2">
-                  <span className="text-xs text-slate-500">🔗 {product.name}</span>
+                  <span className="text-xs text-slate-500">
+                    🔗 {product.name}
+                  </span>
                 </div>
               )}
 
@@ -155,11 +227,11 @@ function Recipes() {
                 Erstellt: {formatDate(recipe.created_at)}
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
-export default Recipes
+export default Recipes;

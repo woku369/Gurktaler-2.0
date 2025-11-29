@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AIChat from "@/renderer/components/AIChat";
 
