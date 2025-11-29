@@ -104,6 +104,7 @@ export interface Tag extends BaseEntity {
     color: string;
 }
 
+
 // Tag Assignment
 export interface TagAssignment extends BaseEntity {
     tag_id: string;

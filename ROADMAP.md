@@ -155,12 +155,12 @@
 
 ## Phase 7: Suche & Tags (v0.7.x)
 
-| Status | Aufgabe        | Beschreibung             |
-| ------ | -------------- | ------------------------ |
-| 📋     | Volltext-Suche | Über alle Bereiche       |
-| ✅     | Tag-System     | Vollständig implementiert|
-| ✅     | Filter         | Tag-Filter in allen Views|
-| 📋     | Favoriten      | Schnellzugriff           |
+| Status | Aufgabe        | Beschreibung                                      |
+| ------ | -------------- | ------------------------------------------------- |
+| 📋     | Volltext-Suche | Über alle Bereiche                                |
+| ✅     | Tag-System     | Vollständig implementiert                         |
+| ✅     | Filter         | Tag-Filter in allen Views (inkl. Recipes, Gebinde)|
+| 📋     | Favoriten      | Schnellzugriff                                    |
 
 ---
 

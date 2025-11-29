@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Link2 } from "lucide-react";
 import { images as imagesService } from "@/renderer/services/storage";
 import type { Image } from "@/shared/types";
 
@@ -18,6 +18,9 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const [images, setImages] = useState<Image[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing images on mount
@@ -81,6 +84,47 @@ export default function ImageUpload({
     setIsDragging(false);
   };
 
+  const handleUrlSubmit = async () => {
+    if (!imageUrl.trim() || isLoadingUrl) return;
+
+    setIsLoadingUrl(true);
+    try {
+      // Fetch the image from URL and convert to base64
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+
+        // Extract filename from URL or use default
+        const urlParts = imageUrl.split("/");
+        const fileName = urlParts[urlParts.length - 1] || "image-from-url.jpg";
+
+        imagesService.create({
+          entity_type: entityType,
+          entity_id: entityId,
+          data_url: dataUrl,
+          file_name: fileName,
+          caption: "",
+        });
+
+        loadImages();
+        onUpload?.();
+        setImageUrl("");
+        setShowUrlInput(false);
+        setIsLoadingUrl(false);
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error("Failed to load image from URL:", error);
+      alert(
+        "Bild konnte nicht von der URL geladen werden. Stelle sicher, dass die URL öffentlich zugänglich ist."
+      );
+      setIsLoadingUrl(false);
+    }
+  };
+
   const removeImage = (id: string) => {
     imagesService.delete(id);
     loadImages();
@@ -99,33 +143,86 @@ export default function ImageUpload({
 
       {/* Upload Area */}
       {images.length < maxImages && (
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-            isDragging
-              ? "border-gurktaler-500 bg-gurktaler-50"
-              : "border-slate-300 hover:border-slate-400 bg-slate-50"
-          }`}
-        >
-          <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-          <p className="text-sm text-slate-600 mb-1">
-            Bilder hochladen oder hierher ziehen
-          </p>
-          <p className="text-xs text-slate-500">
-            PNG, JPG, GIF bis 5MB pro Bild
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => handleFileSelect(e.target.files)}
-            className="hidden"
-          />
-        </div>
+        <>
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+              isDragging
+                ? "border-gurktaler-500 bg-gurktaler-50"
+                : "border-slate-300 hover:border-slate-400 bg-slate-50"
+            }`}
+          >
+            <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+            <p className="text-sm text-slate-600 mb-1">
+              Bilder hochladen oder hierher ziehen
+            </p>
+            <p className="text-xs text-slate-500">
+              PNG, JPG, GIF bis 5MB pro Bild
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => handleFileSelect(e.target.files)}
+              className="hidden"
+            />
+          </div>
+
+          {/* URL Input Toggle */}
+          <div className="mt-3">
+            {!showUrlInput ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowUrlInput(true);
+                }}
+                className="flex items-center gap-2 text-sm text-gurktaler-600 hover:text-gurktaler-700"
+              >
+                <Link2 className="w-4 h-4" />
+                Bild von URL einfügen
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://beispiel.de/bild.jpg"
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleUrlSubmit();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleUrlSubmit}
+                  disabled={isLoadingUrl || !imageUrl.trim()}
+                  className="px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {isLoadingUrl ? "Lädt..." : "Laden"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowUrlInput(false);
+                    setImageUrl("");
+                  }}
+                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors text-sm"
+                >
+                  Abbrechen
+                </button>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Image Preview Grid */}

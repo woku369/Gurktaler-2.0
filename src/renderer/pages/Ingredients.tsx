@@ -1,16 +1,24 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Beaker } from "lucide-react";
-import { ingredients as ingredientsService } from "@/renderer/services/storage";
+import {
+  ingredients as ingredientsService,
+  tags as tagsService,
+  tagAssignments as tagAssignmentsService,
+} from "@/renderer/services/storage";
 import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
 import TagSelector from "@/renderer/components/TagSelector";
-import type { Ingredient } from "@/shared/types";
+import type { Ingredient, Tag } from "@/shared/types";
 
 function Ingredients() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
-  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
+    null
+  );
   const [formData, setFormData] = useState<Partial<Ingredient>>({
     name: "",
     alcohol_percentage: undefined,
@@ -26,6 +34,7 @@ function Ingredients() {
 
   const loadData = () => {
     setIngredients(ingredientsService.getAll());
+    setTags(tagsService.getAll());
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -89,12 +98,23 @@ function Ingredients() {
     setShowForm(false);
   };
 
-  const filteredIngredients = ingredients.filter(
-    (ing) =>
+  const filteredIngredients = ingredients.filter((ing) => {
+    const matchesSearch =
       ing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ing.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ing.notes?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      ing.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    let matchesTag = true;
+    if (selectedTagId) {
+      const assignments = tagAssignmentsService.getByEntity(
+        "ingredient",
+        ing.id
+      );
+      matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
+    }
+
+    return matchesSearch && matchesTag;
+  });
 
   return (
     <div className="p-8">
@@ -112,9 +132,9 @@ function Ingredients() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Search & Tag Filter */}
+      <div className="mb-6 flex gap-4">
+        <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -124,6 +144,18 @@ function Ingredients() {
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
           />
         </div>
+        <select
+          value={selectedTagId}
+          onChange={(e) => setSelectedTagId(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+        >
+          <option value="">Alle Tags</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Form Modal */}
@@ -134,154 +166,157 @@ function Ingredients() {
           onClose={resetForm}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Name der Zutat *
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name der Zutat *
+                  Alkoholgehalt (%vol.)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="100"
+                  value={formData.alcohol_percentage ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      alcohol_percentage: e.target.value
+                        ? parseFloat(e.target.value)
+                        : undefined,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Kategorie (optional)
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
+                  value={formData.category ?? ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
+                    setFormData({ ...formData, category: e.target.value })
                   }
+                  placeholder="z.B. Spirituose, Gewürz, etc."
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-                  required
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Alkoholgehalt (%vol.)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    value={formData.alcohol_percentage ?? ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        alcohol_percentage: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Kategorie (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.category ?? ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    placeholder="z.B. Spirituose, Gewürz, etc."
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Preis pro Einheit (€)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price_per_unit ?? ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        price_per_unit: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Einheit
-                  </label>
-                  <select
-                    value={formData.unit}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        unit: e.target.value as "liter" | "kilogram",
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-                  >
-                    <option value="liter">Liter</option>
-                    <option value="kilogram">Kilogramm</option>
-                  </select>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Preis pro Einheit (€)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price_per_unit ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      price_per_unit: e.target.value
+                        ? parseFloat(e.target.value)
+                        : undefined,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Bemerkung
+                  Einheit
                 </label>
-                <textarea
-                  value={formData.notes ?? ""}
+                <select
+                  value={formData.unit}
                   onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
+                    setFormData({
+                      ...formData,
+                      unit: e.target.value as "liter" | "kilogram",
+                    })
                   }
-                  rows={3}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 resize-none"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                >
+                  <option value="liter">Liter</option>
+                  <option value="kilogram">Kilogramm</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Bemerkung
+              </label>
+              <textarea
+                value={formData.notes ?? ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                rows={3}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 resize-none"
+              />
+            </div>
+
+            {/* Tags (only when editing) */}
+            {editingIngredient && (
+              <div className="border-t border-slate-200 pt-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Tags
+                </label>
+                <TagSelector
+                  entityType="ingredient"
+                  entityId={editingIngredient.id}
                 />
               </div>
+            )}
 
-              {/* Tags (only when editing) */}
-              {editingIngredient && (
-                <div className="border-t border-slate-200 pt-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Tags
-                  </label>
-                  <TagSelector entityType="ingredient" entityId={editingIngredient.id} />
-                </div>
-              )}
-
-              {/* Images (only when editing) */}
-              {editingIngredient && (
-                <div className="border-t border-slate-200 pt-4">
-                  <ImageUpload
-                    entityType="ingredient"
-                    entityId={editingIngredient.id}
-                    maxImages={3}
-                  />
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-4 border-t border-slate-200">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
-                >
-                  {editingIngredient ? "Speichern" : "Erstellen"}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  Abbrechen
-                </button>
+            {/* Images (only when editing) */}
+            {editingIngredient && (
+              <div className="border-t border-slate-200 pt-4">
+                <ImageUpload
+                  entityType="ingredient"
+                  entityId={editingIngredient.id}
+                  maxImages={3}
+                />
               </div>
-            </form>
-          </Modal>
+            )}
+
+            <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+              >
+                {editingIngredient ? "Speichern" : "Erstellen"}
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Empty State */}

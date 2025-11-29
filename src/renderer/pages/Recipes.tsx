@@ -13,6 +13,8 @@ import {
   products as productsService,
   recipeIngredients as recipeIngredientsService,
   ingredients as ingredientsService,
+  tags as tagsService,
+  tagAssignments as tagAssignmentsService,
 } from "@/renderer/services/storage";
 import RecipeForm from "@/renderer/components/RecipeForm";
 import Modal from "@/renderer/components/Modal";
@@ -21,6 +23,7 @@ import type {
   Product,
   RecipeIngredient,
   Ingredient,
+  Tag,
 } from "@/shared/types";
 
 const typeIcons = {
@@ -48,7 +51,9 @@ function Recipes() {
     RecipeIngredient[]
   >([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
 
@@ -61,6 +66,7 @@ function Recipes() {
     setProducts(productsService.getAll());
     setRecipeIngredients(recipeIngredientsService.getAll());
     setIngredients(ingredientsService.getAll());
+    setTags(tagsService.getAll());
   };
 
   const handleSubmit = (
@@ -93,11 +99,22 @@ function Recipes() {
     setEditingRecipe(null);
   };
 
-  const filteredRecipes = recipes.filter(
-    (recipe) =>
+  const filteredRecipes = recipes.filter((recipe) => {
+    const matchesSearch =
       recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      recipe.instructions?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    let matchesTag = true;
+    if (selectedTagId) {
+      const assignments = tagAssignmentsService.getByEntity(
+        "recipe",
+        recipe.id
+      );
+      matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
+    }
+
+    return matchesSearch && matchesTag;
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -126,9 +143,9 @@ function Recipes() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Search & Tag Filter */}
+      <div className="mb-6 flex gap-4">
+        <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -138,6 +155,18 @@ function Recipes() {
             className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
           />
         </div>
+        <select
+          value={selectedTagId}
+          onChange={(e) => setSelectedTagId(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+        >
+          <option value="">Alle Tags</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.id}>
+              {tag.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Recipe Form Modal */}

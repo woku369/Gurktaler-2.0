@@ -19,7 +19,7 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
-## [0.6.0] - 2025-06-XX
+## [0.6.0] - 2024-11-29
 
 ### Hinzugefügt
 
@@ -43,6 +43,19 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
   - Vollständige CRUD-Operationen für Ingredients, Containers, Recipes und RecipeIngredients
   - Type-Definition Extensions: Product, Ingredient, Container, Image (entity_type)
   - calculateAlcoholTax() Utility-Funktion in shared/types
+- **Tag-Filter erweitert**:
+  - Tag-Filter zu Rezepturen-Seite hinzugefügt
+  - Tag-Filter zu Gebinde-Seite hinzugefügt
+  - Tag-Filter zu Zutaten-Seite hinzugefügt
+  - Konsistente Tag-Filter-UI in allen Bereichen (Projekte, Produkte, Notizen, Rezepturen, Gebinde, Zutaten)
+- **Bildergalerie für Gebinde**:
+  - Gebinde-Cards zeigen Bilder in kompakter Galerie (bis zu 3 Bilder)
+  - Automatisches Laden der Bilder beim Start
+- **URL-basierter Bild-Import**:
+  - "Bild von URL einfügen" Button in ImageUpload-Komponente
+  - Unterstützung für Google Photos Shared Links, Imgur, direkte Bild-URLs
+  - Fetch-basiertes Laden mit Base64-Konvertierung
+  - Enter-Taste-Support und Loading-State
 
 ### Geändert
 
