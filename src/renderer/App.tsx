@@ -14,6 +14,7 @@ import GlobalSearch from "./pages/GlobalSearch";
 import AIAssistant from "./pages/AIAssistant";
 import Documentation from "./pages/Documentation";
 import Settings from "./pages/Settings";
+import DesignPreview from "./pages/DesignPreview";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path="ai-assistant" element={<AIAssistant />} />
         <Route path="documentation" element={<Documentation />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="design-preview" element={<DesignPreview />} />
       </Route>
     </Routes>
   );

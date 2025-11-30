@@ -203,8 +203,12 @@ function Dashboard() {
     <div className="p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-        <p className="text-slate-500">Willkommen bei Gurktaler 2.0</p>
+        <h1 className="text-3xl font-heading font-bold text-distillery-900">
+          Dashboard
+        </h1>
+        <p className="text-distillery-600 font-body">
+          Willkommen bei Gurktaler 2.0 — Tradition trifft Innovation
+        </p>
       </div>
 
       {/* Stats */}
@@ -212,19 +216,21 @@ function Dashboard() {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl p-6 shadow-sm border border-slate-200"
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200"
           >
             <div className="flex items-center gap-4">
               <div
-                className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
+                className={`w-14 h-14 ${stat.color} rounded-vintage flex items-center justify-center shadow-md border-2 border-white/20`}
               >
-                <stat.icon className="w-6 h-6 text-white" />
+                <stat.icon className="w-7 h-7 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-800">
+                <p className="text-2xl font-heading font-bold text-distillery-900">
                   {stat.value}
                 </p>
-                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="text-sm text-distillery-600 font-body">
+                  {stat.label}
+                </p>
               </div>
             </div>
           </div>
@@ -234,38 +240,38 @@ function Dashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-            <div className="p-4 border-b border-slate-200">
-              <h2 className="font-semibold text-slate-800">
+          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200">
+            <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
+              <h2 className="font-heading font-semibold text-distillery-900">
                 Letzte Aktivitäten
               </h2>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-distillery-100">
               {recentItems.length > 0 ? (
                 recentItems.map((item, index) => (
                   <div
                     key={index}
-                    className="p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+                    className="p-4 hover:bg-gurktaler-50 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-slate-700">
+                        <p className="font-body font-semibold text-distillery-800">
                           {item.title}
                         </p>
-                        <p className="text-sm text-slate-500 capitalize">
+                        <p className="text-sm text-distillery-600 capitalize font-body">
                           {item.type}
                         </p>
                       </div>
-                      <span className="text-sm text-slate-400">
+                      <span className="text-sm text-distillery-500 font-body">
                         {item.date}
                       </span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-slate-500">
-                  <p>Noch keine Aktivitäten</p>
-                  <p className="text-sm text-slate-400 mt-1">
+                <div className="p-8 text-center text-distillery-600">
+                  <p className="font-body">Noch keine Aktivitäten</p>
+                  <p className="text-sm text-distillery-500 mt-1 font-body">
                     Erstelle dein erstes Projekt, um loszulegen.
                   </p>
                 </div>
@@ -275,28 +281,28 @@ function Dashboard() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <h2 className="font-semibold text-slate-800 mb-4">
+          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
+            <h2 className="font-heading font-semibold text-distillery-900 mb-4">
               Schnellzugriff
             </h2>
             <div className="space-y-2">
               <button
                 onClick={() => handleQuickAction("/notes")}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-lg hover:bg-gurktaler-100 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
               >
                 <Plus className="w-5 h-5" />
                 Neue Notiz
               </button>
               <button
                 onClick={() => handleQuickAction("/projects")}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-100 transition-colors border-vintage border-distillery-200 font-body"
               >
                 <Plus className="w-5 h-5" />
                 Neues Projekt
               </button>
               <button
                 onClick={() => handleQuickAction("/products")}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-100 transition-colors border-vintage border-distillery-200 font-body"
               >
                 <Plus className="w-5 h-5" />
                 Neues Produkt
@@ -306,10 +312,12 @@ function Dashboard() {
 
           {/* Favorites Widget */}
           {favoriteItems.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+            <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
               <div className="flex items-center gap-2 mb-4">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <h2 className="font-semibold text-slate-800">Favoriten</h2>
+                <Star className="w-5 h-5 text-bronze-500 fill-bronze-500" />
+                <h2 className="font-heading font-semibold text-distillery-900">
+                  Favoriten
+                </h2>
               </div>
               <div className="space-y-1">
                 {favoriteItems.map((item, index) => {
@@ -318,10 +326,10 @@ function Dashboard() {
                     <button
                       key={index}
                       onClick={() => handleQuickAction(item.route)}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-50 rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gurktaler-50 rounded-vintage transition-colors"
                     >
-                      <Icon className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                      <span className="text-sm text-slate-700 truncate">
+                      <Icon className="w-4 h-4 text-gurktaler-600 flex-shrink-0" />
+                      <span className="text-sm text-distillery-700 truncate font-body">
                         {item.name}
                       </span>
                     </button>
@@ -334,15 +342,18 @@ function Dashboard() {
       </div>
 
       {/* Info Box */}
-      <div className="bg-gurktaler-50 border border-gurktaler-200 rounded-xl p-6">
-        <h3 className="font-semibold text-gurktaler-800 mb-2">
-          Entwicklungsmodus
-        </h3>
-        <p className="text-gurktaler-700 text-sm">
-          Dies ist eine Entwicklungsversion. Daten werden lokal im Browser
-          (LocalStorage) gespeichert. Für Synchronisation zwischen Geräten nutze
-          den JSON-Export und Git.
-        </p>
+      <div className="bg-gradient-to-br from-distillery-600 to-distillery-700 border-vintage border-distillery-800 rounded-vintage p-6 shadow-vintage-lg relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
+        <div className="relative">
+          <h3 className="font-heading font-bold text-white mb-2 text-lg">
+            🌿 Seit 1865 — Entwicklungsmodus
+          </h3>
+          <p className="text-white/90 text-sm font-body leading-relaxed">
+            Dies ist eine Entwicklungsversion. Daten werden lokal im Browser
+            (LocalStorage) gespeichert. Für Synchronisation zwischen Geräten
+            nutze den JSON-Export und Git.
+          </p>
+        </div>
       </div>
     </div>
   );

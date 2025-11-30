@@ -35,18 +35,22 @@ const navItems = [
 
 function Layout() {
   return (
-    <div className="flex h-screen bg-slate-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col">
+    <div className="flex h-screen bg-gurktaler-100">
+      {/* Sidebar - Distillery Modern */}
+      <aside className="w-64 bg-white border-r-vintage border-distillery-200 flex flex-col shadow-vintage">
         {/* Logo */}
-        <div className="p-4 border-b border-slate-200">
+        <div className="p-4 border-b-vintage border-distillery-200 bg-gradient-to-br from-gurktaler-500 to-gurktaler-600">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gurktaler-600 rounded-lg flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-vintage flex items-center justify-center border-2 border-white/30">
+              <Leaf className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-slate-800">Gurktaler</h1>
-              <p className="text-xs text-slate-500">Version 2.0</p>
+              <h1 className="font-heading font-bold text-white text-lg">
+                Gurktaler
+              </h1>
+              <p className="text-xs text-white/80 font-semibold tracking-wide">
+                2.0
+              </p>
             </div>
           </div>
         </div>
@@ -59,15 +63,15 @@ function Layout() {
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    `flex items-center gap-3 px-3 py-2.5 rounded-vintage transition-all ${
                       isActive
-                        ? "bg-gurktaler-50 text-gurktaler-700 font-medium"
-                        : "text-slate-600 hover:bg-slate-50"
+                        ? "bg-gurktaler-500 text-white font-semibold shadow-md"
+                        : "text-distillery-700 hover:bg-gurktaler-50 hover:text-gurktaler-600"
                     }`
                   }
                 >
                   <item.icon className="w-5 h-5" />
-                  {item.label}
+                  <span className="font-body">{item.label}</span>
                 </NavLink>
               </li>
             ))}
@@ -75,25 +79,25 @@ function Layout() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t-vintage border-distillery-200 bg-gurktaler-50">
           <NavLink
             to="/settings"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-vintage transition-all ${
                 isActive
-                  ? "bg-gurktaler-50 text-gurktaler-700 font-medium"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-gurktaler-500 text-white font-semibold shadow-md"
+                  : "text-distillery-700 hover:bg-white hover:text-gurktaler-600"
               }`
             }
           >
             <Settings className="w-5 h-5" />
-            Einstellungen
+            <span className="font-body">Einstellungen</span>
           </NavLink>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto bg-gurktaler-100">
         <Outlet />
       </main>
     </div>

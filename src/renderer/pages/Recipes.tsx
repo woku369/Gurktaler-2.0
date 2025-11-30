@@ -41,9 +41,9 @@ const typeLabels = {
 };
 
 const typeColors = {
-  macerate: "bg-green-100 text-green-700",
-  distillate: "bg-blue-100 text-blue-700",
-  blend: "bg-amber-100 text-amber-700",
+  macerate: "bg-green-50 text-green-800 border-green-200",
+  distillate: "bg-distillery-50 text-distillery-800 border-distillery-200",
+  blend: "bg-bronze-50 text-bronze-800 border-bronze-200",
 };
 
 function Recipes() {
@@ -131,14 +131,16 @@ function Recipes() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Rezepturen</h1>
-          <p className="text-slate-500">
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
+            Rezepturen
+          </h1>
+          <p className="text-distillery-600 font-body">
             Mazerate, Destillate und Ausmischungen
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
         >
           <Plus className="w-5 h-5" />
           Neue Rezeptur
@@ -148,7 +150,7 @@ function Recipes() {
       {/* Search & Tag Filter */}
       <div className="mb-6 flex gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
             type="text"
             value={searchQuery}

@@ -21,10 +21,10 @@ import {
 import type { Product, Project, Tag } from "@/shared/types";
 
 const statusColors = {
-  draft: "bg-slate-100 text-slate-700",
-  testing: "bg-yellow-100 text-yellow-700",
-  approved: "bg-green-100 text-green-700",
-  archived: "bg-red-100 text-red-700",
+  draft: "bg-distillery-50 text-distillery-800 border-distillery-200",
+  testing: "bg-bronze-50 text-bronze-800 border-bronze-200",
+  approved: "bg-green-50 text-green-800 border-green-200",
+  archived: "bg-slate-50 text-slate-700 border-slate-200",
 };
 
 const statusLabels = {
@@ -131,12 +131,16 @@ function Products() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Produkte</h1>
-          <p className="text-slate-500">Produktentwicklung mit Versionierung</p>
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
+            Produkte
+          </h1>
+          <p className="text-distillery-600 font-body">
+            Produktentwicklung mit Versionierung
+          </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
         >
           <Plus className="w-5 h-5" />
           Neues Produkt
@@ -146,19 +150,19 @@ function Products() {
       {/* Search and Tag Filter */}
       <div className="mb-6 flex gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
             type="text"
             placeholder="Produkte durchsuchen..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent font-body bg-white"
           />
         </div>
         <select
           value={selectedTagId}
           onChange={(e) => setSelectedTagId(e.target.value)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          className="px-4 py-2.5 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body bg-white"
         >
           <option value="">Alle Tags</option>
           {tags.map((tag) => (
@@ -171,12 +175,12 @@ function Products() {
 
       {/* Empty State */}
       {filteredTree.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <Package className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-12 text-center">
+          <Package className="w-16 h-16 mx-auto text-distillery-300 mb-4" />
+          <h3 className="text-lg font-heading font-semibold text-distillery-900 mb-2">
             {products.length === 0 ? "Noch keine Produkte" : "Keine Ergebnisse"}
           </h3>
-          <p className="text-slate-600 mb-6">
+          <p className="text-distillery-600 mb-6 font-body">
             {products.length === 0
               ? "Erstelle dein erstes Produkt, um mit der Entwicklung zu beginnen."
               : "Keine Produkte gefunden für deine Suche."}
@@ -184,7 +188,7 @@ function Products() {
           {products.length === 0 && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="px-6 py-2 bg-gurktaler-500 text-white rounded-lg hover:bg-gurktaler-600 transition-colors"
+              className="px-6 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
             >
               Erstes Produkt erstellen
             </button>
@@ -197,21 +201,21 @@ function Products() {
         {filteredTree.map((product) => (
           <div
             key={product.root.id}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
+            className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden"
           >
             {/* Root Product */}
-            <div className="p-6 hover:bg-slate-50 transition-colors">
+            <div className="p-6 hover:bg-gurktaler-50 transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-slate-800">
+                    <h3 className="text-lg font-heading font-semibold text-distillery-900">
                       {product.root.name}
                     </h3>
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-distillery-600 font-body font-semibold">
                       v{product.root.version}
                     </span>
                     <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      className={`px-3 py-1 text-xs font-semibold rounded-full border-vintage ${
                         statusColors[
                           product.root.status as keyof typeof statusColors
                         ]
@@ -225,7 +229,7 @@ function Products() {
                     </span>
                   </div>
                   {product.root.description && (
-                    <p className="text-sm text-slate-600 mb-2">
+                    <p className="text-sm text-distillery-600 mb-2 font-body">
                       {product.root.description}
                     </p>
                   )}

@@ -11,10 +11,10 @@ import {
 import type { Project, Tag } from "@/shared/types";
 
 const statusColors = {
-  active: "bg-green-100 text-green-700",
-  paused: "bg-yellow-100 text-yellow-700",
-  completed: "bg-blue-100 text-blue-700",
-  archived: "bg-slate-100 text-slate-700",
+  active: "bg-green-50 text-green-800 border-green-200",
+  paused: "bg-bronze-50 text-bronze-800 border-bronze-200",
+  completed: "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200",
+  archived: "bg-distillery-50 text-distillery-700 border-distillery-200",
 };
 
 const statusLabels = {
@@ -105,14 +105,16 @@ function Projects() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Projekte</h1>
-          <p className="text-slate-500">
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
+            Projekte
+          </h1>
+          <p className="text-distillery-600 font-body">
             Verwalte deine Produktentwicklungs-Projekte
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
         >
           <Plus className="w-5 h-5" />
           Neues Projekt
@@ -122,19 +124,19 @@ function Projects() {
       {/* Search & Tag Filter */}
       <div className="flex gap-4 mb-6">
         <div className="flex-1 relative">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
             type="text"
             placeholder="Projekte durchsuchen..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2.5 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent font-body bg-white"
           />
         </div>
         <select
           value={selectedTagId}
           onChange={(e) => setSelectedTagId(e.target.value)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          className="px-4 py-2.5 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body bg-white"
         >
           <option value="">Alle Tags</option>
           {tags.map((tag) => (
@@ -150,23 +152,25 @@ function Projects() {
         {filteredProjects.map((project) => (
           <div
             key={project.id}
-            className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:border-gurktaler-300 transition-colors"
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg transition-all"
           >
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold text-slate-800">
+                  <h3 className="text-lg font-heading font-semibold text-distillery-900">
                     {project.name}
                   </h3>
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    className={`px-3 py-1 text-xs font-semibold rounded-full border-vintage ${
                       statusColors[project.status as keyof typeof statusColors]
                     }`}
                   >
                     {statusLabels[project.status as keyof typeof statusLabels]}
                   </span>
                 </div>
-                <p className="text-slate-500 mb-3">{project.description}</p>
+                <p className="text-distillery-600 mb-3 font-body">
+                  {project.description}
+                </p>
                 {(() => {
                   const projectAssignments = tagAssignmentsService.getByEntity(
                     "project",

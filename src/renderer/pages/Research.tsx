@@ -35,10 +35,10 @@ const typeLabels = {
 };
 
 const typeColors = {
-  competitor: "bg-red-100 text-red-700",
-  supplier: "bg-blue-100 text-blue-700",
-  research: "bg-purple-100 text-purple-700",
-  other: "bg-slate-100 text-slate-700",
+  competitor: "bg-red-50 text-red-800 border-red-200",
+  supplier: "bg-distillery-50 text-distillery-800 border-distillery-200",
+  research: "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200",
+  other: "bg-bronze-50 text-bronze-800 border-bronze-200",
 };
 
 function Research() {
@@ -115,16 +115,16 @@ function Research() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
             Recherche & Links
           </h1>
-          <p className="text-slate-500">
+          <p className="text-distillery-600 font-body">
             Webseiten, Konkurrenz, Lieferanten und Inspiration
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
         >
           <Plus className="w-5 h-5" />
           Neuer Link
@@ -135,10 +135,10 @@ function Research() {
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setFilterType("all")}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
             filterType === "all"
-              ? "bg-gurktaler-600 text-white"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-gurktaler-500 text-white shadow-md"
+              : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
           }`}
         >
           Alle ({weblinks.length})
@@ -147,7 +147,7 @@ function Research() {
           <button
             key={key}
             onClick={() => setFilterType(key)}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
               filterType === key
                 ? "bg-gurktaler-600 text-white"
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"

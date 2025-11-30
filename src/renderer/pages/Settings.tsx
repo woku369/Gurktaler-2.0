@@ -237,16 +237,20 @@ function Settings() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Einstellungen</h1>
-        <p className="text-slate-500">App-Konfiguration und Datenverwaltung</p>
+        <h1 className="text-3xl font-heading font-bold text-distillery-900">
+          Einstellungen
+        </h1>
+        <p className="text-distillery-600 font-body">
+          App-Konfiguration und Datenverwaltung
+        </p>
       </div>
 
       <div className="space-y-6">
         {/* Data Management */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Database className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-distillery-100 rounded-vintage flex items-center justify-center">
+              <Database className="w-5 h-5 text-distillery-600" />
             </div>
             <div>
               <h2 className="font-semibold text-slate-800">Datenverwaltung</h2>

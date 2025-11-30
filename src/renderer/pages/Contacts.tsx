@@ -27,10 +27,10 @@ const typeLabels = {
 };
 
 const typeColors = {
-  supplier: "bg-blue-100 text-blue-700",
-  partner: "bg-green-100 text-green-700",
-  customer: "bg-purple-100 text-purple-700",
-  other: "bg-slate-100 text-slate-700",
+  supplier: "bg-distillery-50 text-distillery-800 border-distillery-200",
+  partner: "bg-green-50 text-green-800 border-green-200",
+  customer: "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200",
+  other: "bg-bronze-50 text-bronze-800 border-bronze-200",
 };
 
 function Contacts() {
@@ -88,14 +88,16 @@ function Contacts() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Kontakte</h1>
-          <p className="text-slate-500">
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
+            Kontakte
+          </h1>
+          <p className="text-distillery-600 font-body">
             Lieferanten, Partner und wichtige Kontakte
           </p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
         >
           <Plus className="w-5 h-5" />
           Neuer Kontakt
@@ -106,10 +108,10 @@ function Contacts() {
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setFilterType("all")}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
             filterType === "all"
-              ? "bg-gurktaler-600 text-white"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-gurktaler-500 text-white shadow-md"
+              : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
           }`}
         >
           Alle ({contacts.length})
@@ -118,10 +120,10 @@ function Contacts() {
           <button
             key={key}
             onClick={() => setFilterType(key)}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
               filterType === key
-                ? "bg-gurktaler-600 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                ? "bg-gurktaler-500 text-white shadow-md"
+                : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
             }`}
           >
             {label} ({contacts.filter((c) => c.type === key).length})
@@ -132,22 +134,22 @@ function Contacts() {
       {/* Search */}
       <div className="mb-6">
         <div className="relative max-w-md">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Kontakte durchsuchen..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+            className="w-full pl-10 pr-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
           />
         </div>
       </div>
 
       {/* Empty State */}
       {filteredContacts.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <Users className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-12 text-center">
+          <Users className="w-16 h-16 mx-auto text-distillery-300 mb-4" />
+          <h3 className="text-lg font-heading font-semibold text-distillery-900 mb-2">
             {contacts.length === 0 ? "Noch keine Kontakte" : "Keine Ergebnisse"}
           </h3>
           <p className="text-slate-600 mb-6">

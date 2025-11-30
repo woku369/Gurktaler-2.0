@@ -19,6 +19,88 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [0.7.0] - 2025-11-30
+
+### Hinzugefügt
+
+- **Distillery Modern Design System - Komplette UI-Überarbeitung**:
+  - Neue Farbpalette: Copper (#B87333), Steel (#4A6363), Bronze (#CD7F32)
+  - Warmer Cream-Hintergrund (#F8F6F3) für vintage Look
+  - Google Fonts Integration: Playfair Display (Serif-Überschriften), Source Sans Pro (Body)
+  - Custom Tailwind Extensions:
+    - Farbskalen: gurktaler (50-900), distillery (50-900), bronze (50-900)
+    - rounded-vintage (12px), border-vintage (2px)
+    - font-heading, font-body
+    - shadow-vintage, shadow-vintage-lg mit Copper-Tönung
+  - Copper-themed Scrollbar
+  - Gradient Header im Sidebar (copper)
+  - Logo mit white backdrop blur und vintage Border
+- **Excel-Import/Export für Zutaten**:
+  - Template-Generator mit Beispiel-Daten (Download-Button)
+  - Excel-Parser für .xlsx/.xls Dateien
+  - Import-Dialog mit Live-Validierung:
+    - Statistik-Cards: Gültig (grün), Duplikate (bronze), Fehler (rot)
+    - Selektive Auswahl (einzeln oder alle)
+    - Duplikat-Management: Überspringen oder Überschreiben
+    - Fehlerhafte Einträge mit Zeilennummer und Details
+  - Validierung:
+    - Name (Pflichtfeld)
+    - Alkoholgehalt 0-100%
+    - Keine negativen Werte (Kosten, Lagerbestand)
+  - Export-Funktion für alle vorhandenen Zutaten
+  - Template-Spalten: Name*, Kategorie, Alkoholgehalt, Lieferant, Kosten, Lagerbestand, Lagereinheit, Mindestbestand, Notizen
+- **Excel-Import/Export für Gebinde**:
+  - Gleiche Funktionalität wie Zutaten-Import
+  - Template mit 4 Beispielen (Flasche, Etikett, Verschluss, Verpackung)
+  - Typ-Mapping: bottle/Flasche, label/Etikett, cap/Verschluss, box/Verpackung, other/Sonstiges
+  - Template-Spalten: Name*, Typ, Volumen (ml), Preis pro Stück, Lieferant, Lagerbestand, Notizen
+  - Validierung: Name, keine negativen Werte
+  - Export-Funktion für alle vorhandenen Gebinde
+- **UI-Komponenten**:
+  - IngredientImportDialog.tsx - Import-Dialog für Zutaten
+  - ContainerImportDialog.tsx - Import-Dialog für Gebinde
+  - Distillery Modern Design durchgehend in allen Dialogen
+
+### Geändert
+
+- **Komplettes Design-Refresh aller Seiten**:
+  - Dashboard: Vintage Cards, größere Icons, copper Buttons
+  - Projects: Status-Colors auf vintage Palette, shadow-vintage
+  - Products: Version-Badges mit distillery Colors
+  - Notes: Type-Colors (bronze/gurktaler/green/distillery), Quick-Entry vintage
+  - Recipes: Type-Colors auf distillery Palette
+  - Contacts: Type-Colors mit vintage Borders
+  - Research: Type-Colors aktualisiert
+  - Tags: Copper Buttons, vintage Form-Card
+  - GlobalSearch: Type-Colors harmonisiert, vintage Search-Input
+  - Settings: Section-Cards mit vintage Styling
+  - Ingredients: Header mit Template/Export/Import-Buttons, vintage Search
+  - Containers: Header mit Template/Export/Import-Buttons, vintage Search
+  - Layout/Sidebar: Gradient copper Header, vintage Navigation
+  - Modal: Vintage Borders und copper hover-states
+
+### Technisch
+
+- Neue Dependencies:
+  - xlsx ^0.18.5 für Excel-Verarbeitung
+- Neue Services:
+  - `ingredientImport.ts` - Excel-Import/Export für Zutaten
+  - `containerImport.ts` - Excel-Import/Export für Gebinde
+- Tailwind Config erweitert mit custom Design-Tokens
+- index.html: Google Fonts Preconnect
+- index.css: Root-Styling, Scrollbar, Custom Shadow-Klassen
+
+### Verbessert
+
+- Konsistente Typografie: Playfair Display für alle Überschriften
+- Harmonisierte Farbverwendung über alle Komponenten
+- Einheitliche Border-Radien (12px) und Border-Stärken (2px)
+- Copper-Schatten für visuelle Tiefe
+- Verbesserte Hover-States mit gurktaler-50 Background
+- Button-Hierarchie: Primary (copper), Secondary (distillery), Tertiary (bronze)
+
+---
+
 ## [0.6.0] - 2024-11-29
 
 ### Hinzugefügt

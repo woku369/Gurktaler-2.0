@@ -33,10 +33,10 @@ const typeIcons: Record<NoteType, any> = {
 };
 
 const typeColors = {
-  idea: "bg-yellow-100 text-yellow-700",
-  note: "bg-blue-100 text-blue-700",
-  todo: "bg-green-100 text-green-700",
-  research: "bg-purple-100 text-purple-700",
+  idea: "bg-bronze-50 text-bronze-800 border-bronze-200",
+  note: "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200",
+  todo: "bg-green-50 text-green-800 border-green-200",
+  research: "bg-distillery-50 text-distillery-800 border-distillery-200",
 };
 
 const typeLabels = {
@@ -154,19 +154,21 @@ function Notes() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
             Notizen & Chaosablage
           </h1>
-          <p className="text-slate-500">Ideen, Gedanken und schnelle Notizen</p>
+          <p className="text-distillery-600 font-body">
+            Ideen, Gedanken und schnelle Notizen
+          </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors">
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold">
           <Plus className="w-5 h-5" />
           Neue Notiz
         </button>
       </div>
 
       {/* Quick Entry */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+      <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4 mb-6">
         <textarea
           value={quickNote}
           onChange={(e) => setQuickNote(e.target.value)}
@@ -176,7 +178,7 @@ function Notes() {
             }
           }}
           placeholder="Schnelle Notiz eingeben... (Gedankenfetzen, Ideen, alles was gerade wichtig ist) - Strg+Enter zum Speichern"
-          className="w-full p-3 border border-slate-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          className="w-full p-3 border-vintage border-distillery-200 rounded-vintage resize-none focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
           rows={3}
         />
         <div className="flex items-center justify-between mt-3">
@@ -188,10 +190,10 @@ function Notes() {
                 <button
                   key={key}
                   onClick={() => setSelectedType(key as NoteType)}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-all ${
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-all border-vintage font-body font-semibold ${
                     isSelected
                       ? typeColors[key as NoteType]
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      : "bg-gurktaler-50 text-distillery-700 border-distillery-200 hover:bg-gurktaler-100"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -203,7 +205,7 @@ function Notes() {
           <button
             onClick={handleQuickSave}
             disabled={!quickNote.trim()}
-            className="px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Speichern
           </button>
@@ -214,30 +216,30 @@ function Notes() {
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setFilterTab("all")}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
             filterTab === "all"
-              ? "bg-gurktaler-600 text-white"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-gurktaler-500 text-white shadow-md"
+              : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
           }`}
         >
           Alle ({notes.length})
         </button>
         <button
           onClick={() => setFilterTab("chaos")}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
             filterTab === "chaos"
-              ? "bg-gurktaler-600 text-white"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-gurktaler-500 text-white shadow-md"
+              : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
           }`}
         >
           Chaosablage ({notes.filter((n) => !n.project_id).length})
         </button>
         <button
           onClick={() => setFilterTab("project")}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
             filterTab === "project"
-              ? "bg-gurktaler-600 text-white"
-              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              ? "bg-gurktaler-500 text-white shadow-md"
+              : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
           }`}
         >
           Mit Projekt ({notes.filter((n) => n.project_id).length})
@@ -247,19 +249,19 @@ function Notes() {
       {/* Search and Tag Filter */}
       <div className="mb-6 flex gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Notizen durchsuchen..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+            className="w-full pl-10 pr-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
           />
         </div>
         <select
           value={selectedTagId}
           onChange={(e) => setSelectedTagId(e.target.value)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          className="px-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
         >
           <option value="">Alle Tags</option>
           {tags.map((tag) => (
@@ -272,12 +274,12 @@ function Notes() {
 
       {/* Empty State */}
       {filteredNotes.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-          <FileText className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-12 text-center">
+          <FileText className="w-16 h-16 mx-auto text-distillery-300 mb-4" />
+          <h3 className="text-lg font-heading font-semibold text-distillery-900 mb-2">
             {notes.length === 0 ? "Noch keine Notizen" : "Keine Ergebnisse"}
           </h3>
-          <p className="text-slate-600">
+          <p className="text-distillery-600 font-body">
             {notes.length === 0
               ? "Nutze das Quick-Entry-Feld oben für spontane Gedanken."
               : "Keine Notizen gefunden für deine Filter."}
@@ -303,11 +305,11 @@ function Notes() {
           return (
             <div
               key={note.id}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:border-gurktaler-300 transition-colors group"
+              className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all group"
             >
               <div className="flex items-start justify-between mb-3">
                 <span
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border-vintage font-body ${
                     typeColors[note.type as NoteType]
                   }`}
                 >

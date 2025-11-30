@@ -2,12 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Distillery Modern - Vintage Heritage Design */
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: "Source Sans Pro", Inter, system-ui, sans-serif;
+  line-height: 1.6;
   font-weight: 400;
-  color: #213547;
-  background-color: #f8fafc;
+  color: #2c3333;
+  background-color: #f8f6f3;
 }
 
 body {
@@ -21,21 +22,43 @@ body {
   flex-direction: column;
 }
 
-/* Custom scrollbar */
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
+  color: #2c3333;
+}
+
+/* Custom scrollbar - Vintage Copper */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #e8ddd0;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: #b87333;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #a0621c;
+}
+
+/* Vintage Shadows */
+.shadow-vintage {
+  box-shadow: 0 4px 12px rgba(139, 111, 71, 0.15);
+}
+
+.shadow-vintage-lg {
+  box-shadow: 0 8px 24px rgba(139, 111, 71, 0.2);
 }

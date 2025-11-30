@@ -301,23 +301,23 @@ export default function GlobalSearch() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case "project":
-        return "bg-blue-100 text-blue-700";
+        return "bg-distillery-50 text-distillery-800 border-distillery-200";
       case "product":
-        return "bg-green-100 text-green-700";
+        return "bg-green-50 text-green-800 border-green-200";
       case "note":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-bronze-50 text-bronze-800 border-bronze-200";
       case "contact":
-        return "bg-purple-100 text-purple-700";
+        return "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200";
       case "weblink":
-        return "bg-pink-100 text-pink-700";
+        return "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200";
       case "recipe":
-        return "bg-gurktaler-100 text-gurktaler-700";
+        return "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200";
       case "ingredient":
-        return "bg-teal-100 text-teal-700";
+        return "bg-green-50 text-green-800 border-green-200";
       case "container":
-        return "bg-orange-100 text-orange-700";
+        return "bg-bronze-50 text-bronze-800 border-bronze-200";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-distillery-50 text-distillery-700 border-distillery-200";
     }
   };
 
@@ -356,10 +356,10 @@ export default function GlobalSearch() {
     <div className="p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-heading font-bold text-distillery-900 mb-2">
             Globale Suche
           </h1>
-          <p className="text-gray-600">
+          <p className="text-distillery-600 font-body">
             Durchsuche alle Bereiche: Projekte, Produkte, Notizen, Kontakte,
             Weblinks, Rezepturen, Zutaten und Gebinde
           </p>
@@ -368,19 +368,19 @@ export default function GlobalSearch() {
         {/* Search Input */}
         <div className="mb-6 space-y-3">
           <div className="relative">
-            <Search className="w-6 h-6 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search className="w-6 h-6 absolute left-4 top-1/2 transform -translate-y-1/2 text-distillery-400" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Wonach suchst du?"
-              className="w-full pl-14 pr-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-gurktaler-primary focus:border-transparent"
+              className="w-full pl-14 pr-4 py-4 text-lg border-vintage border-distillery-200 rounded-vintage focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent font-body"
               autoFocus
             />
           </div>
 
           {/* Favorites Filter */}
-          <label className="flex items-center gap-2 cursor-pointer w-fit">
+          <label className="flex items-center gap-2 cursor-pointer w-fit font-body">
             <input
               type="checkbox"
               checked={showOnlyFavorites}
@@ -390,13 +390,13 @@ export default function GlobalSearch() {
                   performSearch(query);
                 }
               }}
-              className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-500"
+              className="w-4 h-4 text-bronze-500 border-distillery-300 rounded focus:ring-bronze-500"
             />
             <Star
               className={`w-4 h-4 ${
                 showOnlyFavorites
-                  ? "text-yellow-500 fill-yellow-500"
-                  : "text-gray-400"
+                  ? "text-bronze-500 fill-bronze-500"
+                  : "text-distillery-400"
               }`}
             />
             <span className="text-sm text-gray-700">

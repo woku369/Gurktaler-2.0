@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Edit2, Trash2, Beaker, Star } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Beaker,
+  Star,
+  FileSpreadsheet,
+  Download,
+  Upload,
+} from "lucide-react";
 import {
   ingredients as ingredientsService,
   tags as tagsService,
@@ -9,6 +19,11 @@ import {
 import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
 import TagSelector from "@/renderer/components/TagSelector";
+import IngredientImportDialog from "@/renderer/components/IngredientImportDialog";
+import {
+  generateTemplate,
+  exportIngredients,
+} from "@/renderer/services/ingredientImport";
 import type { Ingredient, Tag } from "@/shared/types";
 
 function Ingredients() {
@@ -17,6 +32,7 @@ function Ingredients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
     null
   );
@@ -121,34 +137,65 @@ function Ingredients() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Zutaten</h1>
-          <p className="text-slate-500">Verwaltung der Rohstoffe und Zutaten</p>
+          <h1 className="text-3xl font-heading font-bold text-distillery-900">
+            Zutaten
+          </h1>
+          <p className="text-distillery-600 font-body">
+            Verwaltung der Rohstoffe und Zutaten
+          </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Neue Zutat
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => generateTemplate()}
+            className="flex items-center gap-2 px-4 py-2 bg-distillery-100 text-distillery-700 rounded-vintage hover:bg-distillery-200 transition-all font-body font-semibold"
+            title="Excel-Vorlage herunterladen"
+          >
+            <Download className="w-5 h-5" />
+            Template
+          </button>
+          <button
+            onClick={() => exportIngredients(ingredients)}
+            disabled={ingredients.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-bronze-100 text-bronze-700 rounded-vintage hover:bg-bronze-200 transition-all font-body font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Alle Zutaten exportieren"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            Export
+          </button>
+          <button
+            onClick={() => setShowImportDialog(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gurktaler-100 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-200 transition-all font-body font-semibold"
+            title="Zutaten aus Excel importieren"
+          >
+            <Upload className="w-5 h-5" />
+            Import
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
+          >
+            <Plus className="w-5 h-5" />
+            Neue Zutat
+          </button>
+        </div>
       </div>
 
       {/* Search & Tag Filter */}
       <div className="mb-6 flex gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+          <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Zutaten durchsuchen..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+            className="w-full pl-10 pr-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
           />
         </div>
         <select
           value={selectedTagId}
           onChange={(e) => setSelectedTagId(e.target.value)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          className="px-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
         >
           <option value="">Alle Tags</option>
           {tags.map((tag) => (
@@ -158,6 +205,14 @@ function Ingredients() {
           ))}
         </select>
       </div>
+
+      {/* Import Dialog */}
+      <IngredientImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImportComplete={loadData}
+        existingIngredients={ingredients}
+      />
 
       {/* Form Modal */}
       {showForm && (
