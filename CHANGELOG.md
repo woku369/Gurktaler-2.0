@@ -7,6 +7,47 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [0.8.0] - 2025-11-30
+
+### Neu
+
+#### 🔄 Git-Integration & Automatischer Sync
+- **Git-Service**: Vollständige Integration für Git-Operationen (status, commit, push, pull)
+- **Auto-Commit**: Automatische Commits bei Datenänderungen (create/update/delete)
+- **Auto-Push**: Optionaler automatischer Push nach Commit
+- **Git-Status UI**: Echtzeit-Anzeige in Settings
+  - Aktueller Branch und letzter Commit
+  - Anzahl uncommitted changes
+  - Letzte Commit-Message mit Author und Timestamp
+- **Manual Sync**: Push/Pull Buttons in Settings für manuellen Sync
+- **Konfigurierbar**: Toggle für Auto-Commit, Auto-Push, Custom Commit-Prefix
+
+#### 🔧 Electron IPC Erweiterung
+- Neues `window.electron.invoke()` API für flexiblere Backend-Kommunikation
+- Git-Handler im Electron Main Process mit `child_process.execSync()`
+- TypeScript-Definitionen für IPC-Channels
+
+### Geändert
+
+#### 📦 Storage Service
+- Auto-Commit Hook in `createEntity()`, `updateEntity()`, `deleteEntity()`
+- Entity-Namen werden aus `name` oder `title` extrahiert für aussagekräftige Commit-Messages
+
+#### ⚙️ Settings-Seite
+- Git-Integration Sektion mit Status-Anzeige
+- Refresh-Button für Git-Status
+- Konfiguration für Auto-Commit/Push
+- Error-Handling für fehlgeschlagene Git-Operationen
+
+### Technisch
+- **Neue Dateien**:
+  - `src/renderer/services/git.ts` - Git-Service mit allen Operationen
+  - `src/renderer/types/electron.d.ts` - TypeScript Definitionen
+- **Dependencies**: Keine neuen (nutzt Node.js `child_process`)
+- **IPC-Channels**: `git:status`, `git:commit`, `git:push`, `git:pull`
+
+---
+
 ## [Unreleased]
 
 ### Geplant

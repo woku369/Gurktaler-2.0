@@ -165,7 +165,7 @@
 
 ---
 
-## Phase 8: Sync & Export (v0.8.x)
+## Phase 8: Sync & Export (v0.8.x) 🔄
 
 | Status | Aufgabe                     | Beschreibung                        |
 | ------ | --------------------------- | ----------------------------------- |
@@ -173,9 +173,11 @@
 | ✅     | JSON-Import                 | Daten importieren                   |
 | ✅     | Settings-UI                 | Export/Import Buttons               |
 | ✅     | vCard-Import                | Google Contacts importieren (.vcf)  |
+| ✅     | Git-Integration             | Automatischer Sync                  |
+| ✅     | Auto-Commit                 | Bei Datenänderungen                 |
+| ✅     | Manual Push/Pull            | Sync-Buttons in Settings            |
+| 📋     | Konflikt-Handling           | Bei Merge-Konflikten (v0.9.x)       |
 | 📋     | Google Contacts OAuth API   | Direkter Sync (für v0.9.x)          |
-| 📋     | Git-Integration             | Automatischer Sync                  |
-| 📋     | Konflikt-Handling           | Bei Sync-Konflikten                 |
 
 ---
 
