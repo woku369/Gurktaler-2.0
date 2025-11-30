@@ -7,6 +7,50 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [0.9.0] - 2025-11-30
+
+### Neu
+
+#### 🌿 Rezeptur-Versionierung (Phase 4 komplett)
+- **parent_id & version**: Recipe Interface erweitert für Versionierungs-Support
+- **Tree-View**: Hierarchische Darstellung wie bei Produkten
+  - Root-Rezeptur zeigt alle Versionen darunter
+  - Eingerücktes Layout für Versionshistorie
+  - Jede Version kann selbst wieder versioniert werden
+- **Versionierungs-Button**: GitBranch Icon erstellt neue Version mit parent_id Link
+- **Automatische Kalkulation**: RecipeCalculator Komponente
+  - Gesamtvolumen mit Unit-Conversion (ml/l/g/kg/TL/EL)
+  - Gewichteter Durchschnitts-Alkoholgehalt
+  - Materialkosten gesamt + pro Liter (wenn Ausbeute angegeben)
+  - Distillery Modern Styling mit Droplet/Euro Icons
+- **Suche & Filter**: Berücksichtigt Root-Rezepturen + alle Versionen
+- **Favoriten**: Individuell für jede Version
+- **Tags**: Anzeige und Filter für Rezepturen und Versionen
+
+### Geändert
+
+#### 📝 Recipes.tsx
+- Von Grid-Layout zu Tree-View-Struktur umgestellt
+- Modal-Titel dynamisch: "Neue Version: [Name]" bei Versionierung
+- Vintage Borders und gurktaler/bronze Farben durchgehend
+- Version-Badge mit "v" Präfix wenn vorhanden
+
+#### 🧮 RecipeForm.tsx
+- RecipeCalculator nach RecipeIngredientEditor integriert
+- Nur im Edit-Modus sichtbar (wenn recipe existiert)
+- Props: recipeId, yieldAmount, yieldUnit
+
+### Technisch
+
+- **Erweitert**:
+  - `Recipe` Interface: `parent_id?: string`, `version?: string`
+  - `buildRecipeTree()`: Erstellt hierarchische Struktur
+  - `handleCreateVersion()`: Kopiert Rezeptur mit parent_id Link
+- **Neue Komponente**:
+  - `RecipeCalculator.tsx`: ~180 Zeilen mit Unit-Conversion & Kalkulation
+
+---
+
 ## [0.8.0] - 2025-11-30
 
 ### Neu

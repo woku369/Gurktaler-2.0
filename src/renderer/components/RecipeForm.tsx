@@ -1,6 +1,7 @@
 import { useState, FormEvent, useEffect } from "react";
 import { products as productsService } from "@/renderer/services/storage";
 import RecipeIngredientEditor from "./RecipeIngredientEditor";
+import RecipeCalculator from "./RecipeCalculator";
 import ImageUpload from "./ImageUpload";
 import TagSelector from "./TagSelector";
 import type { Recipe, RecipeType, Product } from "@/shared/types";
@@ -199,6 +200,17 @@ export default function RecipeForm({
       {recipe && (
         <div className="border-t border-slate-200 pt-6">
           <RecipeIngredientEditor recipeId={recipe.id} />
+        </div>
+      )}
+
+      {/* Calculator (only when editing) */}
+      {recipe && (
+        <div className="border-t border-slate-200 pt-6">
+          <RecipeCalculator
+            recipeId={recipe.id}
+            yieldAmount={recipe.yield_amount}
+            yieldUnit={recipe.yield_unit}
+          />
         </div>
       )}
 

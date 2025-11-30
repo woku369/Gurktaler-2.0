@@ -65,16 +65,25 @@
 ### 3. Rezepturen (`recipes`)
 
 | Feld | Typ | Beschreibung |
-|------|-----|--------------|
+|------|-----|--------------||
 | id | TEXT (UUID) | Primärschlüssel |
-| product_id | TEXT | FK → products.id |
+| product_id | TEXT | FK → products.id (optional) |
+| parent_id | TEXT | FK → recipes.id (für Versionierung) |
 | name | TEXT | Rezepturname |
+| version | TEXT | Versionsbezeichnung (z.B. "1.0", "1.1") |
+| type | TEXT | 'macerate', 'distillate', 'blend' |
 | description | TEXT | Beschreibung/Notizen |
 | instructions | TEXT | Zubereitungsanleitung |
 | yield_amount | REAL | Ergibt Menge |
 | yield_unit | TEXT | Einheit (ml, l, etc.) |
+| notes | TEXT | Bemerkungsfeld |
 | created_at | DATETIME | Erstelldatum |
 | updated_at | DATETIME | Letzte Änderung |
+
+**Versionierung:**
+- `parent_id = NULL` → Ursprungsrezeptur
+- `parent_id = xyz` → Abgeleitete Version
+- Beispiel: Rezeptur A (parent=null) → A v1.1 (parent=A) → A v1.2 (parent=A v1.1)
 
 ---
 
@@ -244,4 +253,4 @@ Für Git-Synchronisation werden die Daten als JSON exportiert:
 
 ---
 
-*Letzte Aktualisierung: 25. November 2024*
+*Letzte Aktualisierung: 30. November 2025*

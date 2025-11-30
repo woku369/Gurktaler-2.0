@@ -90,24 +90,27 @@
 
 ---
 
-## Phase 4: Rezepturen (v0.4.x)
+## Phase 4: Rezepturen (v0.6.x - v0.9.x) ✅
 
 ### Zutaten-Stammdaten
 
-| Status | Aufgabe            | Beschreibung                    |
-| ------ | ------------------ | ------------------------------- |
-| 📋     | Zutaten-Liste      | Mazerate, Destillate, Rohstoffe |
-| 📋     | Zutaten-Kategorien | Kräuter, Alkohol, etc.          |
-| 📋     | Bestandsführung    | Optional: Lagerbestand          |
+| Status | Aufgabe            | Beschreibung                           |
+| ------ | ------------------ | -------------------------------------- |
+| ✅     | Zutaten-Liste      | Mazerate, Destillate, Rohstoffe        |
+| ✅     | Zutaten-Kategorien | Freie Kategorisierung                  |
+| ✅     | Preisverwaltung    | Liter-/Kilopreise für Kalkulation      |
+| ✅     | Excel-Import       | Template mit Beispieldaten             |
 
 ### Rezeptur-Editor
 
-| Status | Aufgabe                | Beschreibung      |
-| ------ | ---------------------- | ----------------- |
-| 📋     | Rezeptur-Formular      | Zutaten + Mengen  |
-| 📋     | Zubereitungsschritte   | Anleitung         |
-| 📋     | Rezeptur-Kalkulation   | Mengenberechnung  |
-| 📋     | Rezeptur-Versionierung | Wie bei Produkten |
+| Status | Aufgabe                | Beschreibung                              |
+| ------ | ---------------------- | ----------------------------------------- |
+| ✅     | Rezeptur-Formular      | Zutaten + Mengen mit Sortierung           |
+| ✅     | Zubereitungsschritte   | Anleitung als Textfeld                    |
+| ✅     | Rezeptur-Kalkulation   | Auto-Berechnung: Volumen, Alkohol, Kosten |
+| ✅     | Rezeptur-Versionierung | Tree-View mit parent_id wie bei Produkten |
+| ✅     | Unit-Conversion        | ml/l/g/kg/TL/EL Umrechnung                |
+| ✅     | Pro-Liter-Kalkulation  | Wenn Ausbeute angegeben                   |
 
 ---
 
@@ -226,4 +229,4 @@ Siehe [CHANGELOG.md](./CHANGELOG.md) für detaillierte Versionshistorie.
 
 ---
 
-**Letzte Aktualisierung:** 29. November 2024
+**Letzte Aktualisierung:** 30. November 2025

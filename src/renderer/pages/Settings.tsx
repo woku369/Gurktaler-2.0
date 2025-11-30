@@ -33,16 +33,16 @@ import {
 import { parseVCard } from "@/renderer/services/vcardParser";
 import ContactImportDialog from "@/renderer/components/ContactImportDialog";
 import type { ParsedContact } from "@/renderer/services/vcardParser";
-import { 
-  getGitStatus, 
-  getGitConfig, 
-  saveGitConfig, 
-  pushChanges, 
+import {
+  getGitStatus,
+  getGitConfig,
+  saveGitConfig,
+  pushChanges,
   pullChanges,
   addRemote,
   listRemotes,
   type GitStatus,
-  type GitConfig 
+  type GitConfig,
 } from "@/renderer/services/git";
 
 function Settings() {
@@ -67,14 +67,16 @@ function Settings() {
   const [showRemoteSetup, setShowRemoteSetup] = useState(false);
   const [remoteUrl, setRemoteUrl] = useState("");
   const [remoteName, setRemoteName] = useState("origin");
-  const [remotes, setRemotes] = useState<Array<{ name: string; url: string; type: string }>>([]);
-  
+  const [remotes, setRemotes] = useState<
+    Array<{ name: string; url: string; type: string }>
+  >([]);
+
   // Git-Status laden
   useEffect(() => {
     loadGitStatus();
     loadRemotes();
   }, []);
-  
+
   const loadGitStatus = async () => {
     const status = await getGitStatus();
     setGitStatus(status);
@@ -94,12 +96,13 @@ function Settings() {
     setGitLoading(true);
     setGitError("");
     const result = await addRemote(remoteName, remoteUrl);
-    
+
     if (result.success) {
       setImportStatus("success");
-      setStatusMessage(result.updated 
-        ? `Remote "${remoteName}" aktualisiert!` 
-        : `Remote "${remoteName}" hinzugefügt!`
+      setStatusMessage(
+        result.updated
+          ? `Remote "${remoteName}" aktualisiert!`
+          : `Remote "${remoteName}" hinzugefügt!`
       );
       setShowRemoteSetup(false);
       setRemoteUrl("");
@@ -108,13 +111,14 @@ function Settings() {
     } else {
       setGitError(result.error || "Fehler beim Hinzufügen des Remotes.");
     }
-    
+
     setGitLoading(false);
     setTimeout(() => {
       setImportStatus("idle");
       setStatusMessage("");
     }, 3000);
-  };  const handleGitPush = async () => {
+  };
+  const handleGitPush = async () => {
     setGitLoading(true);
     setGitError("");
     const success = await pushChanges();
@@ -438,7 +442,9 @@ function Settings() {
             {showRemoteSetup && (
               <div className="mb-4 p-4 bg-gurktaler-50 border border-gurktaler-200 rounded-vintage">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gurktaler-900">Remote-Repository hinzufügen</h3>
+                  <h3 className="font-semibold text-gurktaler-900">
+                    Remote-Repository hinzufügen
+                  </h3>
                   <button
                     onClick={() => {
                       setShowRemoteSetup(false);
@@ -450,7 +456,7 @@ function Settings() {
                     ✕
                   </button>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -464,7 +470,7 @@ function Settings() {
                       className="w-full px-3 py-2 border border-slate-200 rounded-vintage text-sm focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">
                       Remote-URL (GitHub/GitLab/etc.)
@@ -477,18 +483,19 @@ function Settings() {
                       className="w-full px-3 py-2 border border-slate-200 rounded-vintage text-sm focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
                     />
                     <p className="text-xs text-slate-500 mt-1">
-                      💡 Beispiele:<br/>
-                      • https://github.com/user/repo.git<br/>
-                      • git@github.com:user/repo.git
+                      💡 Beispiele:
+                      <br />
+                      • https://github.com/user/repo.git
+                      <br />• git@github.com:user/repo.git
                     </p>
                   </div>
-                  
+
                   <button
                     onClick={handleAddRemote}
                     disabled={gitLoading || !remoteUrl.trim()}
                     className="w-full px-4 py-2 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {gitLoading ? 'Wird eingerichtet...' : 'Remote hinzufügen'}
+                    {gitLoading ? "Wird eingerichtet..." : "Remote hinzufügen"}
                   </button>
                 </div>
               </div>
@@ -496,16 +503,25 @@ function Settings() {
 
             {remotes.length > 0 && (
               <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-vintage">
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">Konfigurierte Remotes:</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">
+                  Konfigurierte Remotes:
+                </h3>
                 <div className="space-y-1">
-                  {remotes.filter(r => r.type === 'fetch').map((remote) => (
-                    <div key={remote.name} className="flex items-center gap-2 text-xs">
-                      <code className="px-2 py-0.5 bg-white rounded font-mono text-gurktaler-700">
-                        {remote.name}
-                      </code>
-                      <span className="text-slate-600 truncate">{remote.url}</span>
-                    </div>
-                  ))}
+                  {remotes
+                    .filter((r) => r.type === "fetch")
+                    .map((remote) => (
+                      <div
+                        key={remote.name}
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        <code className="px-2 py-0.5 bg-white rounded font-mono text-gurktaler-700">
+                          {remote.name}
+                        </code>
+                        <span className="text-slate-600 truncate">
+                          {remote.url}
+                        </span>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}

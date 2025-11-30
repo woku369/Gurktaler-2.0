@@ -27,7 +27,11 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **KI-Assistenten**: ChatGPT, Claude, Qwen & DeepSeek Integration für Recherche und Produktentwicklung
 - **Bild-Upload**: Vollständig integriert in Notizen & Produkte (Base64-Speicherung)
 - **Rezeptur-Verwaltung**: Zutaten-DB mit Alkohol%/Preisen, Gebinde-Management, Rezept-Editor mit Zutatenliste
+- **Rezeptur-Versionierung**: Tree-View wie bei Produkten, parent_id Linking, Versionierungs-Button
+- **Rezeptur-Kalkulation**: Automatische Berechnung von Volumen, Alkoholgehalt & Kosten mit Unit-Conversion
 - **Alkoholsteuer-Berechnung**: Automatische Berechnung (12€/L reiner Alkohol) im Produktformular
+- **Git-Integration**: Auto-Commit, Auto-Push, Git-Status UI, Remote-Setup ohne Terminal
+- **Excel-Import/Export**: Zutaten & Gebinde mit Template-Generator
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
 
 ### In Entwicklung 🔄
@@ -139,5 +143,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 0.5.0 (KI-Assistenten & vCard-Import)  
-**Letztes Update**: 29. November 2024
+**Aktuelle Version**: 0.9.0 (Rezeptur-Versionierung & Kalkulation)  
+**Letztes Update**: 30. November 2025

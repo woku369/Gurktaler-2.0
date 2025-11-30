@@ -40,12 +40,14 @@ export interface Product extends BaseEntity {
     notes?: string; // Bemerkungsfeld
 }
 
-// Recipe
+// Recipe with versioning
 export type RecipeType = 'macerate' | 'distillate' | 'blend';
 
 export interface Recipe extends BaseEntity {
     product_id?: string; // Optional: Rezeptur kann auch ohne Produkt existieren
+    parent_id?: string; // For versioning: null = original, otherwise = derived from
     name: string;
+    version?: string; // Version number (e.g., "1.0", "1.1")
     type: RecipeType;
     description?: string;
     instructions?: string; // Zubereitungsschritte
