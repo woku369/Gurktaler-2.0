@@ -6,6 +6,7 @@ import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
     Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite
 } from '@/shared/types'
+import { autoCommit } from './git'
 
 const STORAGE_KEY = 'gurktaler_data'
 
@@ -97,7 +98,7 @@ function now(): string {
 }
 
 // Generic CRUD operations
-function createEntity<T extends { id: string; created_at: string }>(
+function createEntity<T extends { id: string; created_at: string; name?: string; title?: string }>(
     key: keyof AppData,
     entity: Omit<T, 'id' | 'created_at'>
 ): T {
@@ -109,10 +110,16 @@ function createEntity<T extends { id: string; created_at: string }>(
     } as T
         ; (data[key] as unknown as T[]).push(newEntity)
     saveData(data)
+    
+    // Auto-Commit
+    const entityName = (newEntity as { name?: string; title?: string }).name || 
+                      (newEntity as { name?: string; title?: string }).title
+    autoCommit(key, 'created', entityName).catch(console.error)
+    
     return newEntity
 }
 
-function updateEntity<T extends { id: string; updated_at?: string }>(
+function updateEntity<T extends { id: string; updated_at?: string; name?: string; title?: string }>(
     key: keyof AppData,
     id: string,
     updates: Partial<T>
@@ -124,17 +131,30 @@ function updateEntity<T extends { id: string; updated_at?: string }>(
 
     items[index] = { ...items[index], ...updates, updated_at: now() }
     saveData(data)
+    
+    // Auto-Commit
+    const entityName = (items[index] as { name?: string; title?: string }).name || 
+                      (items[index] as { name?: string; title?: string }).title
+    autoCommit(key, 'updated', entityName).catch(console.error)
+    
     return items[index]
 }
 
-function deleteEntity<T extends { id: string }>(key: keyof AppData, id: string): boolean {
+function deleteEntity<T extends { id: string; name?: string; title?: string }>(key: keyof AppData, id: string): boolean {
     const data = loadData()
     const items = data[key] as unknown as T[]
     const index = items.findIndex((item) => item.id === id)
     if (index === -1) return false
 
+    const entityName = (items[index] as { name?: string; title?: string }).name || 
+                      (items[index] as { name?: string; title?: string }).title
+    
     items.splice(index, 1)
     saveData(data)
+    
+    // Auto-Commit
+    autoCommit(key, 'deleted', entityName).catch(console.error)
+    
     return true
 }
 
