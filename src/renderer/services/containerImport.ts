@@ -220,9 +220,7 @@ export function convertToContainer(
     type: imported.type || 'other',
     volume: imported.volume,
     price: imported.price,
-    supplier: imported.supplier,
-    stock_quantity: imported.stock_quantity,
-    notes: imported.notes
+    notes: `${imported.notes || ''}${imported.supplier ? `\nLieferant: ${imported.supplier}` : ''}${imported.stock_quantity ? `\nLagerbestand: ${imported.stock_quantity}` : ''}`
   };
 }
 
@@ -239,12 +237,10 @@ export function exportContainers(containers: Container[]): void {
   };
 
   const exportData = containers.map(cont => ({
-    'Name *': cont.name,
-    'Typ': cont.type,
+    'Name': cont.name,
+    'Typ': typeLabels[cont.type],
     'Volumen (ml)': cont.volume || '',
     'Preis pro Stück (€)': cont.price || '',
-    'Lieferant': cont.supplier || '',
-    'Lagerbestand': cont.stock_quantity || '',
     'Notizen': cont.notes || ''
   }));
 

@@ -215,12 +215,9 @@ export function convertToIngredient(
     name: imported.name,
     category: imported.category,
     alcohol_percentage: imported.alcohol_percentage,
-    supplier: imported.supplier,
-    cost_per_unit: imported.cost_per_unit,
-    stock_quantity: imported.stock_quantity,
-    stock_unit: imported.stock_unit,
-    reorder_level: imported.reorder_level,
-    notes: imported.notes
+    price_per_unit: imported.cost_per_unit,
+    unit: 'liter',
+    notes: `${imported.notes || ''}${imported.supplier ? `\nLieferant: ${imported.supplier}` : ''}${imported.stock_quantity ? `\nLagerbestand: ${imported.stock_quantity} ${imported.stock_unit}` : ''}${imported.reorder_level ? `\nMindestbestand: ${imported.reorder_level}` : ''}`
   };
 }
 
@@ -229,14 +226,11 @@ export function convertToIngredient(
  */
 export function exportIngredients(ingredients: Ingredient[]): void {
   const exportData = ingredients.map(ing => ({
-    'Name *': ing.name,
+    'Name': ing.name,
     'Kategorie': ing.category || '',
     'Alkoholgehalt (% vol.)': ing.alcohol_percentage || 0,
-    'Lieferant': ing.supplier || '',
-    'Kosten pro Einheit (€)': ing.cost_per_unit || 0,
-    'Lagerbestand': ing.stock_quantity || 0,
-    'Lagereinheit': ing.stock_unit || '',
-    'Mindestbestand': ing.reorder_level || 0,
+    'Preis pro Einheit (€)': ing.price_per_unit || 0,
+    'Einheit': ing.unit || 'liter',
     'Notizen': ing.notes || ''
   }));
 
