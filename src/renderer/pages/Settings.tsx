@@ -33,14 +33,14 @@ import {
 import { parseVCard } from "@/renderer/services/vcardParser";
 import ContactImportDialog from "@/renderer/components/ContactImportDialog";
 import type { ParsedContact } from "@/renderer/services/vcardParser";
-import { 
-  getGitStatus, 
-  getGitConfig, 
-  saveGitConfig, 
-  pushChanges, 
+import {
+  getGitStatus,
+  getGitConfig,
+  saveGitConfig,
+  pushChanges,
   pullChanges,
   type GitStatus,
-  type GitConfig 
+  type GitConfig,
 } from "@/renderer/services/git";
 
 function Settings() {
@@ -56,23 +56,23 @@ function Settings() {
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [editingKey, setEditingKey] = useState<AIProvider | null>(null);
-  
+
   // Git-Integration State
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
   const [gitConfig, setGitConfig] = useState<GitConfig>(getGitConfig());
   const [gitLoading, setGitLoading] = useState(false);
   const [gitError, setGitError] = useState<string>("");
-  
+
   // Git-Status laden
   useEffect(() => {
     loadGitStatus();
   }, []);
-  
+
   const loadGitStatus = async () => {
     const status = await getGitStatus();
     setGitStatus(status);
   };
-  
+
   const handleGitPush = async () => {
     setGitLoading(true);
     setGitError("");
@@ -90,14 +90,16 @@ function Settings() {
       setStatusMessage("");
     }, 3000);
   };
-  
+
   const handleGitPull = async () => {
     setGitLoading(true);
     setGitError("");
     const success = await pullChanges();
     if (success) {
       setImportStatus("success");
-      setStatusMessage("Änderungen erfolgreich gepullt! Seite wird neu geladen...");
+      setStatusMessage(
+        "Änderungen erfolgreich gepullt! Seite wird neu geladen..."
+      );
       setTimeout(() => window.location.reload(), 2000);
     } else {
       setGitError("Pull fehlgeschlagen. Eventuell gibt es Konflikte.");
@@ -108,8 +110,11 @@ function Settings() {
       setStatusMessage("");
     }, 3000);
   };
-  
-  const handleGitConfigChange = (key: keyof GitConfig, value: boolean | string) => {
+
+  const handleGitConfigChange = (
+    key: keyof GitConfig,
+    value: boolean | string
+  ) => {
     const newConfig = { ...gitConfig, [key]: value };
     setGitConfig(newConfig);
     saveGitConfig(newConfig);
@@ -358,17 +363,38 @@ function Settings() {
                 <GitBranch className="w-5 h-5 text-gurktaler-600" />
               </div>
               <div>
-                <h2 className="font-semibold text-slate-800 font-heading">Git-Integration</h2>
+                <h2 className="font-semibold text-slate-800 font-heading">
+                  Git-Integration
+                </h2>
                 <p className="text-sm text-slate-500 font-body">
                   Automatischer Sync & Versionierung
                 </p>
               </div>
             </div>
 
+            {!gitStatus.hasRemote && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-vintage">
+                <div className="flex items-center gap-2 text-amber-800 mb-2">
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Kein Remote-Repository konfiguriert</span>
+                </div>
+                <p className="text-xs text-amber-700 mb-2">
+                  Push/Pull funktionieren erst nach Remote-Setup. Führe im Terminal aus:
+                </p>
+                <code className="block bg-amber-100 p-2 rounded text-xs font-mono text-amber-900">
+                  git remote add origin &lt;url&gt;<br/>
+                  git push -u origin master
+                </code>
+              </div>
+            )}
+
             {gitError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-vintage flex items-center gap-2 text-red-700">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm font-medium">{gitError}</span>
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-vintage">
+                <div className="flex items-center gap-2 text-red-700 mb-2">
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Fehler</span>
+                </div>
+                <pre className="text-xs text-red-800 whitespace-pre-wrap font-mono">{gitError}</pre>
               </div>
             )}
 
@@ -378,8 +404,12 @@ function Settings() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <GitBranch className="w-4 h-4 text-gurktaler-600" />
-                    <span className="font-medium text-gurktaler-900">Branch:</span>
-                    <code className="px-2 py-0.5 bg-white rounded text-sm">{gitStatus.branch}</code>
+                    <span className="font-medium text-gurktaler-900">
+                      Branch:
+                    </span>
+                    <code className="px-2 py-0.5 bg-white rounded text-sm">
+                      {gitStatus.branch}
+                    </code>
                   </div>
                   <button
                     onClick={loadGitStatus}
@@ -387,7 +417,11 @@ function Settings() {
                     className="p-1 hover:bg-gurktaler-100 rounded transition-colors"
                     title="Aktualisieren"
                   >
-                    <RefreshCw className={`w-4 h-4 text-gurktaler-600 ${gitLoading ? 'animate-spin' : ''}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 text-gurktaler-600 ${
+                        gitLoading ? "animate-spin" : ""
+                      }`}
+                    />
                   </button>
                 </div>
 
@@ -395,9 +429,14 @@ function Settings() {
                   <div className="flex items-start gap-2 mb-3">
                     <GitCommit className="w-4 h-4 text-slate-500 mt-0.5" />
                     <div className="flex-1 text-sm">
-                      <p className="font-medium text-slate-700">{gitStatus.lastCommit.message}</p>
+                      <p className="font-medium text-slate-700">
+                        {gitStatus.lastCommit.message}
+                      </p>
                       <p className="text-xs text-slate-500">
-                        {gitStatus.lastCommit.author} • {new Date(gitStatus.lastCommit.date).toLocaleString('de-DE')}
+                        {gitStatus.lastCommit.author} •{" "}
+                        {new Date(gitStatus.lastCommit.date).toLocaleString(
+                          "de-DE"
+                        )}
                       </p>
                     </div>
                   </div>
@@ -407,7 +446,8 @@ function Settings() {
                   <div className="flex items-center gap-2 text-sm text-amber-700">
                     <AlertCircle className="w-4 h-4" />
                     <span>
-                      {gitStatus.modified.length + gitStatus.untracked.length} ungespeicherte Änderung(en)
+                      {gitStatus.modified.length + gitStatus.untracked.length}{" "}
+                      ungespeicherte Änderung(en)
                     </span>
                   </div>
                 )}
@@ -424,16 +464,18 @@ function Settings() {
               <div className="flex gap-3">
                 <button
                   onClick={handleGitPull}
-                  disabled={gitLoading}
+                  disabled={gitLoading || !gitStatus.hasRemote}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-vintage border-distillery-200 rounded-vintage hover:bg-distillery-50 transition-colors disabled:opacity-50"
+                  title={!gitStatus.hasRemote ? "Remote-Repository erforderlich" : ""}
                 >
                   <Download className="w-5 h-5" />
                   Pull
                 </button>
                 <button
                   onClick={handleGitPush}
-                  disabled={gitLoading || !gitStatus.hasUncommitted}
+                  disabled={gitLoading || !gitStatus.hasRemote || !gitStatus.hasUncommitted}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors disabled:opacity-50"
+                  title={!gitStatus.hasRemote ? "Remote-Repository erforderlich" : !gitStatus.hasUncommitted ? "Keine Änderungen zum Pushen" : ""}
                 >
                   <Upload className="w-5 h-5" />
                   Push
@@ -442,41 +484,62 @@ function Settings() {
 
               {/* Auto-Commit Config */}
               <div className="pt-4 border-t border-gurktaler-100">
-                <h3 className="font-medium text-slate-800 mb-3">Automatisierung</h3>
+                <h3 className="font-medium text-slate-800 mb-3">
+                  Automatisierung
+                </h3>
                 <div className="space-y-3">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={gitConfig.autoCommit}
-                      onChange={(e) => handleGitConfigChange('autoCommit', e.target.checked)}
+                      onChange={(e) =>
+                        handleGitConfigChange("autoCommit", e.target.checked)
+                      }
                       className="w-4 h-4 text-gurktaler-600 rounded border-gray-300 focus:ring-gurktaler-500"
                     />
                     <div>
-                      <span className="text-sm font-medium text-slate-700">Auto-Commit</span>
-                      <p className="text-xs text-slate-500">Automatischer Commit bei Datenänderungen</p>
+                      <span className="text-sm font-medium text-slate-700">
+                        Auto-Commit
+                      </span>
+                      <p className="text-xs text-slate-500">
+                        Automatischer Commit bei Datenänderungen
+                      </p>
                     </div>
                   </label>
-                  
+
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={gitConfig.autoPush}
-                      onChange={(e) => handleGitConfigChange('autoPush', e.target.checked)}
+                      onChange={(e) =>
+                        handleGitConfigChange("autoPush", e.target.checked)
+                      }
                       disabled={!gitConfig.autoCommit}
                       className="w-4 h-4 text-gurktaler-600 rounded border-gray-300 focus:ring-gurktaler-500 disabled:opacity-50"
                     />
                     <div>
-                      <span className="text-sm font-medium text-slate-700">Auto-Push</span>
-                      <p className="text-xs text-slate-500">Automatischer Push nach Commit</p>
+                      <span className="text-sm font-medium text-slate-700">
+                        Auto-Push
+                      </span>
+                      <p className="text-xs text-slate-500">
+                        Automatischer Push nach Commit
+                      </p>
                     </div>
                   </label>
 
                   <div>
-                    <label className="text-sm font-medium text-slate-700 block mb-1">Commit Message Prefix</label>
+                    <label className="text-sm font-medium text-slate-700 block mb-1">
+                      Commit Message Prefix
+                    </label>
                     <input
                       type="text"
                       value={gitConfig.commitMessagePrefix}
-                      onChange={(e) => handleGitConfigChange('commitMessagePrefix', e.target.value)}
+                      onChange={(e) =>
+                        handleGitConfigChange(
+                          "commitMessagePrefix",
+                          e.target.value
+                        )
+                      }
                       placeholder="[Auto]"
                       className="w-full px-3 py-2 border border-slate-200 rounded-vintage text-sm focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
                     />

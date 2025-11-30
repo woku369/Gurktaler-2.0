@@ -22,6 +22,18 @@ function registerGitHandlers() {
             const untracked = lines.filter(l => l.startsWith('??')).map(l => l.substring(3))
             const staged = lines.filter(l => l.startsWith('M ')).map(l => l.substring(3))
             
+            // Remote prüfen
+            let hasRemote = false
+            try {
+                const remotes = execSync('git remote', {
+                    cwd: projectRoot,
+                    encoding: 'utf-8'
+                }).trim()
+                hasRemote = remotes.length > 0
+            } catch {
+                hasRemote = false
+            }
+            
             // Letzter Commit
             let lastCommit
             try {
@@ -45,6 +57,7 @@ function registerGitHandlers() {
                     untracked,
                     staged,
                     hasUncommitted: modified.length + untracked.length + staged.length > 0,
+                    hasRemote,
                     lastCommit
                 }
             }
@@ -67,20 +80,52 @@ function registerGitHandlers() {
     // Git Push
     ipcMain.handle('git:push', async () => {
         try {
-            execSync('git push', { cwd: projectRoot })
+            // Prüfe Remote
+            const remotes = execSync('git remote', { cwd: projectRoot, encoding: 'utf-8' }).trim()
+            if (!remotes) {
+                return { 
+                    success: false, 
+                    error: 'Kein Remote-Repository konfiguriert.\n\nBitte führe aus:\ngit remote add origin <url>\ngit push -u origin master' 
+                }
+            }
+            
+            execSync('git push', { cwd: projectRoot, encoding: 'utf-8' })
             return { success: true }
-        } catch (error) {
-            return { success: false, error: String(error) }
+        } catch (error: any) {
+            const errorMsg = String(error.stderr || error.message || error)
+            if (errorMsg.includes('No configured push destination')) {
+                return { 
+                    success: false, 
+                    error: 'Kein Remote-Repository konfiguriert.\n\nBitte führe aus:\ngit remote add origin <url>\ngit push -u origin master' 
+                }
+            }
+            return { success: false, error: errorMsg }
         }
     })
 
     // Git Pull
     ipcMain.handle('git:pull', async () => {
         try {
-            execSync('git pull', { cwd: projectRoot })
+            // Prüfe Remote
+            const remotes = execSync('git remote', { cwd: projectRoot, encoding: 'utf-8' }).trim()
+            if (!remotes) {
+                return { 
+                    success: false, 
+                    error: 'Kein Remote-Repository konfiguriert.\n\nBitte führe aus:\ngit remote add origin <url>\ngit branch --set-upstream-to=origin/master master' 
+                }
+            }
+            
+            execSync('git pull', { cwd: projectRoot, encoding: 'utf-8' })
             return { success: true }
-        } catch (error) {
-            return { success: false, error: String(error) }
+        } catch (error: any) {
+            const errorMsg = String(error.stderr || error.message || error)
+            if (errorMsg.includes('no tracking information')) {
+                return { 
+                    success: false, 
+                    error: 'Branch hat kein Remote-Tracking.\n\nBitte führe aus:\ngit branch --set-upstream-to=origin/master master' 
+                }
+            }
+            return { success: false, error: errorMsg }
         }
     })
 }

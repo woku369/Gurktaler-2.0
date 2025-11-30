@@ -13,6 +13,7 @@ export interface GitStatus {
   untracked: string[];
   staged: string[];
   hasUncommitted: boolean;
+  hasRemote: boolean;
   lastCommit?: {
     hash: string;
     message: string;
