@@ -129,6 +129,39 @@ export function saveGitConfig(config: GitConfig): void {
 }
 
 /**
+ * Fügt ein Remote-Repository hinzu oder aktualisiert die URL
+ */
+export async function addRemote(name: string, url: string): Promise<{ success: boolean; updated?: boolean; error?: string }> {
+  try {
+    const result = await window.electron.invoke('git:add-remote', { name, url }) as GitResult & { updated?: boolean };
+    return {
+      success: result.success,
+      updated: result.updated,
+      error: result.error
+    };
+  } catch (error) {
+    console.error('Git add remote failed:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Listet alle konfigurierten Remotes auf
+ */
+export async function listRemotes(): Promise<Array<{ name: string; url: string; type: string }>> {
+  try {
+    const result = await window.electron.invoke('git:list-remotes') as GitResult & { data?: Array<{ name: string; url: string; type: string }> };
+    if (result.success && result.data) {
+      return result.data;
+    }
+    return [];
+  } catch (error) {
+    console.error('Git list remotes failed:', error);
+    return [];
+  }
+}
+
+/**
  * Auto-Commit Helper für Datenänderungen
  */
 export async function autoCommit(entityType: string, action: 'created' | 'updated' | 'deleted', entityName?: string): Promise<void> {

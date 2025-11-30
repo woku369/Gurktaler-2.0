@@ -128,6 +128,73 @@ function registerGitHandlers() {
             return { success: false, error: errorMsg }
         }
     })
+
+    // Git Add Remote
+    ipcMain.handle('git:add-remote', async (_event, { name, url }) => {
+        try {
+            // Prüfe ob Remote schon existiert
+            try {
+                const existing = execSync(`git remote get-url ${name}`, { 
+                    cwd: projectRoot, 
+                    encoding: 'utf-8' 
+                }).trim()
+                if (existing) {
+                    // Remote existiert, aktualisiere URL
+                    execSync(`git remote set-url ${name} ${url}`, { cwd: projectRoot })
+                    return { success: true, updated: true }
+                }
+            } catch {
+                // Remote existiert nicht, füge hinzu
+            }
+            
+            execSync(`git remote add ${name} ${url}`, { cwd: projectRoot })
+            
+            // Versuche Upstream zu setzen für aktuellen Branch
+            try {
+                const branch = execSync('git branch --show-current', { 
+                    cwd: projectRoot, 
+                    encoding: 'utf-8' 
+                }).trim()
+                execSync(`git branch --set-upstream-to=${name}/${branch} ${branch}`, { 
+                    cwd: projectRoot 
+                })
+            } catch {
+                // Upstream setzen fehlgeschlagen (Branch existiert noch nicht remote)
+            }
+            
+            return { success: true, updated: false }
+        } catch (error: any) {
+            return { success: false, error: String(error.stderr || error.message || error) }
+        }
+    })
+
+    // Git List Remotes
+    ipcMain.handle('git:list-remotes', async () => {
+        try {
+            const output = execSync('git remote -v', { 
+                cwd: projectRoot, 
+                encoding: 'utf-8' 
+            }).trim()
+            
+            const remotes: Array<{ name: string; url: string; type: string }> = []
+            if (output) {
+                output.split('\n').forEach(line => {
+                    const match = line.match(/^(\S+)\s+(\S+)\s+\((\S+)\)/)
+                    if (match) {
+                        remotes.push({
+                            name: match[1],
+                            url: match[2],
+                            type: match[3]
+                        })
+                    }
+                })
+            }
+            
+            return { success: true, data: remotes }
+        } catch (error: any) {
+            return { success: false, error: String(error.stderr || error.message || error) }
+        }
+    })
 }
 
 function createWindow() {

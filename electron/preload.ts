@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('electron', {
             'db:query', 'db:run', 
             'data:export', 'data:import',
             'app:version',
-            'git:status', 'git:commit', 'git:push', 'git:pull'
+            'git:status', 'git:commit', 'git:push', 'git:pull', 'git:add-remote', 'git:list-remotes'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);

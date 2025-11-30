@@ -33,14 +33,16 @@ import {
 import { parseVCard } from "@/renderer/services/vcardParser";
 import ContactImportDialog from "@/renderer/components/ContactImportDialog";
 import type { ParsedContact } from "@/renderer/services/vcardParser";
-import {
-  getGitStatus,
-  getGitConfig,
-  saveGitConfig,
-  pushChanges,
+import { 
+  getGitStatus, 
+  getGitConfig, 
+  saveGitConfig, 
+  pushChanges, 
   pullChanges,
+  addRemote,
+  listRemotes,
   type GitStatus,
-  type GitConfig,
+  type GitConfig 
 } from "@/renderer/services/git";
 
 function Settings() {
@@ -62,18 +64,57 @@ function Settings() {
   const [gitConfig, setGitConfig] = useState<GitConfig>(getGitConfig());
   const [gitLoading, setGitLoading] = useState(false);
   const [gitError, setGitError] = useState<string>("");
-
+  const [showRemoteSetup, setShowRemoteSetup] = useState(false);
+  const [remoteUrl, setRemoteUrl] = useState("");
+  const [remoteName, setRemoteName] = useState("origin");
+  const [remotes, setRemotes] = useState<Array<{ name: string; url: string; type: string }>>([]);
+  
   // Git-Status laden
   useEffect(() => {
     loadGitStatus();
+    loadRemotes();
   }, []);
-
+  
   const loadGitStatus = async () => {
     const status = await getGitStatus();
     setGitStatus(status);
   };
 
-  const handleGitPush = async () => {
+  const loadRemotes = async () => {
+    const list = await listRemotes();
+    setRemotes(list);
+  };
+
+  const handleAddRemote = async () => {
+    if (!remoteUrl.trim()) {
+      setGitError("Bitte gib eine Remote-URL ein.");
+      return;
+    }
+
+    setGitLoading(true);
+    setGitError("");
+    const result = await addRemote(remoteName, remoteUrl);
+    
+    if (result.success) {
+      setImportStatus("success");
+      setStatusMessage(result.updated 
+        ? `Remote "${remoteName}" aktualisiert!` 
+        : `Remote "${remoteName}" hinzugefügt!`
+      );
+      setShowRemoteSetup(false);
+      setRemoteUrl("");
+      await loadGitStatus();
+      await loadRemotes();
+    } else {
+      setGitError(result.error || "Fehler beim Hinzufügen des Remotes.");
+    }
+    
+    setGitLoading(false);
+    setTimeout(() => {
+      setImportStatus("idle");
+      setStatusMessage("");
+    }, 3000);
+  };  const handleGitPush = async () => {
     setGitLoading(true);
     setGitError("");
     const success = await pushChanges();
@@ -372,19 +413,100 @@ function Settings() {
               </div>
             </div>
 
-            {!gitStatus.hasRemote && (
+            {!gitStatus.hasRemote && !showRemoteSetup && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-vintage">
-                <div className="flex items-center gap-2 text-amber-800 mb-2">
-                  <AlertCircle className="w-5 h-5" />
-                  <span className="text-sm font-semibold">Kein Remote-Repository konfiguriert</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <AlertCircle className="w-5 h-5" />
+                    <span className="text-sm font-semibold">
+                      Kein Remote-Repository konfiguriert
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-amber-700 mb-2">
-                  Push/Pull funktionieren erst nach Remote-Setup. Führe im Terminal aus:
+                <p className="text-xs text-amber-700 mb-3">
+                  Push/Pull funktionieren erst nach Remote-Setup.
                 </p>
-                <code className="block bg-amber-100 p-2 rounded text-xs font-mono text-amber-900">
-                  git remote add origin &lt;url&gt;<br/>
-                  git push -u origin master
-                </code>
+                <button
+                  onClick={() => setShowRemoteSetup(true)}
+                  className="w-full px-4 py-2 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors text-sm font-medium"
+                >
+                  Remote-Repository einrichten
+                </button>
+              </div>
+            )}
+
+            {showRemoteSetup && (
+              <div className="mb-4 p-4 bg-gurktaler-50 border border-gurktaler-200 rounded-vintage">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gurktaler-900">Remote-Repository hinzufügen</h3>
+                  <button
+                    onClick={() => {
+                      setShowRemoteSetup(false);
+                      setRemoteUrl("");
+                      setGitError("");
+                    }}
+                    className="text-slate-500 hover:text-slate-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Remote-Name
+                    </label>
+                    <input
+                      type="text"
+                      value={remoteName}
+                      onChange={(e) => setRemoteName(e.target.value)}
+                      placeholder="origin"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-vintage text-sm focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Remote-URL (GitHub/GitLab/etc.)
+                    </label>
+                    <input
+                      type="text"
+                      value={remoteUrl}
+                      onChange={(e) => setRemoteUrl(e.target.value)}
+                      placeholder="https://github.com/username/repo.git"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-vintage text-sm focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      💡 Beispiele:<br/>
+                      • https://github.com/user/repo.git<br/>
+                      • git@github.com:user/repo.git
+                    </p>
+                  </div>
+                  
+                  <button
+                    onClick={handleAddRemote}
+                    disabled={gitLoading || !remoteUrl.trim()}
+                    className="w-full px-4 py-2 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {gitLoading ? 'Wird eingerichtet...' : 'Remote hinzufügen'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {remotes.length > 0 && (
+              <div className="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-vintage">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Konfigurierte Remotes:</h3>
+                <div className="space-y-1">
+                  {remotes.filter(r => r.type === 'fetch').map((remote) => (
+                    <div key={remote.name} className="flex items-center gap-2 text-xs">
+                      <code className="px-2 py-0.5 bg-white rounded font-mono text-gurktaler-700">
+                        {remote.name}
+                      </code>
+                      <span className="text-slate-600 truncate">{remote.url}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -394,7 +516,9 @@ function Settings() {
                   <AlertCircle className="w-5 h-5" />
                   <span className="text-sm font-semibold">Fehler</span>
                 </div>
-                <pre className="text-xs text-red-800 whitespace-pre-wrap font-mono">{gitError}</pre>
+                <pre className="text-xs text-red-800 whitespace-pre-wrap font-mono">
+                  {gitError}
+                </pre>
               </div>
             )}
 
@@ -466,16 +590,28 @@ function Settings() {
                   onClick={handleGitPull}
                   disabled={gitLoading || !gitStatus.hasRemote}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-vintage border-distillery-200 rounded-vintage hover:bg-distillery-50 transition-colors disabled:opacity-50"
-                  title={!gitStatus.hasRemote ? "Remote-Repository erforderlich" : ""}
+                  title={
+                    !gitStatus.hasRemote ? "Remote-Repository erforderlich" : ""
+                  }
                 >
                   <Download className="w-5 h-5" />
                   Pull
                 </button>
                 <button
                   onClick={handleGitPush}
-                  disabled={gitLoading || !gitStatus.hasRemote || !gitStatus.hasUncommitted}
+                  disabled={
+                    gitLoading ||
+                    !gitStatus.hasRemote ||
+                    !gitStatus.hasUncommitted
+                  }
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors disabled:opacity-50"
-                  title={!gitStatus.hasRemote ? "Remote-Repository erforderlich" : !gitStatus.hasUncommitted ? "Keine Änderungen zum Pushen" : ""}
+                  title={
+                    !gitStatus.hasRemote
+                      ? "Remote-Repository erforderlich"
+                      : !gitStatus.hasUncommitted
+                      ? "Keine Änderungen zum Pushen"
+                      : ""
+                  }
                 >
                   <Upload className="w-5 h-5" />
                   Push
