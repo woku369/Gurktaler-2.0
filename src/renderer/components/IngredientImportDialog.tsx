@@ -7,11 +7,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import type {
-  ImportedIngredient,
-  ValidationError,
-  ImportResult,
-} from "@/renderer/services/ingredientImport";
+import type { ImportResult } from "@/renderer/services/ingredientImport";
 import {
   parseExcelFile,
   validateIngredients,

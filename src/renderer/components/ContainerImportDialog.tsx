@@ -7,11 +7,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import type {
-  ImportedContainer,
-  ValidationError,
-  ImportResult,
-} from "@/renderer/services/containerImport";
+import type { ImportResult } from "@/renderer/services/containerImport";
 import {
   parseExcelFile,
   validateContainers,

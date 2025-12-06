@@ -203,7 +203,7 @@ function Projects() {
                 <button
                   onClick={() => {
                     favoritesService.toggle("project", project.id);
-                    loadData();
+                    loadProjects();
                   }}
                   className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                   title={

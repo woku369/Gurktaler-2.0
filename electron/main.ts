@@ -1,6 +1,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { execSync } from 'child_process'
+import http from 'http'
+import fs from 'fs'
+import { URL } from 'url'
 
 // Git-Handler registrieren
 function registerGitHandlers() {
@@ -197,6 +200,56 @@ function registerGitHandlers() {
     })
 }
 
+let localServer: http.Server | null = null
+
+function startLocalServer(): Promise<number> {
+    return new Promise((resolve) => {
+        const distPath = app.isPackaged 
+            ? path.join(process.resourcesPath, 'app', 'dist')
+            : path.join(__dirname, '..', 'dist')
+        
+        localServer = http.createServer((req, res) => {
+            let filePath = new URL(req.url || '/', 'http://localhost').pathname
+            
+            // Root -> index.html
+            if (filePath === '/') {
+                filePath = '/index.html'
+            }
+            
+            let fullPath = path.join(distPath, filePath)
+            
+            // Prüfe ob Datei existiert
+            if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+                // Fallback zu index.html für Client-Side Routing (SPA)
+                fullPath = path.join(distPath, 'index.html')
+            }
+            
+            // Content-Type basierend auf Extension
+            const ext = path.extname(fullPath)
+            const contentTypes: Record<string, string> = {
+                '.html': 'text/html',
+                '.js': 'application/javascript',
+                '.css': 'text/css',
+                '.json': 'application/json',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.svg': 'image/svg+xml',
+            }
+            
+            const contentType = contentTypes[ext] || 'application/octet-stream'
+            
+            res.writeHead(200, { 'Content-Type': contentType })
+            fs.createReadStream(fullPath).pipe(res)
+        })
+        
+        localServer.listen(0, () => {
+            const port = (localServer!.address() as any).port
+            console.log('Local server started on port:', port)
+            resolve(port)
+        })
+    })
+}
+
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1400,
@@ -207,6 +260,7 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
+            webSecurity: false,
         },
         titleBarStyle: 'hiddenInset',
         title: 'Gurktaler 2.0',
@@ -217,8 +271,38 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:3000')
         mainWindow.webContents.openDevTools()
     } else {
-        // In production, load the built files
-        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+        // In production, starte lokalen HTTP Server
+        startLocalServer().then(async (port) => {
+            console.log('Loading from localhost:', port)
+            
+            // Warte kurz damit der Server vollständig bereit ist
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+                console.error('Failed to load:', errorCode, errorDescription)
+            })
+            
+            mainWindow.webContents.on('did-finish-load', () => {
+                console.log('Page finished loading')
+            })
+            
+            mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+                console.log('Console:', message, 'at line', line, 'in', sourceId)
+            })
+            
+            mainWindow.loadURL(`http://localhost:${port}`).catch(err => {
+                console.error('Failed to load:', err)
+            })
+            
+            mainWindow.webContents.on('before-input-event', (event, input) => {
+                if (input.key === 'F12') {
+                    mainWindow.webContents.toggleDevTools()
+                    event.preventDefault()
+                }
+            })
+            
+            mainWindow.webContents.openDevTools()
+        })
     }
 }
 
@@ -234,6 +318,9 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+    if (localServer) {
+        localServer.close()
+    }
     if (process.platform !== 'darwin') {
         app.quit()
     }

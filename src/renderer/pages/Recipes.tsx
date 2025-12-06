@@ -14,20 +14,13 @@ import {
   recipes as recipesService,
   products as productsService,
   recipeIngredients as recipeIngredientsService,
-  ingredients as ingredientsService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
   favorites as favoritesService,
 } from "@/renderer/services/storage";
 import RecipeForm from "@/renderer/components/RecipeForm";
 import Modal from "@/renderer/components/Modal";
-import type {
-  Recipe,
-  Product,
-  RecipeIngredient,
-  Ingredient,
-  Tag,
-} from "@/shared/types";
+import type { Recipe, Product, RecipeIngredient, Tag } from "@/shared/types";
 
 const typeIcons = {
   macerate: Droplet,
@@ -53,7 +46,6 @@ function Recipes() {
   const [recipeIngredients, setRecipeIngredients] = useState<
     RecipeIngredient[]
   >([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
@@ -69,7 +61,6 @@ function Recipes() {
     setRecipes(recipesService.getAll());
     setProducts(productsService.getAll());
     setRecipeIngredients(recipeIngredientsService.getAll());
-    setIngredients(ingredientsService.getAll());
     setTags(tagsService.getAll());
   };
 
@@ -396,7 +387,7 @@ function Recipes() {
               {/* Version History */}
               {item.versions.length > 0 && (
                 <div className="border-t-vintage border-distillery-100">
-                  {item.versions.map((version, idx) => {
+                  {item.versions.map((version) => {
                     const VersionIcon = typeIcons[version.type];
                     const versionProduct = version.product_id
                       ? products.find((p) => p.id === version.product_id)

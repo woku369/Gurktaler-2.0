@@ -331,7 +331,7 @@ export const favorites = {
             deleteEntity<Favorite>('favorites', existing.id)
             return false // Removed from favorites
         } else {
-            createEntity<Favorite>('favorites', { entity_type: entityType, entity_id: entityId })
+            createEntity<Favorite>('favorites', { entity_type: entityType as 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container' | 'contact' | 'weblink', entity_id: entityId })
             return true // Added to favorites
         }
     },

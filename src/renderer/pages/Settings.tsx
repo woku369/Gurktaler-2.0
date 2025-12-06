@@ -14,7 +14,6 @@ import {
   EyeOff,
   GitBranch,
   GitCommit,
-  GitPullRequest,
   RefreshCw,
 } from "lucide-react";
 import {

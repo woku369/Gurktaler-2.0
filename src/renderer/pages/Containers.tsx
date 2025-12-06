@@ -456,7 +456,7 @@ function Containers() {
                       >
                         <img
                           src={image.data_url}
-                          alt={image.filename}
+                          alt={image.file_name}
                           className="w-full h-full object-cover"
                         />
                       </div>

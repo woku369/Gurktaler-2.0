@@ -4,7 +4,13 @@ import { images as imagesService } from "@/renderer/services/storage";
 import type { Image } from "@/shared/types";
 
 interface ImageUploadProps {
-  entityType: "project" | "product" | "note" | "recipe";
+  entityType:
+    | "project"
+    | "product"
+    | "note"
+    | "recipe"
+    | "ingredient"
+    | "container";
   entityId: string;
   maxImages?: number;
   onUpload?: () => void;

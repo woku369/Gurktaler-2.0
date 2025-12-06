@@ -1,69 +1,82 @@
-import { useState, useEffect } from 'react'
-import { X, Plus } from 'lucide-react'
-import { tags as tagsService, tagAssignments as tagAssignmentsService } from '@/renderer/services/storage'
-import type { Tag } from '@/shared/types'
+import { useState, useEffect } from "react";
+import { X, Plus } from "lucide-react";
+import {
+  tags as tagsService,
+  tagAssignments as tagAssignmentsService,
+} from "@/renderer/services/storage";
+import type { Tag } from "@/shared/types";
 
 interface TagSelectorProps {
-  entityType: 'project' | 'product' | 'note' | 'recipe'
-  entityId: string
-  onChange?: () => void
+  entityType:
+    | "project"
+    | "product"
+    | "note"
+    | "recipe"
+    | "ingredient"
+    | "container";
+  entityId: string;
+  onChange?: () => void;
 }
 
-export default function TagSelector({ entityType, entityId, onChange }: TagSelectorProps) {
-  const [allTags, setAllTags] = useState<Tag[]>([])
-  const [assignedTags, setAssignedTags] = useState<Tag[]>([])
-  const [isAdding, setIsAdding] = useState(false)
+export default function TagSelector({
+  entityType,
+  entityId,
+  onChange,
+}: TagSelectorProps) {
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [assignedTags, setAssignedTags] = useState<Tag[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    loadTags()
-  }, [entityId])
+    loadTags();
+  }, [entityId]);
 
   const loadTags = () => {
-    const tags = tagsService.getAll()
-    setAllTags(tags)
+    const tags = tagsService.getAll();
+    setAllTags(tags);
 
-    const assignments = tagAssignmentsService.getByEntity(entityType, entityId)
+    const assignments = tagAssignmentsService.getByEntity(entityType, entityId);
     const assigned = assignments
-      .map(a => tags.find(t => t.id === a.tag_id))
-      .filter((t): t is Tag => t !== undefined)
-    setAssignedTags(assigned)
-  }
+      .map((a) => tags.find((t) => t.id === a.tag_id))
+      .filter((t): t is Tag => t !== undefined);
+    setAssignedTags(assigned);
+  };
 
   const handleAddTag = (tagId: string) => {
     // Check if already assigned
-    const isAssigned = assignedTags.some(t => t.id === tagId)
-    if (isAssigned) return
+    const isAssigned = assignedTags.some((t) => t.id === tagId);
+    if (isAssigned) return;
 
     tagAssignmentsService.create({
       tag_id: tagId,
       entity_type: entityType,
       entity_id: entityId,
-    })
-    
-    loadTags()
-    setIsAdding(false)
-    onChange?.()
-  }
+    });
+
+    loadTags();
+    setIsAdding(false);
+    onChange?.();
+  };
 
   const handleRemoveTag = (tagId: string) => {
-    const assignments = tagAssignmentsService.getByEntity(entityType, entityId)
-    const assignment = assignments.find(a => a.tag_id === tagId)
-    
+    const assignments = tagAssignmentsService.getByEntity(entityType, entityId);
+    const assignment = assignments.find((a) => a.tag_id === tagId);
+
     if (assignment) {
-      tagAssignmentsService.delete(assignment.id)
-      loadTags()
-      onChange?.()
+      tagAssignmentsService.delete(assignment.id);
+      loadTags();
+      onChange?.();
     }
-  }
+  };
 
   const availableTags = allTags.filter(
-    tag => !assignedTags.some(assigned => assigned.id === tag.id)
-  )
+    (tag) => !assignedTags.some((assigned) => assigned.id === tag.id)
+  );
 
   return (
     <div>
       <div className="flex items-center gap-2 flex-wrap">
-        {assignedTags.map(tag => (
+        {assignedTags.map((tag) => (
           <span
             key={tag.id}
             className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
@@ -94,7 +107,9 @@ export default function TagSelector({ entityType, entityId, onChange }: TagSelec
       {isAdding && (
         <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Tag auswählen:</span>
+            <span className="text-sm font-medium text-gray-700">
+              Tag auswählen:
+            </span>
             <button
               onClick={() => setIsAdding(false)}
               className="text-gray-400 hover:text-gray-600"
@@ -102,12 +117,14 @@ export default function TagSelector({ entityType, entityId, onChange }: TagSelec
               <X className="w-4 h-4" />
             </button>
           </div>
-          
+
           {availableTags.length === 0 ? (
-            <p className="text-sm text-gray-500">Alle Tags wurden bereits zugewiesen</p>
+            <p className="text-sm text-gray-500">
+              Alle Tags wurden bereits zugewiesen
+            </p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {availableTags.map(tag => (
+              {availableTags.map((tag) => (
                 <button
                   key={tag.id}
                   onClick={() => handleAddTag(tag.id)}
@@ -122,5 +139,5 @@ export default function TagSelector({ entityType, entityId, onChange }: TagSelec
         </div>
       )}
     </div>
-  )
+  );
 }

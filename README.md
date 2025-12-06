@@ -105,6 +105,27 @@ gurktaler-2.0/
 └── README.md             # Diese Datei
 ```
 
+## Production Build
+
+Die Anwendung nutzt einen lokalen HTTP Server für ES Module Support:
+
+```bash
+# Build erstellen
+npm run build  # oder: npx tsc && npx vite build && npx electron-builder
+
+# Portable App
+build-output/win-unpacked/Gurktaler 2.0.exe
+
+# NSIS Installer
+build-output/Gurktaler 2.0-0.9.1-Setup.exe
+```
+
+**Technische Details:**
+- Minimaler HTTP Server (Node.js http) für ES Module Loading
+- Client-Side Routing Fallback für React Router
+- ASAR deaktiviert für bessere Kompatibilität
+- DevTools mit F12 zugänglich
+
 ## Dokumentation
 
 - [ROADMAP.md](./ROADMAP.md) - Entwicklungsplan und offene Aufgaben

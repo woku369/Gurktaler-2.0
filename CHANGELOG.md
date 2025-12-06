@@ -7,6 +7,23 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [0.9.1] - 2025-12-06
+
+### Geändert
+- **Production Build System**: Komplette Überarbeitung für funktionierende EXE
+  - Minimaler HTTP Server ersetzt file:// Protokoll für ES Module Support
+  - Client-Side Routing Fallback für Single Page Application
+  - ASAR deaktiviert für bessere Kompatibilität
+  - Express und serve-handler Dependencies hinzugefügt
+- **Build-Konfiguration**: `build-output/` Verzeichnis für bessere Trennung
+
+### Behoben
+- ES Module Loading in Production Build
+- 404 Fehler bei React Router Navigation
+- DevTools Console nicht sichtbar in packaged App
+
+---
+
 ## [0.9.0] - 2025-11-30
 
 ### Neu

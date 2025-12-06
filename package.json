@@ -1,6 +1,6 @@
 {
     "name": "gurktaler-2.0",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "description": "Projektverwaltungstool und Think-Tank für Gurktaler Kräuterlikör-Entwicklung",
     "main": "dist-electron/main.js",
     "author": "Gurktaler Team",
@@ -15,11 +15,13 @@
     },
     "dependencies": {
         "date-fns": "^2.30.0",
+        "express": "^5.2.1",
         "lucide-react": "^0.294.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-markdown": "^10.1.0",
         "react-router-dom": "^6.20.0",
+        "serve-handler": "^6.1.6",
         "uuid": "^9.0.1",
         "xlsx": "^0.18.5"
     },
@@ -44,12 +46,29 @@
     "build": {
         "appId": "com.gurktaler.zweipunktnull",
         "productName": "Gurktaler 2.0",
+        "asar": false,
+        "files": [
+            "dist/**/*",
+            "dist-electron/**/*"
+        ],
         "directories": {
-            "output": "release"
+            "output": "build-output"
         },
         "win": {
-            "target": "nsis",
-            "icon": "public/icon.ico"
+            "target": {
+                "target": "nsis",
+                "arch": [
+                    "x64"
+                ]
+            },
+            "artifactName": "${productName}-${version}-Setup.${ext}",
+            "signAndEditExecutable": false
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true
         }
     }
 }
