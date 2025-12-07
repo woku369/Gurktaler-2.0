@@ -7,6 +7,64 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [0.9.2] - 2025-12-07
+
+### Neu
+
+#### 📄 Dokumentenverwaltung für alle Entitäten
+- **DocumentManager Komponente**: Universelles Modal-UI für Dokumente
+  - 3 Dokumenttypen: Lokale Dateien, URL-Links, Google Photos
+  - 6 Kategorien: Rezeptur, Analyse, Marketing, Etikett, Dokumentation, Sonstiges
+  - Dateiauswahl mit Metadaten-Extraktion (Name, Größe, MIME-Type)
+  - Relative Pfade für Portabilität zwischen Geräten
+  - Thumbnail-Support für Bilder
+- **Unterstützte Dateitypen**:
+  - Dokumente: PDF, Word (DOCX), Excel (XLSX), Text (TXT)
+  - Bilder: JPG, PNG, WEBP, GIF, BMP
+  - Farbcodierte Icons: Rot (PDF), Grün (Excel), Blau (Word), Lila (Bilder)
+- **Datei-Operationen**:
+  - Öffnen mit System-App (shell.openPath)
+  - Im Explorer anzeigen (shell.showItemInFolder)
+  - Existenz-Validierung vor Öffnen
+  - Löschen der Dokumentreferenz (Datei bleibt erhalten)
+- **Integration in allen Entitäten**:
+  - Projekte: ProductForm.tsx
+  - Produkte: ProjectForm.tsx
+  - Rezepte: RecipeForm.tsx
+  - Zutaten: Ingredients.tsx (Inline-Form)
+  - Gebinde: Containers.tsx (Inline-Form)
+  - Kontakte: ContactForm.tsx
+- **Electron IPC Handler**:
+  - file:select - Dateiauswahl-Dialog mit Metadaten
+  - file:open - Öffnet Datei mit Standard-App
+  - file:show - Zeigt Datei im Explorer
+  - file:exists - Validiert Dateipfad
+- **Storage-Strategie**:
+  - Hybrid: Base64 für Bilder (mobile Kompatibilität)
+  - Relative Pfade für Dokumente (Desktop-Optimierung)
+  - Automatische Persistenz via storage.ts
+- **User Guide**: Vollständige Dokumentation in Documentation.tsx
+  - 4 How-To Anleitungen (Lokale Datei, URL, Google Photos, Verwalten)
+  - 7 Tipps für optimale Nutzung
+  - Google Photos Caveat dokumentiert
+
+### Behoben
+- **Form-Submission**: Alle Buttons in DocumentManager haben `type="button"` gegen versehentliches Absenden
+- **Git-Commit-Escaping**: Doppelte Backslash- und Quote-Escapes für Sonderzeichen in Commit-Messages
+- **Duplikate**: Entfernte doppelte State-Deklarationen in ProjectForm und ContactForm
+- **TypeScript**: Alle Compilation-Fehler behoben
+
+### Technisch
+- Document Interface mit 8 Feldern (type, path, name, category, description, mime_type, file_size, thumbnail)
+- DocumentType: 'file' | 'url' | 'google-photos'
+- DocumentCategory: 6 vordefinierte Kategorien
+- Alle 6 Entity Interfaces erweitert mit `documents?: Document[]`
+- Preload-Whitelist erweitert um file:* Channels
+- MIME-Type-Detection für gängige Formate
+- Path-Normalisierung mit path.relative() von Projekt-Root
+
+---
+
 ## [0.9.1] - 2025-12-06
 
 ### Geändert
