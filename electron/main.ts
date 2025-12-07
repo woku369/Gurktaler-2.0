@@ -73,7 +73,9 @@ function registerGitHandlers() {
     ipcMain.handle('git:commit', async (_event, { message }) => {
         try {
             execSync('git add .', { cwd: projectRoot })
-            execSync(`git commit -m "${message}"`, { cwd: projectRoot })
+            // Escape Anführungszeichen und Backslashes in der Commit-Message
+            const escapedMessage = message.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+            execSync(`git commit -m "${escapedMessage}"`, { cwd: projectRoot })
             return { success: true }
         } catch (error) {
             return { success: false, error: String(error) }
