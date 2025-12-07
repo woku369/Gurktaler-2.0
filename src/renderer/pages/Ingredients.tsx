@@ -19,12 +19,13 @@ import {
 import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
 import TagSelector from "@/renderer/components/TagSelector";
+import DocumentManager from "@/renderer/components/DocumentManager";
 import IngredientImportDialog from "@/renderer/components/IngredientImportDialog";
 import {
   generateTemplate,
   exportIngredients,
 } from "@/renderer/services/ingredientImport";
-import type { Ingredient, Tag } from "@/shared/types";
+import type { Ingredient, Tag, Document } from "@/shared/types";
 
 function Ingredients() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -43,11 +44,43 @@ function Ingredients() {
     price_per_unit: undefined,
     unit: "liter",
     notes: "",
+    documents: [],
   });
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
+    const newDoc: Document = {
+      ...doc,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    setFormData({
+      ...formData,
+      documents: [...(formData.documents || []), newDoc],
+    });
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setFormData({
+      ...formData,
+      documents: (formData.documents || []).filter((d) => d.id !== id),
+    });
+  };
+
+  const handleOpenDocument = async (doc: Document) => {
+    if (doc.type === "file") {
+      await window.electron.invoke("file:open", doc.path);
+    } else {
+      window.open(doc.path, "_blank");
+    }
+  };
+
+  const handleShowInFolder = async (doc: Document) => {
+    await window.electron.invoke("file:show", doc.path);
+  };
 
   const loadData = () => {
     setIngredients(ingredientsService.getAll());
@@ -91,6 +124,7 @@ function Ingredients() {
       price_per_unit: ingredient.price_per_unit,
       unit: ingredient.unit,
       notes: ingredient.notes,
+      documents: ingredient.documents || [],
     });
     setShowForm(true);
   };
@@ -110,6 +144,7 @@ function Ingredients() {
       price_per_unit: undefined,
       unit: "liter",
       notes: "",
+      documents: [],
     });
     setEditingIngredient(null);
     setShowForm(false);
@@ -352,6 +387,19 @@ function Ingredients() {
                   entityType="ingredient"
                   entityId={editingIngredient.id}
                   maxImages={3}
+                />
+              </div>
+            )}
+
+            {/* Documents (only when editing) */}
+            {editingIngredient && (
+              <div className="border-t border-slate-200 pt-4">
+                <DocumentManager
+                  documents={formData.documents || []}
+                  onAdd={handleAddDocument}
+                  onDelete={handleDeleteDocument}
+                  onOpen={handleOpenDocument}
+                  onShowInFolder={handleShowInFolder}
                 />
               </div>
             )}

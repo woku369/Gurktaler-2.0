@@ -20,12 +20,19 @@ import {
 import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
 import TagSelector from "@/renderer/components/TagSelector";
+import DocumentManager from "@/renderer/components/DocumentManager";
 import ContainerImportDialog from "@/renderer/components/ContainerImportDialog";
 import {
   generateTemplate,
   exportContainers,
 } from "@/renderer/services/containerImport";
-import type { Container, ContainerType, Image, Tag } from "@/shared/types";
+import type {
+  Container,
+  ContainerType,
+  Image,
+  Tag,
+  Document,
+} from "@/shared/types";
 
 const containerTypeLabels: Record<ContainerType, string> = {
   bottle: "Flasche",
@@ -54,11 +61,43 @@ function Containers() {
     volume: undefined,
     notes: "",
     price: undefined,
+    documents: [],
   });
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
+    const newDoc: Document = {
+      ...doc,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    setFormData({
+      ...formData,
+      documents: [...(formData.documents || []), newDoc],
+    });
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setFormData({
+      ...formData,
+      documents: (formData.documents || []).filter((d) => d.id !== id),
+    });
+  };
+
+  const handleOpenDocument = async (doc: Document) => {
+    if (doc.type === "file") {
+      await window.electron.invoke("file:open", doc.path);
+    } else {
+      window.open(doc.path, "_blank");
+    }
+  };
+
+  const handleShowInFolder = async (doc: Document) => {
+    await window.electron.invoke("file:show", doc.path);
+  };
 
   const loadData = () => {
     const allContainers = containersService.getAll();
@@ -111,6 +150,7 @@ function Containers() {
       volume: container.volume,
       notes: container.notes,
       price: container.price,
+      documents: container.documents || [],
     });
     setShowForm(true);
   };
@@ -129,6 +169,7 @@ function Containers() {
       volume: undefined,
       notes: "",
       price: undefined,
+      documents: [],
     });
     setEditingContainer(null);
     setShowForm(false);
@@ -355,6 +396,19 @@ function Containers() {
                   entityType="container"
                   entityId={editingContainer.id}
                   maxImages={3}
+                />
+              </div>
+            )}
+
+            {/* Documents (only when editing) */}
+            {editingContainer && (
+              <div className="border-t border-slate-200 pt-4">
+                <DocumentManager
+                  documents={formData.documents || []}
+                  onAdd={handleAddDocument}
+                  onDelete={handleDeleteDocument}
+                  onOpen={handleOpenDocument}
+                  onShowInFolder={handleShowInFolder}
                 />
               </div>
             )}

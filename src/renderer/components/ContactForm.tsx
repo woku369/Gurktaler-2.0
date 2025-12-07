@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import ContactProjectSelector from "./ContactProjectSelector";
-import type { Contact } from "@/shared/types";
+import DocumentManager from "./DocumentManager";
+import type { Contact, Document } from "@/shared/types";
 
 interface ContactFormProps {
   contact?: Contact;
@@ -27,6 +28,34 @@ export default function ContactForm({
   const [phone, setPhone] = useState(contact?.phone || "");
   const [address, setAddress] = useState(contact?.address || "");
   const [notes, setNotes] = useState(contact?.notes || "");
+  const [documents, setDocuments] = useState<Document[]>(
+    contact?.documents || []
+  );
+
+  const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
+    const newDoc: Document = {
+      ...doc,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    setDocuments([...documents, newDoc]);
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(documents.filter((d) => d.id !== id));
+  };
+
+  const handleOpenDocument = async (doc: Document) => {
+    if (doc.type === "file") {
+      await window.electron.invoke("file:open", doc.path);
+    } else {
+      window.open(doc.path, "_blank");
+    }
+  };
+
+  const handleShowInFolder = async (doc: Document) => {
+    await window.electron.invoke("file:show", doc.path);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -44,6 +73,7 @@ export default function ContactForm({
       phone: phone.trim() || undefined,
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
+      documents: documents.length > 0 ? documents : undefined,
     });
   };
 
@@ -156,6 +186,19 @@ export default function ContactForm({
       {contact && (
         <div>
           <ContactProjectSelector contactId={contact.id} />
+        </div>
+      )}
+
+      {/* Documents */}
+      {contact && (
+        <div>
+          <DocumentManager
+            documents={documents}
+            onAdd={handleAddDocument}
+            onDelete={handleDeleteDocument}
+            onOpen={handleOpenDocument}
+            onShowInFolder={handleShowInFolder}
+          />
         </div>
       )}
 

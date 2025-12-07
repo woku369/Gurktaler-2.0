@@ -4,7 +4,8 @@ import RecipeIngredientEditor from "./RecipeIngredientEditor";
 import RecipeCalculator from "./RecipeCalculator";
 import ImageUpload from "./ImageUpload";
 import TagSelector from "./TagSelector";
-import type { Recipe, RecipeType, Product } from "@/shared/types";
+import DocumentManager from "./DocumentManager";
+import type { Recipe, RecipeType, Product, Document } from "@/shared/types";
 
 interface RecipeFormProps {
   recipe?: Recipe;
@@ -33,10 +34,38 @@ export default function RecipeForm({
   const [yieldUnit, setYieldUnit] = useState(recipe?.yield_unit || "ml");
   const [notes, setNotes] = useState(recipe?.notes || "");
   const [products, setProducts] = useState<Product[]>([]);
+  const [documents, setDocuments] = useState<Document[]>(
+    recipe?.documents || []
+  );
 
   useEffect(() => {
     setProducts(productsService.getAll());
   }, []);
+
+  const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
+    const newDoc: Document = {
+      ...doc,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    setDocuments([...documents, newDoc]);
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(documents.filter((d) => d.id !== id));
+  };
+
+  const handleOpenDocument = async (doc: Document) => {
+    if (doc.type === "file") {
+      await window.electron.invoke("file:open", doc.path);
+    } else {
+      window.open(doc.path, "_blank");
+    }
+  };
+
+  const handleShowInFolder = async (doc: Document) => {
+    await window.electron.invoke("file:show", doc.path);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -50,6 +79,7 @@ export default function RecipeForm({
       yield_amount: yieldAmount ? parseFloat(yieldAmount) : undefined,
       yield_unit: yieldUnit || undefined,
       notes: notes.trim() || undefined,
+      documents: documents.length > 0 ? documents : undefined,
     });
   };
 
@@ -228,6 +258,19 @@ export default function RecipeForm({
       {recipe && (
         <div className="border-t border-slate-200 pt-6">
           <ImageUpload entityType="recipe" entityId={recipe.id} maxImages={5} />
+        </div>
+      )}
+
+      {/* Documents */}
+      {recipe && (
+        <div className="border-t border-slate-200 pt-6">
+          <DocumentManager
+            documents={documents}
+            onAdd={handleAddDocument}
+            onDelete={handleDeleteDocument}
+            onOpen={handleOpenDocument}
+            onShowInFolder={handleShowInFolder}
+          />
         </div>
       )}
 
