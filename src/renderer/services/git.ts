@@ -162,6 +162,32 @@ export async function listRemotes(): Promise<Array<{ name: string; url: string; 
 }
 
 /**
+ * Löst Merge-Konflikte durch Überschreiben mit Remote
+ */
+export async function resolveConflictWithRemote(): Promise<boolean> {
+  try {
+    const result = await window.electron.invoke('git:resolve-conflict-remote') as GitResult;
+    return result.success;
+  } catch (error) {
+    console.error('Git conflict resolution failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Bricht Merge ab und behält lokale Änderungen
+ */
+export async function abortMerge(): Promise<boolean> {
+  try {
+    const result = await window.electron.invoke('git:abort-merge') as GitResult;
+    return result.success;
+  } catch (error) {
+    console.error('Git merge abort failed:', error);
+    return false;
+  }
+}
+
+/**
  * Auto-Commit Helper für Datenänderungen
  */
 export async function autoCommit(entityType: string, action: 'created' | 'updated' | 'deleted', entityName?: string): Promise<void> {

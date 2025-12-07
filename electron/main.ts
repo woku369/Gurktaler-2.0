@@ -118,8 +118,39 @@ function registerGitHandlers() {
                 }
             }
             
-            execSync('git pull', { cwd: projectRoot, encoding: 'utf-8' })
-            return { success: true }
+            // Prüfe ob es lokale Änderungen gibt
+            const status = execSync('git status --porcelain', { cwd: projectRoot, encoding: 'utf-8' }).trim()
+            if (status) {
+                // Lokale Änderungen vorhanden - automatisch committen
+                try {
+                    execSync('git add .', { cwd: projectRoot })
+                    execSync('git commit -m "[Auto-Sync] Lokale Änderungen vor Pull"', { cwd: projectRoot })
+                } catch {
+                    // Commit fehlgeschlagen, trotzdem versuchen zu pullen
+                }
+            }
+            
+            // Versuche normalen Pull
+            try {
+                execSync('git pull', { cwd: projectRoot, encoding: 'utf-8' })
+                return { success: true }
+            } catch (pullError: any) {
+                const pullErrorMsg = String(pullError.stderr || pullError.message || pullError)
+                
+                // Merge-Konflikt erkannt
+                if (pullErrorMsg.includes('CONFLICT') || pullErrorMsg.includes('Automatic merge failed')) {
+                    return { 
+                        success: false, 
+                        error: 'MERGE-KONFLIKT! Lokale und Remote-Änderungen überschneiden sich.\n\n' +
+                               'Du hast 2 Optionen:\n' +
+                               '1. Lokale Änderungen behalten: git merge --abort\n' +
+                               '2. Remote-Änderungen übernehmen: git reset --hard origin/master\n\n' +
+                               'Empfehlung: Öffne ein Terminal und löse den Konflikt manuell.'
+                    }
+                }
+                
+                throw pullError
+            }
         } catch (error: any) {
             const errorMsg = String(error.stderr || error.message || error)
             if (errorMsg.includes('no tracking information')) {
@@ -194,6 +225,36 @@ function registerGitHandlers() {
             }
             
             return { success: true, data: remotes }
+        } catch (error: any) {
+            return { success: false, error: String(error.stderr || error.message || error) }
+        }
+    })
+
+    // Git Resolve Conflict - Übernimmt Remote-Version
+    ipcMain.handle('git:resolve-conflict-remote', async () => {
+        try {
+            // Merge abbrechen
+            try {
+                execSync('git merge --abort', { cwd: projectRoot })
+            } catch {
+                // Kein Merge aktiv
+            }
+            
+            // Lokale Änderungen verwerfen und Remote übernehmen
+            execSync('git fetch origin', { cwd: projectRoot })
+            execSync('git reset --hard origin/master', { cwd: projectRoot })
+            
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.stderr || error.message || error) }
+        }
+    })
+
+    // Git Abort Merge - Behält lokale Änderungen
+    ipcMain.handle('git:abort-merge', async () => {
+        try {
+            execSync('git merge --abort', { cwd: projectRoot })
+            return { success: true }
         } catch (error: any) {
             return { success: false, error: String(error.stderr || error.message || error) }
         }

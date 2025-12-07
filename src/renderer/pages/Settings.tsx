@@ -40,6 +40,8 @@ import {
   pullChanges,
   addRemote,
   listRemotes,
+  resolveConflictWithRemote,
+  abortMerge,
   type GitStatus,
   type GitConfig,
 } from "@/renderer/services/git";
@@ -69,6 +71,7 @@ function Settings() {
   const [remotes, setRemotes] = useState<
     Array<{ name: string; url: string; type: string }>
   >([]);
+  const [showConflictDialog, setShowConflictDialog] = useState(false);
 
   // Git-Status laden
   useEffect(() => {
@@ -147,12 +150,41 @@ function Settings() {
       setTimeout(() => window.location.reload(), 2000);
     } else {
       setGitError("Pull fehlgeschlagen. Eventuell gibt es Konflikte.");
+      setShowConflictDialog(true);
     }
     setGitLoading(false);
     setTimeout(() => {
       setImportStatus("idle");
       setStatusMessage("");
     }, 3000);
+  };
+
+  const handleResolveConflictRemote = async () => {
+    setGitLoading(true);
+    setShowConflictDialog(false);
+    const success = await resolveConflictWithRemote();
+    if (success) {
+      setImportStatus("success");
+      setStatusMessage("Konflikt gelöst! Remote-Daten übernommen. Seite wird neu geladen...");
+      setTimeout(() => window.location.reload(), 2000);
+    } else {
+      setGitError("Konflikt-Lösung fehlgeschlagen.");
+    }
+    setGitLoading(false);
+  };
+
+  const handleAbortMerge = async () => {
+    setGitLoading(true);
+    setShowConflictDialog(false);
+    const success = await abortMerge();
+    if (success) {
+      setImportStatus("success");
+      setStatusMessage("Merge abgebrochen. Lokale Änderungen behalten.");
+      loadGitStatus();
+    } else {
+      setGitError("Merge-Abbruch fehlgeschlagen.");
+    }
+    setGitLoading(false);
   };
 
   const handleGitConfigChange = (
@@ -968,6 +1000,77 @@ function Settings() {
             setParsedContacts([]);
           }}
         />
+      )}
+
+      {/* Git Conflict Dialog */}
+      {showConflictDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-vintage p-6 max-w-md w-full mx-4 shadow-vintage">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertCircle className="w-8 h-8 text-amber-600" />
+              <h3 className="text-xl font-heading font-bold text-slate-800">
+                Merge-Konflikt erkannt
+              </h3>
+            </div>
+
+            <div className="mb-6 space-y-3">
+              <p className="text-sm text-slate-700">
+                Lokale und Remote-Änderungen überschneiden sich. Du kannst:
+              </p>
+
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-vintage">
+                <p className="text-sm font-medium text-blue-800 mb-1">
+                  Option 1: Remote-Daten übernehmen
+                </p>
+                <p className="text-xs text-blue-700">
+                  Verwirft deine lokalen Änderungen und übernimmt die Daten vom
+                  Server. Empfohlen wenn du auf dem anderen Gerät gearbeitet
+                  hast.
+                </p>
+              </div>
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-vintage">
+                <p className="text-sm font-medium text-amber-800 mb-1">
+                  Option 2: Lokale Änderungen behalten
+                </p>
+                <p className="text-xs text-amber-700">
+                  Bricht den Merge ab und behält deine lokalen Daten. Du musst
+                  dann manuell synchronisieren.
+                </p>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-vintage">
+                <p className="text-xs text-slate-600">
+                  💡 <strong>Tipp:</strong> Bei Unsicherheit wähle Option 1 und
+                  exportiere vorher ein Backup über "Daten exportieren".
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleResolveConflictRemote}
+                disabled={gitLoading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-vintage hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm font-medium"
+              >
+                Remote übernehmen
+              </button>
+              <button
+                onClick={handleAbortMerge}
+                disabled={gitLoading}
+                className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-vintage hover:bg-amber-700 transition-colors disabled:opacity-50 text-sm font-medium"
+              >
+                Lokal behalten
+              </button>
+              <button
+                onClick={() => setShowConflictDialog(false)}
+                className="px-4 py-2 border-vintage border-slate-200 rounded-vintage hover:bg-slate-50 transition-colors text-sm"
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

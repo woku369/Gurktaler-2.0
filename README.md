@@ -219,18 +219,26 @@ Seit 2021 akzeptiert GitHub keine Passwörter mehr für HTTPS. Du benötigst ein
    git config --global credential.helper wincred
    ```
 
-### Auto-Commit & Auto-Push Einstellungen
+### Auto-Commit, Auto-Push & Auto-Pull Einstellungen
 
 In der App unter **Einstellungen → Git-Integration**:
 
 - ✅ **Auto-Commit**: Erstellt automatisch einen Commit bei jeder Datenänderung
 - ✅ **Auto-Push**: Pusht automatisch nach jedem Commit (benötigt Remote-Setup)
+- ✅ **Auto-Pull beim Start**: Holt automatisch neueste Daten beim App-Start
 - **Commit Message Prefix**: Standardmäßig `[Auto]`, anpassbar
 
 **Beispiel Auto-Commit Nachrichten**:
 - `[Auto] Produkt "Gurktaler Kräuter Reserve" erstellt`
 - `[Auto] Rezept "Maischebasis V3" aktualisiert`
 - `[Auto] Projekt "Markttest Graz" aktualisiert`
+
+**Auto-Pull Verhalten**:
+- Beim App-Start wird automatisch `git pull` ausgeführt (wenn Auto-Push aktiviert)
+- Lokale Änderungen werden vorher automatisch committed
+- Bei Merge-Konflikten erscheint ein Dialog mit 2 Optionen:
+  - **Remote übernehmen**: Verwirft lokale Änderungen, lädt Remote-Daten
+  - **Lokal behalten**: Behält lokale Daten, Sync muss später manuell erfolgen
 
 ### Manuelle Sync-Operationen
 
@@ -260,9 +268,16 @@ Falls Auto-Push deaktiviert ist oder du manuell synchronisieren willst:
 3. Remote ist bereits konfiguriert
 4. Aktiviere Auto-Commit & Auto-Push
 
-**Bei jedem Start auf Gerät 2**:
-- Klicke **Pull** in den Einstellungen → holt neueste Daten
+**Bei jedem Start**:
+- ✅ **Automatisch**: Auto-Pull holt neueste Daten beim App-Start
+- 🔄 **Manuell**: Klicke **Pull** in den Einstellungen wenn Auto-Pull deaktiviert ist
+- Bei Konflikten: Dialog hilft bei der Lösung (Remote übernehmen oder Lokal behalten)
 - Arbeite normal → Auto-Push synchronisiert automatisch
+
+**Konflikt-Vermeidung**:
+- Arbeite möglichst nicht gleichzeitig auf beiden Geräten an denselben Daten
+- Auto-Pull stellt sicher, dass du immer mit dem neuesten Stand startest
+- Bei Konflikten: Wähle im Dialog "Remote übernehmen" (empfohlen)
 
 ### Datensynchronisation (Legacy JSON-Export)
 
