@@ -201,6 +201,7 @@ export default function DocumentManager({
 
         <div className="relative">
           <button
+            type="button"
             onClick={() => setShowAddMenu(!showAddMenu)}
             className="flex items-center gap-2 px-3 py-1.5 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors text-sm"
           >
@@ -212,6 +213,7 @@ export default function DocumentManager({
           {showAddMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-vintage shadow-vintage border-vintage border-slate-200 py-2 z-10">
               <button
+                type="button"
                 onClick={() => openAddModal("file")}
                 className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
               >
@@ -219,6 +221,7 @@ export default function DocumentManager({
                 Lokale Datei durchsuchen
               </button>
               <button
+                type="button"
                 onClick={() => openAddModal("url")}
                 className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
               >
@@ -226,6 +229,7 @@ export default function DocumentManager({
                 URL/Link eingeben
               </button>
               <button
+                type="button"
                 onClick={() => openAddModal("google-photos")}
                 className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
               >
@@ -290,6 +294,7 @@ export default function DocumentManager({
                   {doc.type === "file" ? (
                     <>
                       <button
+                        type="button"
                         onClick={() => handleOpenDocument(doc)}
                         className="p-2 hover:bg-slate-200 rounded transition-colors"
                         title="Öffnen"
@@ -297,6 +302,7 @@ export default function DocumentManager({
                         <ExternalLink className="w-4 h-4 text-slate-600" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => onShowInFolder(doc)}
                         className="p-2 hover:bg-slate-200 rounded transition-colors"
                         title="Im Explorer zeigen"
@@ -306,6 +312,7 @@ export default function DocumentManager({
                     </>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => handleOpenDocument(doc)}
                       className="p-2 hover:bg-slate-200 rounded transition-colors"
                       title="Link öffnen"
@@ -314,6 +321,7 @@ export default function DocumentManager({
                     </button>
                   )}
                   <button
+                    type="button"
                     onClick={() => onDelete(doc.id)}
                     className="p-2 hover:bg-red-100 rounded transition-colors"
                     title="Löschen"
@@ -340,6 +348,7 @@ export default function DocumentManager({
                   : "Google Photos Link hinzufügen"}
               </h3>
               <button
+                type="button"
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-slate-600"
               >
@@ -408,12 +417,14 @@ export default function DocumentManager({
 
               <div className="flex gap-3 pt-2">
                 <button
+                  type="button"
                   onClick={() => setShowAddModal(false)}
                   className="flex-1 px-4 py-2 border-vintage border-slate-200 rounded-vintage hover:bg-slate-50 transition-colors text-sm"
                 >
                   Abbrechen
                 </button>
                 <button
+                  type="button"
                   onClick={
                     addType === "file" ? handleAddLocalFile : handleAddUrl
                   }
