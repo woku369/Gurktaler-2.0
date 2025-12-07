@@ -435,8 +435,42 @@ const sections: Section[] = [
     icon: Settings,
     content: {
       description:
-        "Datenexport/-import als JSON, vCard-Import, API-Key-Verwaltung für KI-Assistenten.",
+        "Git-Integration für automatische Synchronisation, Datenexport/-import als JSON, vCard-Import, API-Key-Verwaltung für KI-Assistenten.",
       howTo: [
+        {
+          title: "Git-Integration einrichten",
+          steps: [
+            "Erstelle GitHub Repository (privat empfohlen)",
+            'Settings → Git-Integration → "Remote-Repository einrichten"',
+            "Remote-URL einfügen (https://github.com/user/repo.git)",
+            'Klicke "Remote hinzufügen"',
+            "Aktiviere Auto-Commit (committed bei jeder Änderung)",
+            "Aktiviere Auto-Push (pusht automatisch zu GitHub)",
+            "Ab jetzt wird jede Datenänderung automatisch synchronisiert",
+          ],
+        },
+        {
+          title: "Auto-Pull nutzen",
+          steps: [
+            "Auto-Pull ist aktiv wenn Auto-Push aktiviert ist",
+            "Beim App-Start werden automatisch neueste Daten geholt",
+            "Lokale Änderungen werden vorher committed",
+            "Bei Konflikten erscheint Dialog mit 2 Optionen:",
+            '→ "Remote übernehmen": Lädt Server-Daten (empfohlen)',
+            '→ "Lokal behalten": Behält deine Änderungen',
+            "Nach Remote-Übernahme: App lädt automatisch neu",
+          ],
+        },
+        {
+          title: "Mehrere Geräte synchronisieren",
+          steps: [
+            "Gerät 1: Remote einrichten, Auto-Commit/Push aktivieren",
+            "Gerät 2: Repository klonen, App installieren",
+            "Gerät 2: Auto-Commit/Push aktivieren",
+            "Ab jetzt: App-Start = Auto-Pull holt neueste Daten",
+            "Konflikt-Vermeidung: Nicht gleichzeitig am selben arbeiten",
+          ],
+        },
         {
           title: "Daten exportieren",
           steps: [
@@ -467,9 +501,13 @@ const sections: Section[] = [
         },
       ],
       tips: [
-        "Regelmäßig exportieren als Backup",
-        "Export in Git-Repository committen",
-        "API-Keys nie teilen",
+        "Git-Integration = Beste Sync-Lösung für mehrere Geräte",
+        "Auto-Pull vermeidet veraltete Daten beim Start",
+        "Bei Konflikten: Remote übernehmen ist meist die richtige Wahl",
+        "GitHub Personal Access Token für HTTPS statt Passwort",
+        "SSH-Key für bequemeren Push ohne Token-Eingabe",
+        "JSON-Export als zusätzliches Backup nutzen",
+        "API-Keys nie teilen oder committen",
         "LocalStorage-Größe wird angezeigt",
       ],
     },
@@ -501,15 +539,18 @@ const sections: Section[] = [
       features: [
         "✅ Phase 1-6: Fundament, UI, Projekte, Produkte, Rezepturen abgeschlossen",
         "✅ Phase 7: Tag-System & Volltext-Suche komplett",
-        "📋 Phase 7: Favoriten-System (in Arbeit)",
-        "📋 Phase 8: Git-Integration, Google Contacts OAuth",
-        "📋 Phase 9: Android PWA",
-        "📋 Phase 10: Performance, Backup, Installer",
+        "✅ Phase 8: Git-Integration mit Auto-Commit/Push/Pull komplett",
+        "✅ Phase 9: Production Build & Installer (NSIS) komplett",
+        "📋 Phase 7: Favoriten-System (geplant)",
+        "📋 Phase 8: Google Contacts OAuth (geplant)",
+        "📋 Phase 10: Android PWA",
+        "📋 Phase 11: Performance-Optimierung",
       ],
       tips: [
-        "Aktuelle Version im CHANGELOG.md",
-        "Feature-Requests via Git Issues",
-        "Regelmäßige Updates geplant",
+        "Aktuelle Version: 0.9.1 (siehe CHANGELOG.md)",
+        "Feature-Requests via GitHub Issues",
+        "Regelmäßige Updates alle 2-4 Wochen",
+        "Git-Sync macht Multi-Device-Nutzung möglich",
       ],
     },
   },

@@ -165,7 +165,9 @@ function Settings() {
     const success = await resolveConflictWithRemote();
     if (success) {
       setImportStatus("success");
-      setStatusMessage("Konflikt gelöst! Remote-Daten übernommen. Seite wird neu geladen...");
+      setStatusMessage(
+        "Konflikt gelöst! Remote-Daten übernommen. Seite wird neu geladen..."
+      );
       setTimeout(() => window.location.reload(), 2000);
     } else {
       setGitError("Konflikt-Lösung fehlgeschlagen.");
