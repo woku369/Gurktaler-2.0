@@ -1,12 +1,14 @@
 import { useState, FormEvent, useEffect } from "react";
 import TagSelector from "./TagSelector";
 import ImageUpload from "./ImageUpload";
+import DocumentManager from "./DocumentManager";
 import { containers as containersService } from "@/renderer/services/storage";
 import type {
   Product,
   ProductStatus,
   Project,
   Container,
+  Document,
 } from "@/shared/types";
 
 interface ProductFormProps {
@@ -55,6 +57,9 @@ export default function ProductForm({
   const [containerId, setContainerId] = useState(product?.container_id || "");
   const [notes, setNotes] = useState(product?.notes || "");
   const [containers, setContainers] = useState<Container[]>([]);
+  const [documents, setDocuments] = useState<Document[]>(
+    product?.documents || []
+  );
 
   const isVersioning = !!parentProduct;
 
@@ -74,6 +79,32 @@ export default function ProductForm({
   };
 
   const alcoholTax = calculateAlcoholTax();
+
+  const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
+    const newDoc: Document = {
+      ...doc,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    setDocuments([...documents, newDoc]);
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(documents.filter((d) => d.id !== id));
+  };
+
+  const handleOpenDocument = async (doc: Document) => {
+    if (doc.type === "file") {
+      await window.electron.invoke("file:open", doc.path);
+    } else {
+      // URL oder Google Photos - öffne im Browser
+      window.open(doc.path, "_blank");
+    }
+  };
+
+  const handleShowInFolder = async (doc: Document) => {
+    await window.electron.invoke("file:show", doc.path);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -97,6 +128,7 @@ export default function ProductForm({
       include_alcohol_tax: includeAlcoholTax,
       container_id: containerId || undefined,
       notes: notes.trim() || undefined,
+      documents: documents.length > 0 ? documents : undefined,
     });
   };
 
@@ -376,6 +408,19 @@ export default function ProductForm({
             entityType="product"
             entityId={product.id}
             maxImages={5}
+          />
+        </div>
+      )}
+
+      {/* Documents */}
+      {product && (
+        <div>
+          <DocumentManager
+            documents={documents}
+            onAdd={handleAddDocument}
+            onDelete={handleDeleteDocument}
+            onOpen={handleOpenDocument}
+            onShowInFolder={handleShowInFolder}
           />
         </div>
       )}

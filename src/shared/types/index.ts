@@ -8,6 +8,20 @@ export type IngredientCategory = 'mazerat' | 'destillat' | 'rohstoff' | 'alkohol
 export type WeblinkType = 'competitor' | 'research' | 'supplier' | 'other';
 export type ByproductType = 'marketing' | 'packaging' | 'label' | 'other';
 export type ContainerType = 'bottle' | 'label' | 'cap' | 'box' | 'other';
+export type DocumentType = 'file' | 'url' | 'google-photos';
+export type DocumentCategory = 'recipe' | 'analysis' | 'marketing' | 'label' | 'documentation' | 'other';
+
+// Document - Pfad-basierte Dokumentenverwaltung
+export interface Document extends BaseEntity {
+    type: DocumentType;
+    path: string; // Relativer Pfad oder URL
+    name: string;
+    category?: DocumentCategory;
+    description?: string;
+    mime_type?: string;
+    file_size?: number; // in bytes
+    thumbnail?: string; // Optional: Base64 Mini-Preview
+}
 
 // Base Entity
 export interface BaseEntity {
@@ -21,6 +35,7 @@ export interface Project extends BaseEntity {
     name: string;
     description?: string;
     status: ProjectStatus;
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Product with versioning - Produktdatenbank (versionierbar)
@@ -38,6 +53,7 @@ export interface Product extends BaseEntity {
     include_alcohol_tax?: boolean; // Checkbox: Alkoholsteuer (12€/L) für Preisfindung
     alcohol_tax_amount?: number; // Berechneter Steuerbetrag
     notes?: string; // Bemerkungsfeld
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Recipe with versioning
@@ -54,6 +70,7 @@ export interface Recipe extends BaseEntity {
     yield_amount?: number; // Ausgabemenge
     yield_unit?: string; // Einheit (ml, liter)
     notes?: string; // Bemerkungsfeld
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Alkoholsteuer-Konstante: 12 Euro pro Liter reinem Alkohol
@@ -89,6 +106,7 @@ export interface Ingredient extends BaseEntity {
     price_per_unit?: number; // Liter- oder Kilopreis
     unit: 'liter' | 'kilogram'; // Einheit für Preis
     notes?: string; // Bemerkung
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Note / Chaos Storage
@@ -125,6 +143,7 @@ export interface Contact extends BaseEntity {
     phone?: string;
     address?: string;
     notes?: string;
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Contact-Project Assignment (junction table)
@@ -159,6 +178,7 @@ export interface Container extends BaseEntity {
     volume?: number; // in ml
     notes?: string; // Bemerkung
     price?: number; // Preis pro Einheit
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Image

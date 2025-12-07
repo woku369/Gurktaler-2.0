@@ -29,7 +29,7 @@ function App() {
   useEffect(() => {
     const performAutoPull = async () => {
       const config = getGitConfig();
-      
+
       // Nur wenn Auto-Pull aktiviert ist
       if (!config.autoPush) {
         return;
@@ -141,27 +141,6 @@ function App() {
         </Route>
       </Routes>
     </>
-  );
-}
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="projects" element={<Projects />} />
-        <Route path="products" element={<Products />} />
-        <Route path="recipes" element={<Recipes />} />
-        <Route path="ingredients" element={<Ingredients />} />
-        <Route path="containers" element={<Containers />} />
-        <Route path="notes" element={<Notes />} />
-        <Route path="contacts" element={<Contacts />} />
-        <Route path="research" element={<Research />} />
-        <Route path="tags" element={<Tags />} />
-        <Route path="search" element={<GlobalSearch />} />
-        <Route path="ai-assistant" element={<AIAssistant />} />
-        <Route path="documentation" element={<Documentation />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="design-preview" element={<DesignPreview />} />
-      </Route>
-    </Routes>
   );
 }
 

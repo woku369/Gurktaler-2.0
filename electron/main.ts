@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import path from 'path'
 import { execSync } from 'child_process'
 import http from 'http'
@@ -261,6 +261,120 @@ function registerGitHandlers() {
     })
 }
 
+// File-Handler registrieren
+function registerFileHandlers() {
+    const projectRoot = path.join(__dirname, '..')
+
+    // Datei-Dialog öffnen
+    ipcMain.handle('file:select', async () => {
+        try {
+            const result = await dialog.showOpenDialog({
+                properties: ['openFile'],
+                filters: [
+                    { name: 'Alle Dateien', extensions: ['*'] },
+                    { name: 'Dokumente', extensions: ['pdf', 'docx', 'xlsx', 'txt', 'doc', 'xls', 'pptx'] },
+                    { name: 'Bilder', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'] },
+                    { name: 'Tabellen', extensions: ['xlsx', 'xls', 'csv'] }
+                ]
+            })
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: false, canceled: true }
+            }
+
+            const filePath = result.filePaths[0]
+            
+            // Relativen Pfad berechnen (vom Projektroot aus)
+            const relativePath = path.relative(projectRoot, filePath)
+            
+            // Datei-Info abrufen
+            const stats = fs.statSync(filePath)
+            const fileName = path.basename(filePath)
+            const ext = path.extname(filePath).toLowerCase()
+
+            // MIME-Type ermitteln
+            const mimeTypes: Record<string, string> = {
+                '.pdf': 'application/pdf',
+                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                '.doc': 'application/msword',
+                '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                '.xls': 'application/vnd.ms-excel',
+                '.txt': 'text/plain',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.gif': 'image/gif',
+                '.webp': 'image/webp'
+            }
+
+            return {
+                success: true,
+                file: {
+                    path: relativePath,
+                    absolutePath: filePath,
+                    name: fileName,
+                    size: stats.size,
+                    mimeType: mimeTypes[ext] || 'application/octet-stream'
+                }
+            }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Datei mit Standard-App öffnen
+    ipcMain.handle('file:open', async (_event, relativePath: string) => {
+        try {
+            const absolutePath = path.isAbsolute(relativePath)
+                ? relativePath
+                : path.join(projectRoot, relativePath)
+
+            // Prüfe ob Datei existiert
+            if (!fs.existsSync(absolutePath)) {
+                return { success: false, error: 'Datei nicht gefunden' }
+            }
+
+            await shell.openPath(absolutePath)
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Im Explorer zeigen
+    ipcMain.handle('file:show', async (_event, relativePath: string) => {
+        try {
+            const absolutePath = path.isAbsolute(relativePath)
+                ? relativePath
+                : path.join(projectRoot, relativePath)
+
+            // Prüfe ob Datei existiert
+            if (!fs.existsSync(absolutePath)) {
+                return { success: false, error: 'Datei nicht gefunden' }
+            }
+
+            shell.showItemInFolder(absolutePath)
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Prüfe ob Datei existiert
+    ipcMain.handle('file:exists', async (_event, relativePath: string) => {
+        try {
+            const absolutePath = path.isAbsolute(relativePath)
+                ? relativePath
+                : path.join(projectRoot, relativePath)
+
+            const exists = fs.existsSync(absolutePath)
+            return { success: true, exists }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+}
+
 let localServer: http.Server | null = null
 
 function startLocalServer(): Promise<number> {
@@ -369,6 +483,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
     registerGitHandlers()
+    registerFileHandlers()
     createWindow()
 
     app.on('activate', () => {
