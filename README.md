@@ -132,23 +132,157 @@ build-output/Gurktaler 2.0-0.9.1-Setup.exe
 - [CHANGELOG.md](./CHANGELOG.md) - Versionshistorie
 - [docs/DATENMODELL.md](./docs/DATENMODELL.md) - Datenbankschema
 
-## Datensynchronisation
+## GitHub Remote Repository einrichten
 
-Die Anwendung speichert Daten lokal in SQLite. Für die Synchronisation zwischen Geräten:
+### Variante 1: Über die Anwendung (empfohlen)
+
+1. **GitHub Repository erstellen**
+   - Gehe zu [github.com](https://github.com) und melde dich an
+   - Klicke auf "New Repository" (grüner Button oben rechts)
+   - Repository-Name: z.B. `gurktaler-data-sync`
+   - Visibility: **Private** (wichtig für sensible Daten!)
+   - **Wichtig**: Haken bei "Initialize this repository with a README" **NICHT** setzen
+   - Klicke "Create repository"
+
+2. **Remote-URL kopieren**
+   - GitHub zeigt dir die Repository-URL an (z.B. `https://github.com/username/gurktaler-data-sync.git`)
+   - Oder nutze SSH: `git@github.com:username/gurktaler-data-sync.git` (empfohlen)
+
+3. **In der App einrichten**
+   - Öffne **Einstellungen** → Bereich **Git-Integration**
+   - Klicke auf "Remote-Repository einrichten"
+   - Füge die URL ein und klicke "Remote hinzufügen"
+   - Fertig! Ab jetzt synchronisiert die App automatisch
+
+4. **Erstmaliges Pushen**
+   - Die App wird nach dem Remote-Setup automatisch versuchen zu pushen
+   - Falls du SSH verwendest, musst du vorher deinen SSH-Key zu GitHub hinzufügen:
+     * Gehe zu GitHub → Settings → SSH and GPG keys
+     * Füge deinen öffentlichen SSH-Key hinzu (~/.ssh/id_rsa.pub)
+
+### Variante 2: Über Git Bash / Terminal
+
+```bash
+# Im Projekt-Verzeichnis
+cd c:\Users\wolfg\Desktop\zweipunktnullVS
+
+# Remote hinzufügen (HTTPS)
+git remote add origin https://github.com/username/gurktaler-data-sync.git
+
+# Oder mit SSH (empfohlen)
+git remote add origin git@github.com:username/gurktaler-data-sync.git
+
+# Ersten Push mit Upstream setzen
+git push -u origin master
+
+# Branch-Tracking prüfen
+git branch -vv
+```
+
+### SSH-Key für GitHub erstellen (einmalig)
+
+Falls du noch keinen SSH-Key hast:
+
+```bash
+# SSH-Key generieren
+ssh-keygen -t ed25519 -C "deine@email.com"
+
+# Key anzeigen und kopieren
+cat ~/.ssh/id_ed25519.pub
+
+# Zu GitHub hinzufügen:
+# GitHub → Settings → SSH and GPG keys → New SSH key
+# Füge den kopierten Key ein
+```
+
+### Authentifizierung mit HTTPS (GitHub Personal Access Token)
+
+Seit 2021 akzeptiert GitHub keine Passwörter mehr für HTTPS. Du benötigst ein **Personal Access Token**:
+
+1. **Token erstellen**:
+   - GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - "Generate new token" → "Generate new token (classic)"
+   - Note: z.B. "Gurktaler App Sync"
+   - Expiration: Wähle eine Laufzeit (z.B. 90 Tage oder "No expiration")
+   - Scopes: Wähle **repo** (voller Repository-Zugriff)
+   - Klicke "Generate token"
+   - **Wichtig**: Kopiere das Token sofort, es wird nur einmal angezeigt!
+
+2. **Token verwenden**:
+   - Bei HTTPS-Push/Pull wirst du nach Username/Passwort gefragt
+   - Username: Dein GitHub-Username
+   - Password: Das generierte Token (nicht dein GitHub-Passwort!)
+
+3. **Token speichern (Git Credential Manager)**:
+   ```bash
+   # Windows speichert das Token automatisch beim ersten Push
+   git config --global credential.helper wincred
+   ```
+
+### Auto-Commit & Auto-Push Einstellungen
+
+In der App unter **Einstellungen → Git-Integration**:
+
+- ✅ **Auto-Commit**: Erstellt automatisch einen Commit bei jeder Datenänderung
+- ✅ **Auto-Push**: Pusht automatisch nach jedem Commit (benötigt Remote-Setup)
+- **Commit Message Prefix**: Standardmäßig `[Auto]`, anpassbar
+
+**Beispiel Auto-Commit Nachrichten**:
+- `[Auto] Produkt "Gurktaler Kräuter Reserve" erstellt`
+- `[Auto] Rezept "Maischebasis V3" aktualisiert`
+- `[Auto] Projekt "Markttest Graz" aktualisiert`
+
+### Manuelle Sync-Operationen
+
+Falls Auto-Push deaktiviert ist oder du manuell synchronisieren willst:
+
+- **Pull** (Download): Ändert lokale Daten mit Remote-Stand ab
+- **Push** (Upload): Lädt lokale Commits zu GitHub hoch
+
+⚠️ **Wichtig**: Pull überschreibt lokale Änderungen! Stelle sicher, dass du vorher committed hast.
+
+### Mehrere Geräte synchronisieren
+
+**Gerät 1 (Initial)**:
+1. Remote-Repository einrichten (siehe oben)
+2. Auto-Commit & Auto-Push aktivieren
+3. Arbeite normal → Daten werden automatisch gepusht
+
+**Gerät 2 (Neu)**:
+1. Repository klonen:
+   ```bash
+   git clone https://github.com/username/gurktaler-data-sync.git zweipunktnullVS
+   cd zweipunktnullVS
+   npm install
+   npm run build
+   ```
+2. Öffne die App → Einstellungen
+3. Remote ist bereits konfiguriert
+4. Aktiviere Auto-Commit & Auto-Push
+
+**Bei jedem Start auf Gerät 2**:
+- Klicke **Pull** in den Einstellungen → holt neueste Daten
+- Arbeite normal → Auto-Push synchronisiert automatisch
+
+### Datensynchronisation (Legacy JSON-Export)
+
+Alternativ zur Git-Integration kannst du weiterhin JSON-Export/Import nutzen:
 
 1. **Export**: Daten werden als JSON exportiert
 2. **Git**: JSON-Dateien werden via Git synchronisiert
 3. **Import**: Auf anderem Gerät werden die Daten importiert
 
 ```bash
-# Daten exportieren (in der App oder via CLI)
-# → Erzeugt data-export/*.json
+# Daten exportieren (in der App: Einstellungen → Daten exportieren)
+# → Erzeugt gurktaler-backup-YYYY-MM-DD.json
 
 # Via Git synchronisieren
-git add data-export/
+git add gurktaler-backup-*.json
 git commit -m "Daten-Sync $(date +%Y-%m-%d)"
 git push
 ```
+
+⚠️ **Wichtig**: JSON-Import überschreibt ALLE lokalen Daten!
 
 ## Versionierung
 
@@ -164,5 +298,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 0.9.0 (Rezeptur-Versionierung & Kalkulation)  
-**Letztes Update**: 30. November 2025
+**Aktuelle Version**: 0.9.1 (Production Build & Git-Integration)  
+**Letztes Update**: 7. Dezember 2025
