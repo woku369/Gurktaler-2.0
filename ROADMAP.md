@@ -178,9 +178,12 @@
 | ✅     | vCard-Import                | Google Contacts importieren (.vcf)  |
 | ✅     | Git-Integration             | Automatischer Sync                  |
 | ✅     | Auto-Commit                 | Bei Datenänderungen                 |
+| ✅     | Auto-Push                   | Automatisch zu GitHub pushen        |
+| ✅     | Auto-Pull                   | Beim App-Start mit Konfliktlösung   |
 | ✅     | Manual Push/Pull            | Sync-Buttons in Settings            |
-| 📋     | Konflikt-Handling           | Bei Merge-Konflikten (v0.9.x)       |
-| 📋     | Google Contacts OAuth API   | Direkter Sync (für v0.9.x)          |
+| ✅     | Konflikt-Handling           | Dialog: Remote übernehmen / Lokal   |
+| ✅     | Backup via Git              | Remote-Repository = Backup-System   |
+| 📋     | Google Contacts OAuth API   | Direkter Sync (für v1.1.x)          |
 
 ---
 
@@ -197,13 +200,13 @@
 
 ## Phase 10: Polish & Release (v1.0.0)
 
-| Status | Aufgabe        | Beschreibung         |
-| ------ | -------------- | -------------------- |
-| 📋     | Performance    | Optimierung          |
-| 📋     | Error-Handling | Robustheit           |
-| 📋     | Backup-System  | Automatische Backups |
-| 📋     | Installer      | Windows Setup        |
-| 📋     | Dokumentation  | Vollständig          |
+| Status | Aufgabe        | Beschreibung                                  |
+| ------ | -------------- | --------------------------------------------- |
+| 📋     | Performance    | Optimierung                                   |
+| 📋     | Error-Handling | Robustheit                                    |
+| ✅     | Backup-System  | Git-basiert (Auto-Commit/Push zu GitHub)      |
+| ✅     | Installer      | Windows Setup (NSIS)                          |
+| 🔄     | Dokumentation  | In-App vollständig, README aktuell            |
 
 ---
 

@@ -44,6 +44,27 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - Android-Companion-App (PWA)
 - Dashboard mit Statistiken
 
+## Backup-Strategie
+
+**Automatisches Backup via Git-Integration:**
+
+✅ **Echtzeit-Backup**: Jede Datenänderung wird automatisch committed und zu GitHub gepusht (wenn Auto-Commit/Push aktiv)
+✅ **Remote-Sicherheit**: Alle Daten sicher auf GitHub (privates Repository empfohlen)
+✅ **Multi-Device-Sync**: Auto-Pull beim App-Start synchronisiert automatisch
+✅ **Konfliktlösung**: Dialog mit 2 Optionen bei Merge-Konflikten
+✅ **Versionierung**: Vollständige Git-Historie aller Änderungen
+
+**Zusätzliche Backup-Optionen:**
+
+📦 **JSON-Export**: Manuelles lokales Backup (Settings → Daten exportieren)
+📦 **Vor kritischen Aktionen**: Export vor Import/Mass-Delete empfohlen
+
+**Empfohlenes Setup:**
+1. Privates GitHub-Repository erstellen
+2. Remote in App einrichten (Settings → Git-Integration)
+3. Auto-Commit + Auto-Push aktivieren
+4. Fertig - Backups laufen automatisch im Hintergrund
+
 ## Tech-Stack
 
 | Komponente | Technologie |
