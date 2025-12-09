@@ -438,9 +438,35 @@ function createWindow() {
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
             webSecurity: false,
+            partition: 'persist:gurktaler', // KRITISCH: Persistentes LocalStorage!
         },
         titleBarStyle: 'hiddenInset',
         title: 'Gurktaler 2.0',
+    })
+
+    // Console-Logging für beide Modi
+    mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+        const levelNames = ['VERBOSE', 'INFO', 'WARNING', 'ERROR']
+        console.log(`[Renderer ${levelNames[level]}]`, message)
+        if (line && sourceId) {
+            console.log(`  at line ${line} in ${sourceId}`)
+        }
+    })
+
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        console.error('[LOAD ERROR]', errorCode, errorDescription)
+    })
+
+    mainWindow.webContents.on('did-finish-load', () => {
+        console.log('[LOAD SUCCESS] Page finished loading')
+    })
+
+    // F12 für DevTools
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F12') {
+            mainWindow.webContents.toggleDevTools()
+            event.preventDefault()
+        }
     })
 
     // In development, load from Vite dev server
@@ -450,32 +476,13 @@ function createWindow() {
     } else {
         // In production, starte lokalen HTTP Server
         startLocalServer().then(async (port) => {
-            console.log('Loading from localhost:', port)
+            console.log('[SERVER] Starting on port:', port)
             
             // Warte kurz damit der Server vollständig bereit ist
             await new Promise(resolve => setTimeout(resolve, 500))
             
-            mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-                console.error('Failed to load:', errorCode, errorDescription)
-            })
-            
-            mainWindow.webContents.on('did-finish-load', () => {
-                console.log('Page finished loading')
-            })
-            
-            mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-                console.log('Console:', message, 'at line', line, 'in', sourceId)
-            })
-            
             mainWindow.loadURL(`http://localhost:${port}`).catch(err => {
-                console.error('Failed to load:', err)
-            })
-            
-            mainWindow.webContents.on('before-input-event', (event, input) => {
-                if (input.key === 'F12') {
-                    mainWindow.webContents.toggleDevTools()
-                    event.preventDefault()
-                }
+                console.error('[LOAD ERROR] Failed to load:', err)
             })
             
             mainWindow.webContents.openDevTools()
@@ -484,6 +491,12 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    // Setze expliziten userData-Path für konsistente Speicherung
+    const userDataPath = path.join(app.getPath('appData'), 'Gurktaler-2.0')
+    app.setPath('userData', userDataPath)
+    console.log('[ELECTRON] userData path:', userDataPath)
+    console.log('[ELECTRON] App ready, starting...')
+    
     registerGitHandlers()
     registerFileHandlers()
     createWindow()
