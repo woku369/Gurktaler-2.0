@@ -419,10 +419,13 @@ function startLocalServer(): Promise<number> {
             fs.createReadStream(fullPath).pipe(res)
         })
         
-        localServer.listen(0, () => {
-            const port = (localServer!.address() as any).port
-            console.log('Local server started on port:', port)
-            resolve(port)
+        // KRITISCHER FIX: Fester Port für persistentes localStorage
+        // Random-Port (listen(0)) ändert sich bei jedem Start
+        // → Neue Origin → Neuer LocalStorage → DATENVERLUST!
+        const FIXED_PORT = 58888
+        localServer.listen(FIXED_PORT, () => {
+            console.log('Local server started on FIXED port:', FIXED_PORT)
+            resolve(FIXED_PORT)
         })
     })
 }

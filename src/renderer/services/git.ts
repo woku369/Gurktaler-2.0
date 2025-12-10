@@ -165,7 +165,7 @@ export async function listRemotes(): Promise<Array<{ name: string; url: string; 
  * Löst Merge-Konflikte durch Überschreiben mit Remote
  */
 export async function resolveConflictWithRemote(): Promise<boolean> {
-  try {
+  try { 
     const result = await window.electron.invoke('git:resolve-conflict-remote') as GitResult;
     return result.success;
   } catch (error) {
