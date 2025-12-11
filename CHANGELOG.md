@@ -7,6 +7,41 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [0.9.3] - 2025-12-11
+
+### 🔥 KRITISCHE BUGFIXES
+
+#### Datenverlust bei App-Neustart behoben
+- **ROOT CAUSE**: LocalStorage ist Origin-basiert (Protocol + Host + Port)
+  - Production-Server verwendete Random-Port (listen(0))
+  - Bei jedem App-Start: Neuer Port → Neue Origin → LEERER LocalStorage
+  - Beispiel: localhost:52795 → localhost:63315 → ALLE DATEN VERLOREN
+- **LÖSUNG**: Fester Port 58888 in Production
+  - Immer gleiche Origin: http://localhost:58888
+  - Partition 'persist:gurktaler' bleibt aktiv
+  - LocalStorage jetzt persistent über App-Neustarts
+- **IMPACT**: Kritischer Fix - App jetzt produktionsreif
+  - Projekte, Produkte, Rezepte überleben Neustart
+  - Keine Datenverluste mehr bei geschlossener App
+
+### Neu
+
+#### 📋 Production Logging
+- Console-Logs werden in Log-Datei geschrieben
+- Log-Pfad: `%APPDATA%\Gurktaler-2.0\logs\gurktaler-YYYY-MM-DD.log`
+- IPC-Handler `logs:open` öffnet Log-Verzeichnis
+- Tägliche Log-Rotation (Datum im Dateinamen)
+- Main-Process-Logs: Server-Start, userData-Path, Fehler
+- Debugging von Production-Builds möglich
+
+### Technische Details
+
+- **Electron**: Fester Port 58888 statt Random-Port
+- **Logging**: fs.appendFileSync für Production-Logs
+- **IPC**: Neuer Handler `logs:open` für Explorer-Zugriff
+
+---
+
 ## [0.9.2] - 2025-12-07
 
 ### Neu
