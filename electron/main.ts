@@ -5,6 +5,58 @@ import http from 'http'
 import fs from 'fs'
 import { URL } from 'url'
 
+// Logging-Setup für Production
+const isDev = process.env.NODE_ENV === 'development'
+let logFilePath = ''
+
+function writeLog(level: string, ...args: any[]) {
+    if (isDev || !logFilePath) return
+    
+    const timestamp = new Date().toISOString()
+    const message = `[${level} ${timestamp}] ${args.join(' ')}\n`
+    
+    try {
+        fs.appendFileSync(logFilePath, message, 'utf-8')
+    } catch (err) {
+        // Fallback: Schreibe in Console
+        console.error('Log write failed:', err)
+    }
+}
+
+function setupLogging() {
+    if (!isDev) {
+        // Log-Datei im userData-Verzeichnis
+        const logDir = path.join(app.getPath('userData'), 'logs')
+        if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true })
+        }
+        
+        logFilePath = path.join(logDir, `gurktaler-${new Date().toISOString().split('T')[0]}.log`)
+        
+        // Überschreibe console.log für Main-Process
+        const originalLog = console.log
+        const originalError = console.error
+        const originalWarn = console.warn
+        
+        console.log = (...args: any[]) => {
+            writeLog('LOG', ...args)
+            originalLog(...args)
+        }
+        
+        console.error = (...args: any[]) => {
+            writeLog('ERROR', ...args)
+            originalError(...args)
+        }
+        
+        console.warn = (...args: any[]) => {
+            writeLog('WARN', ...args)
+            originalWarn(...args)
+        }
+        
+        console.log('Logging initialisiert:', logFilePath)
+    }
+}
+
 // Git-Handler registrieren
 function registerGitHandlers() {
     const projectRoot = path.join(__dirname, '..')
@@ -324,6 +376,20 @@ function registerFileHandlers() {
         }
     })
 
+    // Log-Verzeichnis öffnen
+    ipcMain.handle('logs:open', async () => {
+        try {
+            const logDir = path.join(app.getPath('userData'), 'logs')
+            if (fs.existsSync(logDir)) {
+                shell.openPath(logDir)
+                return { success: true }
+            }
+            return { success: false, error: 'Log-Verzeichnis nicht gefunden' }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
     // Datei mit Standard-App öffnen
     ipcMain.handle('file:open', async (_event, relativePath: string) => {
         try {
@@ -494,6 +560,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    // Logging-Setup ZUERST
+    setupLogging()
+    
     // Setze expliziten userData-Path für konsistente Speicherung
     const userDataPath = path.join(app.getPath('appData'), 'Gurktaler-2.0')
     app.setPath('userData', userDataPath)

@@ -10,7 +10,8 @@ contextBridge.exposeInMainWorld('electron', {
             'app:version',
             'git:status', 'git:commit', 'git:push', 'git:pull', 'git:add-remote', 'git:list-remotes',
             'git:resolve-conflict-remote', 'git:abort-merge',
-            'file:select', 'file:open', 'file:show', 'file:exists'
+            'file:select', 'file:open', 'file:show', 'file:exists',
+            'logs:open'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);
