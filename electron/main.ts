@@ -513,12 +513,23 @@ function createWindow() {
         title: 'Gurktaler 2.0',
     })
 
-    // Console-Logging für beide Modi
+    // Console-Logging für beide Modi - KRITISCH: Renderer-Logs erfassen!
     mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
         const levelNames = ['VERBOSE', 'INFO', 'WARNING', 'ERROR']
-        console.log(`[Renderer ${levelNames[level]}]`, message)
+        const levelName = levelNames[level]
+        
+        // Log in Datei (wenn Production) UND Console
+        if (levelName === 'ERROR') {
+            console.error(`[Renderer ${levelName}]`, message)
+        } else if (levelName === 'WARNING') {
+            console.warn(`[Renderer ${levelName}]`, message)
+        } else {
+            console.log(`[Renderer ${levelName}]`, message)
+        }
+        
         if (line && sourceId) {
-            console.log(`  at line ${line} in ${sourceId}`)
+            const location = `  at line ${line} in ${sourceId}`
+            console.log(location)
         }
     })
 
