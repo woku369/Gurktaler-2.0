@@ -237,7 +237,7 @@ function Recipes() {
           onClose={handleCancel}
         >
           <RecipeForm
-            recipe={editingRecipe || undefined}
+            recipe={editingRecipe || versioningRecipe || undefined}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
           />
