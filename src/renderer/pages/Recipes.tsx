@@ -1,67 +1,64 @@
 import { useState, useEffect } from "react";
-import {
-  Plus,
-  Search,
-  Edit2,
-  Trash2,
-  FlaskConical,
-  Droplet,
-  Beaker,
-  Star,
-  GitBranch,
-} from "lucide-react";
+import { Plus, Search, FlaskConical } from "lucide-react";
 import {
   recipes as recipesService,
-  products as productsService,
   recipeIngredients as recipeIngredientsService,
+  ingredients as ingredientsService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
   favorites as favoritesService,
+  images as imagesService,
 } from "@/renderer/services/storage";
 import RecipeForm from "@/renderer/components/RecipeForm";
+import RecipeCard from "@/renderer/components/RecipeCard";
 import Modal from "@/renderer/components/Modal";
-import type { Recipe, Product, RecipeIngredient, Tag } from "@/shared/types";
-
-const typeIcons = {
-  macerate: Droplet,
-  distillate: Beaker,
-  blend: FlaskConical,
-};
-
-const typeLabels = {
-  macerate: "Mazerat",
-  distillate: "Destillat",
-  blend: "Ausmischung",
-};
-
-const typeColors = {
-  macerate: "bg-green-50 text-green-800 border-green-200",
-  distillate: "bg-distillery-50 text-distillery-800 border-distillery-200",
-  blend: "bg-bronze-50 text-bronze-800 border-bronze-200",
-};
+import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
+import type {
+  Recipe,
+  RecipeIngredient,
+  Ingredient,
+  Tag,
+  Image,
+  Document,
+} from "@/shared/types";
 
 function Recipes() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [recipeIngredients, setRecipeIngredients] = useState<
     RecipeIngredient[]
   >([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
+  const [recipeImages, setRecipeImages] = useState<Record<string, Image[]>>({});
+  const [recipeDocuments, setRecipeDocuments] = useState<
+    Record<string, Document[]>
+  >({});
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
   const [versioningRecipe, setVersioningRecipe] = useState<Recipe | null>(null);
+  const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
+  const [quickUrlRecipe, setQuickUrlRecipe] = useState<Recipe | null>(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = () => {
-    setRecipes(recipesService.getAll());
-    setProducts(productsService.getAll());
+    const allRecipes = recipesService.getAll();
+    setRecipes(allRecipes);
     setRecipeIngredients(recipeIngredientsService.getAll());
+    setIngredients(ingredientsService.getAll());
     setTags(tagsService.getAll());
+
+    // Load images for all recipes
+    const imagesMap: Record<string, Image[]> = {};
+    allRecipes.forEach((recipe) => {
+      imagesMap[recipe.id] = imagesService.getByEntity("recipe", recipe.id);
+    });
+    setRecipeImages(imagesMap);
+    setRecipeDocuments({}); // Documents currently not loaded
   };
 
   const handleSubmit = (
@@ -108,46 +105,62 @@ function Recipes() {
     setShowForm(true);
   };
 
-  // Build recipe tree structure
-  const buildRecipeTree = () => {
-    const rootRecipes = recipes.filter((r) => !r.parent_id);
-    return rootRecipes.map((root) => ({
-      root,
-      versions: recipes.filter((r) => r.parent_id === root.id),
-    }));
+  const handleToggleFavorite = (id: string) => {
+    const existing = favoritesService.getByEntity("recipe", id);
+    if (existing) {
+      favoritesService.delete(existing.id);
+    } else {
+      favoritesService.create({
+        entity_type: "recipe",
+        entity_id: id,
+      });
+    }
+    loadData();
   };
 
-  const recipeTree = buildRecipeTree();
-  const filteredTree = recipeTree.filter((item) => {
-    const matchesSearch = item.root.name
+  const handleCopyName = (recipeName: string) => {
+    navigator.clipboard.writeText(recipeName);
+    // Visual feedback could be added here
+  };
+
+  const handleQuickAddUrl = (recipe: Recipe) => {
+    setQuickUrlRecipe(recipe);
+    setShowQuickUrlDialog(true);
+  };
+
+  const handleAddQuickUrl = (url: string, name?: string) => {
+    if (!quickUrlRecipe) return;
+
+    // TODO: Implement document creation when documents service is available
+    console.log("Quick URL add:", { url, name, recipeId: quickUrlRecipe.id });
+
+    setShowQuickUrlDialog(false);
+    setQuickUrlRecipe(null);
+    loadData();
+  };
+
+  const handleQuickAddDocument = (recipe: Recipe) => {
+    // Open full form for document
+    handleEdit(recipe);
+  };
+
+  // Simplified: Get flat filtered list instead of tree
+  const filteredRecipes = recipes.filter((recipe) => {
+    const matchesSearch = recipe.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
 
     let matchesTag = true;
     if (selectedTagId) {
-      const rootAssignments = tagAssignmentsService.getByEntity(
+      const assignments = tagAssignmentsService.getByEntity(
         "recipe",
-        item.root.id
+        recipe.id
       );
-      const versionAssignments = item.versions.flatMap((v) =>
-        tagAssignmentsService.getByEntity("recipe", v.id)
-      );
-      matchesTag = [...rootAssignments, ...versionAssignments].some(
-        (a) => a.tag_id === selectedTagId
-      );
+      matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
     }
 
     return matchesSearch && matchesTag;
   });
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
 
   return (
     <div className="p-8">
@@ -217,7 +230,7 @@ function Recipes() {
       )}
 
       {/* Empty State */}
-      {filteredTree.length === 0 && (
+      {filteredRecipes.length === 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
           <FlaskConical className="w-16 h-16 mx-auto text-slate-300 mb-4" />
           <h3 className="text-lg font-semibold text-slate-800 mb-2">
@@ -241,258 +254,44 @@ function Recipes() {
         </div>
       )}
 
-      {/* Recipe Tree */}
-      <div className="space-y-4">
-        {filteredTree.map((item) => {
-          const Icon = typeIcons[item.root.type];
-          const rootProduct = item.root.product_id
-            ? products.find((p) => p.id === item.root.product_id)
-            : null;
+      {/* Recipe Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredRecipes.map((recipe) => {
+          const isFavorite = favoritesService.isFavorite("recipe", recipe.id);
           return (
-            <div
-              key={item.root.id}
-              className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden"
-            >
-              {/* Root Recipe */}
-              <div className="p-6 hover:bg-gurktaler-50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-heading font-semibold text-distillery-900">
-                        {item.root.name}
-                      </h3>
-                      {item.root.version && (
-                        <span className="text-sm text-distillery-600 font-body font-semibold">
-                          v{item.root.version}
-                        </span>
-                      )}
-                      <span
-                        className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full border-vintage ${
-                          typeColors[item.root.type]
-                        }`}
-                      >
-                        <Icon className="w-3 h-3" />
-                        {typeLabels[item.root.type]}
-                      </span>
-                    </div>
-                    {item.root.instructions && (
-                      <p className="text-sm text-distillery-600 mb-2 font-body">
-                        {item.root.instructions}
-                      </p>
-                    )}
-                    {rootProduct && (
-                      <div className="mb-2">
-                        <span className="text-xs text-distillery-500">
-                          🔗 {rootProduct.name}
-                        </span>
-                      </div>
-                    )}
-                    {(() => {
-                      const ingredientCount = recipeIngredients.filter(
-                        (ri) => ri.recipe_id === item.root.id
-                      ).length;
-                      return ingredientCount > 0 ? (
-                        <div className="mb-2">
-                          <span className="text-xs font-medium text-gurktaler-600">
-                            📋 {ingredientCount} Zutat
-                            {ingredientCount !== 1 ? "en" : ""}
-                          </span>
-                        </div>
-                      ) : null;
-                    })()}
-                    {item.root.yield_amount && (
-                      <div className="mb-2">
-                        <span className="text-xs text-distillery-600">
-                          ⚗️ Ausbeute: {item.root.yield_amount}{" "}
-                          {item.root.yield_unit || "ml"}
-                        </span>
-                      </div>
-                    )}
-                    {(() => {
-                      const recipeAssignments =
-                        tagAssignmentsService.getByEntity(
-                          "recipe",
-                          item.root.id
-                        );
-                      const recipeTags = recipeAssignments
-                        .map((a) => tags.find((t) => t.id === a.tag_id))
-                        .filter((t): t is Tag => t !== undefined);
-                      return (
-                        recipeTags.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {recipeTags.map((tag) => (
-                              <span
-                                key={tag.id}
-                                className="px-2 py-1 text-xs rounded-full font-body"
-                                style={{
-                                  backgroundColor: `${tag.color}20`,
-                                  color: tag.color,
-                                  border: `1px solid ${tag.color}40`,
-                                }}
-                              >
-                                {tag.name}
-                              </span>
-                            ))}
-                          </div>
-                        )
-                      );
-                    })()}
-                  </div>
-                  <div className="flex gap-2 ml-4">
-                    <button
-                      onClick={() => {
-                        favoritesService.toggle("recipe", item.root.id);
-                        loadData();
-                      }}
-                      className="p-2 hover:bg-bronze-100 rounded-lg transition-colors"
-                      title={
-                        favoritesService.isFavorite("recipe", item.root.id)
-                          ? "Aus Favoriten entfernen"
-                          : "Zu Favoriten hinzufügen"
-                      }
-                    >
-                      <Star
-                        className={`w-5 h-5 ${
-                          favoritesService.isFavorite("recipe", item.root.id)
-                            ? "text-yellow-500 fill-yellow-500"
-                            : "text-distillery-400"
-                        }`}
-                      />
-                    </button>
-                    <button
-                      onClick={() => handleCreateVersion(item.root)}
-                      className="p-2 hover:bg-gurktaler-100 rounded-lg transition-colors"
-                      title="Neue Version erstellen"
-                    >
-                      <GitBranch className="w-5 h-5 text-gurktaler-600" />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(item.root)}
-                      className="p-2 hover:bg-bronze-100 rounded-lg transition-colors"
-                      title="Bearbeiten"
-                    >
-                      <Edit2 className="w-5 h-5 text-distillery-600" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.root.id)}
-                      className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                      title="Löschen"
-                    >
-                      <Trash2 className="w-5 h-5 text-red-600" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Version History */}
-              {item.versions.length > 0 && (
-                <div className="border-t-vintage border-distillery-100">
-                  {item.versions.map((version) => {
-                    const VersionIcon = typeIcons[version.type];
-                    const versionProduct = version.product_id
-                      ? products.find((p) => p.id === version.product_id)
-                      : null;
-                    return (
-                      <div
-                        key={version.id}
-                        className="p-4 pl-12 bg-gurktaler-50/30 hover:bg-gurktaler-50/50 transition-colors border-t-vintage border-distillery-100 first:border-t-0"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <GitBranch className="w-4 h-4 text-gurktaler-600" />
-                              <h4 className="font-heading font-semibold text-distillery-800">
-                                {version.name}
-                              </h4>
-                              {version.version && (
-                                <span className="text-sm text-distillery-600 font-body">
-                                  v{version.version}
-                                </span>
-                              )}
-                              <span
-                                className={`flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
-                                  typeColors[version.type]
-                                }`}
-                              >
-                                <VersionIcon className="w-3 h-3" />
-                                {typeLabels[version.type]}
-                              </span>
-                            </div>
-                            {version.instructions && (
-                              <p className="text-sm text-distillery-600 mb-1 font-body">
-                                {version.instructions}
-                              </p>
-                            )}
-                            {versionProduct && (
-                              <div className="mb-1">
-                                <span className="text-xs text-distillery-500">
-                                  🔗 {versionProduct.name}
-                                </span>
-                              </div>
-                            )}
-                            <div className="text-xs text-distillery-400 font-body">
-                              Erstellt: {formatDate(version.created_at)}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 ml-4">
-                            <button
-                              onClick={() => {
-                                favoritesService.toggle("recipe", version.id);
-                                loadData();
-                              }}
-                              className="p-1 hover:bg-bronze-100 rounded transition-colors"
-                              title={
-                                favoritesService.isFavorite(
-                                  "recipe",
-                                  version.id
-                                )
-                                  ? "Aus Favoriten entfernen"
-                                  : "Zu Favoriten hinzufügen"
-                              }
-                            >
-                              <Star
-                                className={`w-4 h-4 ${
-                                  favoritesService.isFavorite(
-                                    "recipe",
-                                    version.id
-                                  )
-                                    ? "text-yellow-500 fill-yellow-500"
-                                    : "text-distillery-400"
-                                }`}
-                              />
-                            </button>
-                            <button
-                              onClick={() => handleCreateVersion(version)}
-                              className="p-1 hover:bg-gurktaler-100 rounded transition-colors"
-                              title="Neue Version erstellen"
-                            >
-                              <GitBranch className="w-4 h-4 text-gurktaler-600" />
-                            </button>
-                            <button
-                              onClick={() => handleEdit(version)}
-                              className="p-1 hover:bg-bronze-100 rounded transition-colors"
-                              title="Bearbeiten"
-                            >
-                              <Edit2 className="w-4 h-4 text-distillery-600" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(version.id)}
-                              className="p-1 hover:bg-red-100 rounded transition-colors"
-                              title="Löschen"
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <RecipeCard
+              key={recipe.id}
+              recipe={recipe}
+              images={recipeImages[recipe.id] || []}
+              documents={recipeDocuments[recipe.id] || []}
+              recipeIngredients={recipeIngredients}
+              ingredients={ingredients}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onToggleFavorite={handleToggleFavorite}
+              onCopy={() => handleCopyName(recipe.name)}
+              onCreateVersion={handleCreateVersion}
+              onUpdate={loadData}
+              onQuickAddUrl={handleQuickAddUrl}
+              onQuickAddDocument={handleQuickAddDocument}
+              isFavorite={isFavorite}
+            />
           );
         })}
       </div>
+
+      {/* Quick Add URL Dialog */}
+      {showQuickUrlDialog && quickUrlRecipe && (
+        <QuickAddUrlDialog
+          isOpen={showQuickUrlDialog}
+          onClose={() => {
+            setShowQuickUrlDialog(false);
+            setQuickUrlRecipe(null);
+          }}
+          onAdd={handleAddQuickUrl}
+          entityName={quickUrlRecipe.name}
+        />
+      )}
     </div>
   );
 }
