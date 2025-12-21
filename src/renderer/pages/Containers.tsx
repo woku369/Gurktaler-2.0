@@ -21,6 +21,8 @@ import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
 import TagSelector from "@/renderer/components/TagSelector";
 import DocumentManager from "@/renderer/components/DocumentManager";
+import ContainerCard from "@/renderer/components/ContainerCard";
+import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
 import ContainerImportDialog from "@/renderer/components/ContainerImportDialog";
 import {
   generateTemplate,
@@ -52,6 +54,10 @@ function Containers() {
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
+  const [quickUrlContainer, setQuickUrlContainer] = useState<Container | null>(
+    null
+  );
   const [editingContainer, setEditingContainer] = useState<Container | null>(
     null
   );
@@ -63,6 +69,9 @@ function Containers() {
     price: undefined,
     documents: [],
   });
+  const [copiedContainerId, setCopiedContainerId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     loadData();
@@ -160,6 +169,46 @@ function Containers() {
       containersService.delete(id);
       loadData();
     }
+  };
+
+  const handleQuickAddUrl = (container: Container) => {
+    setQuickUrlContainer(container);
+    setShowQuickUrlDialog(true);
+  };
+
+  const handleAddQuickUrl = (url: string, name: string) => {
+    if (!quickUrlContainer) return;
+
+    const newDoc: Document = {
+      id: crypto.randomUUID(),
+      type: "url",
+      path: url,
+      name: name,
+      category: "other",
+      created_at: new Date().toISOString(),
+    };
+
+    const updatedDocs = [...(quickUrlContainer.documents || []), newDoc];
+    containersService.update(quickUrlContainer.id, { documents: updatedDocs });
+    loadData();
+  };
+
+  const handleQuickAddDocument = (container: Container) => {
+    setEditingContainer(container);
+    setFormData({
+      name: container.name,
+      type: container.type,
+      volume: container.volume,
+      notes: container.notes,
+      price: container.price,
+      documents: container.documents || [],
+    });
+    setShowForm(true);
+  };
+
+  const handleCopyName = (containerId: string) => {
+    setCopiedContainerId(containerId);
+    setTimeout(() => setCopiedContainerId(null), 2000);
   };
 
   const resetForm = () => {
@@ -451,105 +500,40 @@ function Containers() {
 
       {/* Containers Grid */}
       {filteredContainers.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredContainers.map((container) => (
-            <div
+            <ContainerCard
               key={container.id}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-colors group"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                  {containerTypeLabels[container.type]}
-                </span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
-                      favoritesService.toggle("container", container.id);
-                      loadData();
-                    }}
-                    className="p-1 hover:bg-slate-100 rounded"
-                    title={
-                      favoritesService.isFavorite("container", container.id)
-                        ? "Aus Favoriten entfernen"
-                        : "Zu Favoriten hinzufügen"
-                    }
-                  >
-                    <Star
-                      className={`w-4 h-4 ${
-                        favoritesService.isFavorite("container", container.id)
-                          ? "text-yellow-500 fill-yellow-500"
-                          : "text-slate-400"
-                      }`}
-                    />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(container)}
-                    className="p-1 hover:bg-slate-100 rounded"
-                    title="Bearbeiten"
-                  >
-                    <Edit2 className="w-4 h-4 text-slate-500" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(container.id)}
-                    className="p-1 hover:bg-red-50 rounded"
-                    title="Löschen"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Image Section */}
-              {containerImages[container.id]?.length > 0 && (
-                <div className="mb-3 -mx-5 -mt-5">
-                  <div className="grid grid-cols-3 gap-1">
-                    {containerImages[container.id].slice(0, 3).map((image) => (
-                      <div
-                        key={image.id}
-                        className="aspect-square bg-slate-100 overflow-hidden first:rounded-tl-xl"
-                      >
-                        <img
-                          src={image.data_url}
-                          alt={image.file_name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              container={container}
+              image={containerImages[container.id]?.[0]}
+              isFavorite={favoritesService.isFavorite(
+                "container",
+                container.id
               )}
-
-              <div className="flex items-start mb-3">
-                <Package className="w-5 h-5 text-slate-400 mr-2 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-slate-800">
-                    {container.name}
-                  </h3>
-                  {container.volume && (
-                    <p className="text-sm text-slate-600">
-                      {container.volume} ml
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {container.price && (
-                <div className="mb-2">
-                  <span className="text-sm font-medium text-slate-700">
-                    €{container.price.toFixed(2)}
-                  </span>
-                </div>
-              )}
-
-              {container.notes && (
-                <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-                  {container.notes}
-                </p>
-              )}
-            </div>
+              onToggleFavorite={() => {
+                favoritesService.toggle("container", container.id);
+                loadData();
+              }}
+              onEdit={() => handleEdit(container)}
+              onDelete={() => handleDelete(container.id)}
+              onAddUrl={() => handleQuickAddUrl(container)}
+              onAddDocument={() => handleQuickAddDocument(container)}
+              onCopy={() => handleCopyName(container.id)}
+            />
           ))}
         </div>
       )}
+
+      {/* Quick Add URL Dialog */}
+      <QuickAddUrlDialog
+        isOpen={showQuickUrlDialog}
+        onClose={() => {
+          setShowQuickUrlDialog(false);
+          setQuickUrlContainer(null);
+        }}
+        onAdd={handleAddQuickUrl}
+        entityName={quickUrlContainer?.name || ""}
+      />
     </div>
   );
 }
