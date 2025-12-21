@@ -519,6 +519,7 @@ function Containers() {
               onAddUrl={() => handleQuickAddUrl(container)}
               onAddDocument={() => handleQuickAddDocument(container)}
               onCopy={() => handleCopyName(container.id)}
+              onUpdate={loadData}
             />
           ))}
         </div>

@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Star } from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import ProjectForm from "@/renderer/components/ProjectForm";
+import ProjectCard from "@/renderer/components/ProjectCard";
+import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
 import {
   projects as projectsService,
+  images as imagesService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
   favorites as favoritesService,
 } from "@/renderer/services/storage";
-import type { Project, Tag } from "@/shared/types";
+import type { Project, Image, Tag, Document } from "@/shared/types";
 
 const statusColors = {
   active: "bg-green-50 text-green-800 border-green-200",
@@ -26,11 +29,17 @@ const statusLabels = {
 
 function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [projectImages, setProjectImages] = useState<Record<string, Image[]>>(
+    {}
+  );
   const [tags, setTags] = useState<Tag[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
+  const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
+  const [quickUrlProject, setQuickUrlProject] = useState<Project | null>(null);
+  const [copiedProjectId, setCopiedProjectId] = useState<string | null>(null);
 
   // Load projects on mount
   useEffect(() => {
@@ -38,8 +47,16 @@ function Projects() {
   }, []);
 
   const loadProjects = () => {
-    setProjects(projectsService.getAll());
+    const allProjects = projectsService.getAll();
+    setProjects(allProjects);
     setTags(tagsService.getAll());
+
+    // Load images for all projects
+    const imageMap: Record<string, Image[]> = {};
+    allProjects.forEach((project) => {
+      imageMap[project.id] = imagesService.getByEntity("project", project.id);
+    });
+    setProjectImages(imageMap);
   };
 
   const handleCreate = (
@@ -76,6 +93,41 @@ function Projects() {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setEditingProject(null);
+  };
+
+  const handleQuickAddUrl = (project: Project) => {
+    setQuickUrlProject(project);
+    setShowQuickUrlDialog(true);
+  };
+
+  const handleAddQuickUrl = (url: string, name: string) => {
+    if (!quickUrlProject) return;
+
+    const newDoc: Document = {
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      type: "url",
+      path: url,
+      name: name || url,
+    };
+
+    const currentDocs = quickUrlProject.documents || [];
+    projectsService.update(quickUrlProject.id, {
+      documents: [...currentDocs, newDoc],
+    });
+
+    setShowQuickUrlDialog(false);
+    setQuickUrlProject(null);
+    loadProjects();
+  };
+
+  const handleQuickAddDocument = (project: Project) => {
+    handleEdit(project);
+  };
+
+  const handleCopyName = (projectId: string) => {
+    setCopiedProjectId(projectId);
+    setTimeout(() => setCopiedProjectId(null), 2000);
   };
 
   const filteredProjects = projects.filter((project) => {
@@ -147,98 +199,40 @@ function Projects() {
         </select>
       </div>
 
-      {/* Project List */}
-      <div className="grid gap-4">
-        {filteredProjects.map((project) => (
-          <div
-            key={project.id}
-            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg transition-all"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-heading font-semibold text-distillery-900">
-                    {project.name}
-                  </h3>
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full border-vintage ${
-                      statusColors[project.status as keyof typeof statusColors]
-                    }`}
-                  >
-                    {statusLabels[project.status as keyof typeof statusLabels]}
-                  </span>
-                </div>
-                <p className="text-distillery-600 mb-3 font-body">
-                  {project.description}
-                </p>
-                {(() => {
-                  const projectAssignments = tagAssignmentsService.getByEntity(
-                    "project",
-                    project.id
-                  );
-                  const projectTags = projectAssignments
-                    .map((a) => tags.find((t) => t.id === a.tag_id))
-                    .filter((t): t is Tag => t !== undefined);
-                  return (
-                    projectTags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {projectTags.map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                            style={{ backgroundColor: tag.color }}
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
-                      </div>
-                    )
-                  );
-                })()}
-                <div className="flex items-center gap-4 text-sm text-slate-500">
-                  <span>{getProductCount(project.id)} Produkte</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    favoritesService.toggle("project", project.id);
-                    loadProjects();
-                  }}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                  title={
-                    favoritesService.isFavorite("project", project.id)
-                      ? "Aus Favoriten entfernen"
-                      : "Zu Favoriten hinzufügen"
-                  }
-                >
-                  <Star
-                    className={`w-4 h-4 ${
-                      favoritesService.isFavorite("project", project.id)
-                        ? "text-yellow-500 fill-yellow-500"
-                        : "text-slate-400"
-                    }`}
-                  />
-                </button>
-                <button
-                  onClick={() => handleEdit(project)}
-                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Bearbeiten"
-                >
-                  <Edit2 className="w-4 h-4 text-slate-500" />
-                </button>
-                <button
-                  onClick={() => handleDelete(project.id)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Löschen"
-                >
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Project Grid */}
+      {filteredProjects.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              image={projectImages[project.id]?.[0]}
+              isFavorite={favoritesService.isFavorite("project", project.id)}
+              onToggleFavorite={() => {
+                favoritesService.toggle("project", project.id);
+                loadProjects();
+              }}
+              onEdit={() => handleEdit(project)}
+              onDelete={() => handleDelete(project.id)}
+              onAddUrl={() => handleQuickAddUrl(project)}
+              onAddDocument={() => handleQuickAddDocument(project)}
+              onCopy={() => handleCopyName(project.id)}
+              onUpdate={loadProjects}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Quick Add URL Dialog */}
+      <QuickAddUrlDialog
+        isOpen={showQuickUrlDialog}
+        onClose={() => {
+          setShowQuickUrlDialog(false);
+          setQuickUrlProject(null);
+        }}
+        onAdd={handleAddQuickUrl}
+        entityName={quickUrlProject?.name || ""}
+      />
 
       {/* Empty State */}
       {filteredProjects.length === 0 && (

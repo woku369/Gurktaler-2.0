@@ -4,51 +4,60 @@ import {
   Trash2,
   Copy,
   ExternalLink,
-  Image as ImageIcon,
   FileText,
+  Package,
+  GitBranch,
 } from "lucide-react";
 import TagBadgeList from "@/renderer/components/TagBadgeList";
-import type { Container, Image, ContainerType } from "@/shared/types";
+import type { Product, Image, Document, ProductStatus } from "@/shared/types";
 
-interface ContainerCardProps {
-  container: Container;
+interface ProductCardProps {
+  product: Product;
   image?: Image;
   isFavorite: boolean;
   onToggleFavorite: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onCreateVersion: () => void;
   onAddUrl: () => void;
   onAddDocument: () => void;
   onCopy: () => void;
   onUpdate?: () => void;
 }
 
-const containerTypeLabels: Record<ContainerType, string> = {
-  bottle: "Flasche",
-  label: "Etikett",
-  cap: "Verschluss",
-  box: "Verpackung",
-  other: "Sonstiges",
+const statusColors: Record<ProductStatus, string> = {
+  draft: "bg-distillery-100 text-distillery-800",
+  testing: "bg-bronze-100 text-bronze-800",
+  approved: "bg-green-100 text-green-800",
+  archived: "bg-slate-100 text-slate-700",
 };
 
-export default function ContainerCard({
-  container,
+const statusLabels: Record<ProductStatus, string> = {
+  draft: "Entwurf",
+  testing: "In Test",
+  approved: "Freigegeben",
+  archived: "Archiviert",
+};
+
+export default function ProductCard({
+  product,
   image,
   isFavorite,
   onToggleFavorite,
   onEdit,
   onDelete,
+  onCreateVersion,
   onAddUrl,
   onAddDocument,
   onCopy,
   onUpdate,
-}: ContainerCardProps) {
+}: ProductCardProps) {
   const handleCopyName = () => {
-    navigator.clipboard.writeText(container.name);
+    navigator.clipboard.writeText(product.name);
     onCopy();
   };
 
-  const openDocument = async (doc: any) => {
+  const openDocument = async (doc: Document) => {
     if (doc.type === "file") {
       await window.electron.invoke("file:open", doc.path);
     } else if (doc.type === "url") {
@@ -65,26 +74,37 @@ export default function ContainerCard({
           {image ? (
             <img
               src={image.data_url}
-              alt={container.name}
+              alt={product.name}
               className="w-full h-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <ImageIcon className="w-8 h-8 text-distillery-300" />
+              <Package className="w-8 h-8 text-distillery-300" />
             </div>
           )}
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Name und Type */}
+          {/* Name, Version und Status */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-heading font-bold text-distillery-900 truncate">
-                {container.name}
-              </h3>
-              <span className="inline-block px-2 py-0.5 text-xs bg-distillery-100 text-distillery-700 rounded-full font-body">
-                {containerTypeLabels[container.type]}
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-heading font-bold text-distillery-900 truncate">
+                  {product.name}
+                </h3>
+                {product.version && (
+                  <span className="text-sm text-distillery-500 font-body">
+                    v{product.version}
+                  </span>
+                )}
+              </div>
+              <span
+                className={`inline-block px-2 py-0.5 text-xs rounded-full font-body font-semibold ${
+                  statusColors[product.status]
+                }`}
+              >
+                {statusLabels[product.status]}
               </span>
             </div>
 
@@ -96,6 +116,13 @@ export default function ContainerCard({
                 title="Name kopieren"
               >
                 <Copy className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onCreateVersion}
+                className="p-1.5 text-distillery-600 hover:text-gurktaler-600 hover:bg-distillery-50 rounded transition-colors"
+                title="Version erstellen"
+              >
+                <GitBranch className="w-4 h-4" />
               </button>
               <button
                 onClick={onToggleFavorite}
@@ -131,34 +158,48 @@ export default function ContainerCard({
             </div>
           </div>
 
+          {/* Description */}
+          {product.description && (
+            <p className="text-sm text-distillery-600 mb-2 line-clamp-2 font-body">
+              {product.description}
+            </p>
+          )}
+
           {/* Details */}
           <div className="text-sm text-distillery-600 space-y-1 font-body">
-            {container.volume && (
+            {product.alcohol_percentage && (
               <div>
-                <span className="font-semibold">Volumen:</span>{" "}
-                {container.volume} ml
+                <span className="font-semibold">Alkohol:</span>{" "}
+                {product.alcohol_percentage}%vol.
               </div>
             )}
-            {container.price && (
+            {product.container_size && (
               <div>
-                <span className="font-semibold">Preis:</span> €
-                {container.price.toFixed(2)}
+                <span className="font-semibold">Gebindegröße:</span>{" "}
+                {product.container_size} ml
               </div>
             )}
           </div>
 
+          {/* Archive Reason */}
+          {product.archive_reason && (
+            <p className="text-sm text-red-600 italic mt-2 font-body">
+              Archiviert: {product.archive_reason}
+            </p>
+          )}
+
           {/* Notes - gekürzt anzeigen */}
-          {container.notes && (
+          {product.notes && (
             <p className="text-sm text-distillery-500 mt-2 line-clamp-2 font-body">
-              {container.notes}
+              {product.notes}
             </p>
           )}
 
           {/* Tags */}
           <div className="mt-2">
             <TagBadgeList
-              entityType="container"
-              entityId={container.id}
+              entityType="product"
+              entityId={product.id}
               onUpdate={onUpdate}
             />
           </div>
@@ -183,14 +224,14 @@ export default function ContainerCard({
         </button>
 
         {/* Dokumente/URLs anzeigen */}
-        {container.documents && container.documents.length > 0 && (
+        {product.documents && product.documents.length > 0 && (
           <div className="flex-1 flex items-center gap-1 ml-2">
             <span className="text-xs text-distillery-500 font-body">
-              {container.documents.length} Dokument
-              {container.documents.length > 1 ? "e" : ""}:
+              {product.documents.length} Dokument
+              {product.documents.length > 1 ? "e" : ""}:
             </span>
             <div className="flex gap-1">
-              {container.documents.slice(0, 3).map((doc) => (
+              {product.documents.slice(0, 3).map((doc) => (
                 <button
                   key={doc.id}
                   onClick={() => openDocument(doc)}
@@ -204,9 +245,9 @@ export default function ContainerCard({
                   )}
                 </button>
               ))}
-              {container.documents.length > 3 && (
+              {product.documents.length > 3 && (
                 <span className="text-xs text-distillery-400 self-center font-body">
-                  +{container.documents.length - 3}
+                  +{product.documents.length - 3}
                 </span>
               )}
             </div>

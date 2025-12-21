@@ -1,15 +1,9 @@
 import { useState, useEffect } from "react";
-import {
-  Plus,
-  Search,
-  GitBranch,
-  Edit2,
-  Trash2,
-  Package,
-  Star,
-} from "lucide-react";
+import { Plus, Search, Package } from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import ProductForm from "@/renderer/components/ProductForm";
+import ProductCard from "@/renderer/components/ProductCard";
+import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
 import {
   products as productsService,
   projects as projectsService,
@@ -18,24 +12,13 @@ import {
   images as imagesService,
   favorites as favoritesService,
 } from "@/renderer/services/storage";
-import type { Product, Project, Tag } from "@/shared/types";
-
-const statusColors = {
-  draft: "bg-distillery-50 text-distillery-800 border-distillery-200",
-  testing: "bg-bronze-50 text-bronze-800 border-bronze-200",
-  approved: "bg-green-50 text-green-800 border-green-200",
-  archived: "bg-slate-50 text-slate-700 border-slate-200",
-};
-
-const statusLabels = {
-  draft: "Entwurf",
-  testing: "In Test",
-  approved: "Freigegeben",
-  archived: "Archiviert",
-};
+import type { Product, Project, Image, Tag, Document } from "@/shared/types";
 
 function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [productImages, setProductImages] = useState<Record<string, Image[]>>(
+    {}
+  );
   const [projects, setProjects] = useState<Project[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,15 +28,25 @@ function Products() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
+  const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
+  const [quickUrlProduct, setQuickUrlProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = () => {
-    setProducts(productsService.getAll());
+    const allProducts = productsService.getAll();
+    setProducts(allProducts);
     setProjects(projectsService.getAll());
     setTags(tagsService.getAll());
+
+    // Load images for all products
+    const imageMap: Record<string, Image[]> = {};
+    allProducts.forEach((product) => {
+      imageMap[product.id] = imagesService.getByEntity("product", product.id);
+    });
+    setProductImages(imageMap);
   };
 
   const handleSubmit = (
@@ -94,33 +87,52 @@ function Products() {
     setIsModalOpen(true);
   };
 
-  // Build product tree structure
-  const buildProductTree = () => {
-    const rootProducts = products.filter((p) => !p.parent_id);
-    return rootProducts.map((root) => ({
-      root,
-      versions: products.filter((p) => p.parent_id === root.id),
-    }));
+  const handleQuickAddUrl = (product: Product) => {
+    setQuickUrlProduct(product);
+    setShowQuickUrlDialog(true);
   };
 
-  const productTree = buildProductTree();
-  const filteredTree = productTree.filter((item) => {
-    const matchesSearch = item.root.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+  const handleAddQuickUrl = (url: string, name: string) => {
+    if (!quickUrlProduct) return;
+
+    const newDoc: Document = {
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      type: "url",
+      path: url,
+      name: name || url,
+    };
+
+    const currentDocs = quickUrlProduct.documents || [];
+    productsService.update(quickUrlProduct.id, {
+      documents: [...currentDocs, newDoc],
+    });
+
+    setShowQuickUrlDialog(false);
+    setQuickUrlProduct(null);
+    loadData();
+  };
+
+  const handleQuickAddDocument = (product: Product) => {
+    handleEdit(product);
+  };
+
+  const handleCopyName = () => {
+    // Clipboard copy happens in ProductCard
+  };
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
     let matchesTag = true;
     if (selectedTagId) {
-      const rootAssignments = tagAssignmentsService.getByEntity(
+      const assignments = tagAssignmentsService.getByEntity(
         "product",
-        item.root.id
+        product.id
       );
-      const versionAssignments = item.versions.flatMap((v) =>
-        tagAssignmentsService.getByEntity("product", v.id)
-      );
-      matchesTag = [...rootAssignments, ...versionAssignments].some(
-        (a) => a.tag_id === selectedTagId
-      );
+      matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
     }
 
     return matchesSearch && matchesTag;
@@ -174,7 +186,7 @@ function Products() {
       </div>
 
       {/* Empty State */}
-      {filteredTree.length === 0 && (
+      {filteredProducts.length === 0 && (
         <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-12 text-center">
           <Package className="w-16 h-16 mx-auto text-distillery-300 mb-4" />
           <h3 className="text-lg font-heading font-semibold text-distillery-900 mb-2">
@@ -196,253 +208,41 @@ function Products() {
         </div>
       )}
 
-      {/* Product Tree */}
-      <div className="space-y-4">
-        {filteredTree.map((product) => (
-          <div
-            key={product.root.id}
-            className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden"
-          >
-            {/* Root Product */}
-            <div className="p-6 hover:bg-gurktaler-50 transition-colors">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-heading font-semibold text-distillery-900">
-                      {product.root.name}
-                    </h3>
-                    <span className="text-sm text-distillery-600 font-body font-semibold">
-                      v{product.root.version}
-                    </span>
-                    <span
-                      className={`px-3 py-1 text-xs font-semibold rounded-full border-vintage ${
-                        statusColors[
-                          product.root.status as keyof typeof statusColors
-                        ]
-                      }`}
-                    >
-                      {
-                        statusLabels[
-                          product.root.status as keyof typeof statusLabels
-                        ]
-                      }
-                    </span>
-                  </div>
-                  {product.root.description && (
-                    <p className="text-sm text-distillery-600 mb-2 font-body">
-                      {product.root.description}
-                    </p>
-                  )}
-                  {product.root.archive_reason && (
-                    <p className="text-sm text-red-600 italic mb-2">
-                      Archiviert: {product.root.archive_reason}
-                    </p>
-                  )}
-                  {(() => {
-                    const productAssignments =
-                      tagAssignmentsService.getByEntity(
-                        "product",
-                        product.root.id
-                      );
-                    const productTags = productAssignments
-                      .map((a) => tags.find((t) => t.id === a.tag_id))
-                      .filter((t): t is Tag => t !== undefined);
-                    return (
-                      productTags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {productTags.map((tag) => (
-                            <span
-                              key={tag.id}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                              style={{ backgroundColor: tag.color }}
-                            >
-                              {tag.name}
-                            </span>
-                          ))}
-                        </div>
-                      )
-                    );
-                  })()}
-                  {product.root.project_id && (
-                    <p className="text-xs text-slate-500">
-                      Projekt:{" "}
-                      {projects.find((p) => p.id === product.root.project_id)
-                        ?.name || "Unbekannt"}
-                    </p>
-                  )}
-                  {/* Bilder */}
-                  {(() => {
-                    const productImages = imagesService.getByEntity(
-                      "product",
-                      product.root.id
-                    );
-                    if (productImages.length === 0) return null;
-                    return (
-                      <div className="flex gap-1 mt-2 overflow-x-auto">
-                        {productImages.slice(0, 3).map((img) => (
-                          <img
-                            key={img.id}
-                            src={img.data_url}
-                            alt={img.caption || img.file_name}
-                            className="w-16 h-16 object-cover rounded border border-slate-200"
-                            title={img.caption || img.file_name}
-                          />
-                        ))}
-                        {productImages.length > 3 && (
-                          <div className="w-16 h-16 flex items-center justify-center bg-slate-100 rounded border border-slate-200 text-xs text-slate-500">
-                            +{productImages.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div className="flex items-center gap-2">
-                  {product.versions.length > 0 && (
-                    <span className="flex items-center gap-1 text-sm text-slate-500">
-                      <GitBranch className="w-4 h-4" />
-                      {product.versions.length} Version(en)
-                    </span>
-                  )}
-                  <button
-                    onClick={() => handleCreateVersion(product.root)}
-                    className="p-2 hover:bg-gurktaler-50 rounded-lg transition-colors"
-                    title="Neue Version erstellen"
-                  >
-                    <Plus className="w-5 h-5 text-gurktaler-600" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      favoritesService.toggle("product", product.root.id);
-                      loadData();
-                    }}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    title={
-                      favoritesService.isFavorite("product", product.root.id)
-                        ? "Aus Favoriten entfernen"
-                        : "Zu Favoriten hinzufügen"
-                    }
-                  >
-                    <Star
-                      className={`w-5 h-5 ${
-                        favoritesService.isFavorite("product", product.root.id)
-                          ? "text-yellow-500 fill-yellow-500"
-                          : "text-slate-400"
-                      }`}
-                    />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(product.root)}
-                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    title="Bearbeiten"
-                  >
-                    <Edit2 className="w-5 h-5 text-slate-500" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.root.id)}
-                    className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Löschen"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-500" />
-                  </button>
-                </div>
-              </div>
-            </div>
+      {/* Products Grid */}
+      {filteredProducts.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              image={productImages[product.id]?.[0]}
+              isFavorite={favoritesService.isFavorite("product", product.id)}
+              onToggleFavorite={() => {
+                favoritesService.toggle("product", product.id);
+                loadData();
+              }}
+              onEdit={() => handleEdit(product)}
+              onDelete={() => handleDelete(product.id)}
+              onCreateVersion={() => handleCreateVersion(product)}
+              onAddUrl={() => handleQuickAddUrl(product)}
+              onAddDocument={() => handleQuickAddDocument(product)}
+              onCopy={handleCopyName}
+              onUpdate={loadData}
+            />
+          ))}
+        </div>
+      )}
 
-            {/* Versions */}
-            {product.versions.length > 0 && (
-              <div className="border-t border-slate-200 bg-slate-50">
-                {product.versions.map((version) => (
-                  <div
-                    key={version.id}
-                    className="p-4 pl-12 hover:bg-slate-100 transition-colors border-b border-slate-200 last:border-b-0"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <div className="w-6 h-6 border-l-2 border-b-2 border-slate-300 rounded-bl-lg -ml-8 -mt-2"></div>
-                          <span className="font-medium text-slate-700">
-                            {version.name}
-                          </span>
-                          <span className="text-sm text-slate-500">
-                            v{version.version}
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              statusColors[
-                                version.status as keyof typeof statusColors
-                              ]
-                            }`}
-                          >
-                            {
-                              statusLabels[
-                                version.status as keyof typeof statusLabels
-                              ]
-                            }
-                          </span>
-                        </div>
-                        {version.description && (
-                          <p className="text-sm text-slate-600 ml-8 mb-1">
-                            {version.description}
-                          </p>
-                        )}
-                        {version.archive_reason && (
-                          <p className="text-sm text-red-600 italic ml-8">
-                            Archiviert: {version.archive_reason}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleCreateVersion(version)}
-                          className="p-2 hover:bg-gurktaler-50 rounded-lg transition-colors"
-                          title="Unterversion erstellen"
-                        >
-                          <Plus className="w-4 h-4 text-gurktaler-600" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            favoritesService.toggle("product", version.id);
-                            loadData();
-                          }}
-                          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                          title={
-                            favoritesService.isFavorite("product", version.id)
-                              ? "Aus Favoriten entfernen"
-                              : "Zu Favoriten hinzufügen"
-                          }
-                        >
-                          <Star
-                            className={`w-4 h-4 ${
-                              favoritesService.isFavorite("product", version.id)
-                                ? "text-yellow-500 fill-yellow-500"
-                                : "text-slate-400"
-                            }`}
-                          />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(version)}
-                          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                          title="Bearbeiten"
-                        >
-                          <Edit2 className="w-4 h-4 text-slate-500" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(version.id)}
-                          className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Löschen"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* Quick Add URL Dialog */}
+      <QuickAddUrlDialog
+        isOpen={showQuickUrlDialog}
+        onClose={() => {
+          setShowQuickUrlDialog(false);
+          setQuickUrlProduct(null);
+        }}
+        onAdd={handleAddQuickUrl}
+        entityName={quickUrlProduct?.name || ""}
+      />
 
       {/* Modal */}
       {isModalOpen && (

@@ -2,16 +2,14 @@ import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
-  Edit2,
-  Trash2,
   Beaker,
-  Star,
   FileSpreadsheet,
   Download,
   Upload,
 } from "lucide-react";
 import {
   ingredients as ingredientsService,
+  images as imagesService,
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
   favorites as favoritesService,
@@ -20,20 +18,28 @@ import Modal from "@/renderer/components/Modal";
 import ImageUpload from "@/renderer/components/ImageUpload";
 import TagSelector from "@/renderer/components/TagSelector";
 import DocumentManager from "@/renderer/components/DocumentManager";
+import IngredientCard from "@/renderer/components/IngredientCard";
+import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
 import IngredientImportDialog from "@/renderer/components/IngredientImportDialog";
 import {
   generateTemplate,
   exportIngredients,
 } from "@/renderer/services/ingredientImport";
-import type { Ingredient, Tag, Document } from "@/shared/types";
+import type { Ingredient, Image, Tag, Document } from "@/shared/types";
 
 function Ingredients() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [ingredientImages, setIngredientImages] = useState<
+    Record<string, Image[]>
+  >({});
   const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
+  const [quickUrlIngredient, setQuickUrlIngredient] =
+    useState<Ingredient | null>(null);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
     null
   );
@@ -83,8 +89,19 @@ function Ingredients() {
   };
 
   const loadData = () => {
-    setIngredients(ingredientsService.getAll());
+    const allIngredients = ingredientsService.getAll();
+    setIngredients(allIngredients);
     setTags(tagsService.getAll());
+
+    // Load images for all ingredients
+    const imageMap: Record<string, Image[]> = {};
+    allIngredients.forEach((ingredient) => {
+      imageMap[ingredient.id] = imagesService.getByEntity(
+        "ingredient",
+        ingredient.id
+      );
+    });
+    setIngredientImages(imageMap);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -134,6 +151,40 @@ function Ingredients() {
       ingredientsService.delete(id);
       loadData();
     }
+  };
+
+  const handleQuickAddUrl = (ingredient: Ingredient) => {
+    setQuickUrlIngredient(ingredient);
+    setShowQuickUrlDialog(true);
+  };
+
+  const handleAddQuickUrl = (url: string, name: string) => {
+    if (!quickUrlIngredient) return;
+
+    const newDoc: Document = {
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+      type: "url",
+      path: url,
+      name: name || url,
+    };
+
+    const currentDocs = quickUrlIngredient.documents || [];
+    ingredientsService.update(quickUrlIngredient.id, {
+      documents: [...currentDocs, newDoc],
+    });
+
+    setShowQuickUrlDialog(false);
+    setQuickUrlIngredient(null);
+    loadData();
+  };
+
+  const handleQuickAddDocument = (ingredient: Ingredient) => {
+    handleEdit(ingredient);
+  };
+
+  const handleCopyName = () => {
+    // Clipboard copy happens in IngredientCard
   };
 
   const resetForm = () => {
@@ -440,110 +491,43 @@ function Ingredients() {
         </div>
       )}
 
-      {/* Ingredients Table */}
+      {/* Ingredients Grid */}
       {filteredIngredients.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Kategorie
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Alkohol
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Preis
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Bemerkung
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  Aktionen
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {filteredIngredients.map((ingredient) => (
-                <tr key={ingredient.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <Beaker className="w-4 h-4 text-slate-400 mr-2" />
-                      <span className="font-medium text-slate-800">
-                        {ingredient.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {ingredient.category && (
-                      <span className="px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
-                        {ingredient.category}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                    {ingredient.alcohol_percentage
-                      ? `${ingredient.alcohol_percentage}%vol.`
-                      : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                    {ingredient.price_per_unit
-                      ? `€${ingredient.price_per_unit.toFixed(2)}/${
-                          ingredient.unit === "liter" ? "L" : "kg"
-                        }`
-                      : "-"}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 max-w-xs truncate">
-                    {ingredient.notes || "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => {
-                        favoritesService.toggle("ingredient", ingredient.id);
-                        loadData();
-                      }}
-                      className="mr-3"
-                      title={
-                        favoritesService.isFavorite("ingredient", ingredient.id)
-                          ? "Aus Favoriten entfernen"
-                          : "Zu Favoriten hinzufügen"
-                      }
-                    >
-                      <Star
-                        className={`w-4 h-4 ${
-                          favoritesService.isFavorite(
-                            "ingredient",
-                            ingredient.id
-                          )
-                            ? "text-yellow-500 fill-yellow-500"
-                            : "text-slate-400"
-                        }`}
-                      />
-                    </button>
-                    <button
-                      onClick={() => handleEdit(ingredient)}
-                      className="text-gurktaler-600 hover:text-gurktaler-700 mr-3"
-                      title="Bearbeiten"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(ingredient.id)}
-                      className="text-red-600 hover:text-red-700"
-                      title="Löschen"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredIngredients.map((ingredient) => (
+            <IngredientCard
+              key={ingredient.id}
+              ingredient={ingredient}
+              image={ingredientImages[ingredient.id]?.[0]}
+              isFavorite={favoritesService.isFavorite(
+                "ingredient",
+                ingredient.id
+              )}
+              onToggleFavorite={() => {
+                favoritesService.toggle("ingredient", ingredient.id);
+                loadData();
+              }}
+              onEdit={() => handleEdit(ingredient)}
+              onDelete={() => handleDelete(ingredient.id)}
+              onAddUrl={() => handleQuickAddUrl(ingredient)}
+              onAddDocument={() => handleQuickAddDocument(ingredient)}
+              onCopy={handleCopyName}
+              onUpdate={loadData}
+            />
+          ))}
         </div>
       )}
+
+      {/* Quick Add URL Dialog */}
+      <QuickAddUrlDialog
+        isOpen={showQuickUrlDialog}
+        onClose={() => {
+          setShowQuickUrlDialog(false);
+          setQuickUrlIngredient(null);
+        }}
+        onAdd={handleAddQuickUrl}
+        entityName={quickUrlIngredient?.name || ""}
+      />
     </div>
   );
 }
