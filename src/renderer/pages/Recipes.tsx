@@ -67,19 +67,34 @@ function Recipes() {
     if (editingRecipe) {
       recipesService.update(editingRecipe.id, data);
     } else if (versioningRecipe) {
-      // Creating new version
+      // Creating new version - increment version if not provided
+      const parentVersion = versioningRecipe.version || "1.0";
+      const newVersion = data.version || incrementVersion(parentVersion);
       recipesService.create({
         ...data,
+        version: newVersion,
         parent_id: versioningRecipe.id,
       });
     } else {
-      // Creating new recipe
-      recipesService.create(data);
+      // Creating new recipe - set version to 1.0 if not provided
+      recipesService.create({
+        ...data,
+        version: data.version || "1.0",
+      });
     }
     setShowForm(false);
     setEditingRecipe(null);
     setVersioningRecipe(null);
     loadData();
+  };
+
+  const incrementVersion = (version: string): string => {
+    const parts = version.split(".");
+    if (parts.length === 2) {
+      const minor = parseInt(parts[1]) + 1;
+      return `${parts[0]}.${minor}`;
+    }
+    return version;
   };
 
   const handleEdit = (recipe: Recipe) => {

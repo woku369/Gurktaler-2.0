@@ -25,6 +25,7 @@ export default function RecipeForm({
   onCancel,
 }: RecipeFormProps) {
   const [name, setName] = useState(recipe?.name || "");
+  const [version, setVersion] = useState(recipe?.version || "");
   const [type, setType] = useState<RecipeType>(recipe?.type || "macerate");
   const [productId, setProductId] = useState(recipe?.product_id || "");
   const [instructions, setInstructions] = useState(recipe?.instructions || "");
@@ -73,6 +74,7 @@ export default function RecipeForm({
 
     onSubmit({
       name: name.trim(),
+      version: version.trim() || undefined,
       type,
       product_id: productId.trim() || undefined,
       instructions: instructions.trim() || undefined,
@@ -129,25 +131,45 @@ export default function RecipeForm({
 
           <div>
             <label
-              htmlFor="product"
+              htmlFor="version"
               className="block text-sm font-medium text-slate-700 mb-1"
             >
-              Produkt (optional)
+              Version
             </label>
-            <select
-              id="product"
-              value={productId}
-              onChange={(e) => setProductId(e.target.value)}
+            <input
+              id="version"
+              type="text"
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-            >
-              <option value="">Kein Produkt</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name} (v{product.version})
-                </option>
-              ))}
-            </select>
+              placeholder="z.B. 1.0 oder 1.1"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Wird automatisch zu "1.0" wenn leer
+            </p>
           </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="product"
+            className="block text-sm font-medium text-slate-700 mb-1"
+          >
+            Produkt (optional)
+          </label>
+          <select
+            id="product"
+            value={productId}
+            onChange={(e) => setProductId(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          >
+            <option value="">Kein Produkt</option>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name} (v{product.version})
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
