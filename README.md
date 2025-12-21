@@ -33,16 +33,38 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **Git-Integration**: Auto-Commit, Auto-Push, Git-Status UI, Remote-Setup ohne Terminal
 - **Excel-Import/Export**: Zutaten & Gebinde mit Template-Generator
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
+- **PWA (Android/Mobile)**: Installierbare Web-App, Offline-Funktionalität, Quick-Note Button
 
 ### In Entwicklung 🔄
+- Volltext-Suche über alle Bereiche (bereits implementiert)
 - Kostenkalkulationen und Preisfindung
-- Volltext-Suche über alle Bereiche
-- Git-Integration (aktuell manuell via JSON)
 
 ### Geplant 📋
 - Google Contacts OAuth Integration (Live-Sync)
-- Android-Companion-App (PWA)
-- Dashboard mit Statistiken
+- Capacitor Native App (falls native Features benötigt)
+- Dashboard mit erweiterten Statistiken
+
+## Mobile & PWA Support
+
+**Progressive Web App (PWA) - Installation auf Android:**
+
+Die App kann als eigenständige Web-App auf Android-Geräten installiert werden:
+
+1. **Im Browser öffnen**: Öffne `http://your-server-ip:3000` in Chrome auf Android
+2. **Zum Startbildschirm hinzufügen**: Chrome → Menü → "Zum Startbildschirm hinzufügen"
+3. **App nutzen**: Icon erscheint auf dem Home-Screen, läuft wie native App
+
+**Mobile Features:**
+- ✅ **Responsive Design**: Platform Detection (Electron = Desktop-UI, Browser = Mobile-UI)
+- ✅ **Hamburger-Navigation**: Slide-in Drawer auf kleinen Screens (< 768px)
+- ✅ **Quick-Note Button**: Floating Action Button für schnelle Notizen (nur Mobile)
+- ✅ **Offline-Funktionalität**: Service Worker cached Assets & Fonts
+- ✅ **Touch-optimiert**: Größere Touch-Targets, kompakte Cards
+- ✅ **Git-Sync**: Gleicher Datenaustausch wie Desktop (Auto-Pull/Push)
+
+**Platform-Verhalten:**
+- **Windows-Desktop (Electron)**: UI bleibt unverändert, feste Sidebar
+- **Browser/Android (PWA)**: Responsive Mobile-UI, Hamburger-Menü
 
 ## Backup-Strategie
 

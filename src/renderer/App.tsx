@@ -16,6 +16,7 @@ import AIAssistant from "./pages/AIAssistant";
 import Documentation from "./pages/Documentation";
 import Settings from "./pages/Settings";
 import DesignPreview from "./pages/DesignPreview";
+import QuickNoteButton from "./components/QuickNoteButton";
 import { getGitConfig, isGitRepository, pullChanges } from "./services/git";
 import { AlertCircle, Download, RefreshCw } from "lucide-react";
 
@@ -140,6 +141,9 @@ function App() {
           <Route path="design-preview" element={<DesignPreview />} />
         </Route>
       </Routes>
+
+      {/* Quick Note Button - nur auf Mobile/Browser */}
+      <QuickNoteButton />
     </>
   );
 }

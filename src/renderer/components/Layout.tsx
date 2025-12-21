@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -15,6 +16,8 @@ import {
   BookOpen,
   Settings,
   Leaf,
+  Menu,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -34,10 +37,66 @@ const navItems = [
 ];
 
 function Layout() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Platform Detection: Prüfe ob wir in Electron (Desktop) oder Browser (Mobile/PWA) laufen
+  const isElectron =
+    typeof window !== "undefined" && (window as any).electron !== undefined;
+
   return (
     <div className="flex h-screen bg-gurktaler-100">
+      {/* Mobile Header - nur im Browser auf kleinen Screens */}
+      {!isElectron && (
+        <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b-vintage border-distillery-200 shadow-md z-40 flex items-center px-4">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 rounded-vintage hover:bg-gurktaler-50 transition-colors"
+            aria-label="Menü öffnen"
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6 text-distillery-700" />
+            ) : (
+              <Menu className="w-6 h-6 text-distillery-700" />
+            )}
+          </button>
+          <div className="flex items-center gap-2 ml-4">
+            <Leaf className="w-6 h-6 text-gurktaler-600" />
+            <h1 className="font-heading font-bold text-distillery-800 text-lg">
+              Gurktaler 2.0
+            </h1>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay für Mobile Menu - nur im Browser */}
+      {!isElectron && isMobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar - Distillery Modern */}
-      <aside className="w-64 bg-white border-r-vintage border-distillery-200 flex flex-col shadow-vintage">
+      <aside
+        className={`
+        ${
+          isElectron
+            ? "w-64 static"
+            : "fixed md:static inset-y-0 left-0 z-50 w-64"
+        }
+        bg-white border-r-vintage border-distillery-200 flex flex-col shadow-vintage
+        ${
+          !isElectron &&
+          "transform transition-transform duration-300 ease-in-out"
+        }
+        ${
+          !isElectron &&
+          (isMobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full md:translate-x-0")
+        }
+      `}
+      >
         {/* Logo */}
         <div className="p-4 border-b-vintage border-distillery-200 bg-gradient-to-br from-gurktaler-500 to-gurktaler-600">
           <div className="flex items-center gap-3">
@@ -62,6 +121,7 @@ function Layout() {
               <li key={item.to}>
                 <NavLink
                   to={item.to}
+                  onClick={() => !isElectron && setIsMobileMenuOpen(false)}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-vintage transition-all ${
                       isActive
@@ -82,6 +142,7 @@ function Layout() {
         <div className="p-4 border-t-vintage border-distillery-200 bg-gurktaler-50">
           <NavLink
             to="/settings"
+            onClick={() => !isElectron && setIsMobileMenuOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-vintage transition-all ${
                 isActive
@@ -97,7 +158,11 @@ function Layout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto bg-gurktaler-100">
+      <main
+        className={`flex-1 overflow-auto bg-gurktaler-100 ${
+          !isElectron && "md:ml-0 pt-16 md:pt-0"
+        }`}
+      >
         <Outlet />
       </main>
     </div>

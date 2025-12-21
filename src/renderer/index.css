@@ -62,3 +62,17 @@ h6 {
 .shadow-vintage-lg {
   box-shadow: 0 8px 24px rgba(139, 111, 71, 0.2);
 }
+
+/* PWA Mobile Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
