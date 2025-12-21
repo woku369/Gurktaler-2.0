@@ -26,8 +26,8 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **Tag-System**: Flexible Kategorisierung mit Farben, Filter in allen Bereichen
 - **KI-Assistenten**: ChatGPT, Claude, Qwen & DeepSeek Integration für Recherche und Produktentwicklung
 - **Bild-Upload**: Vollständig integriert in Notizen & Produkte (Base64-Speicherung)
-- **Rezeptur-Verwaltung**: Zutaten-DB mit Alkohol%/Preisen, Gebinde-Management, Rezept-Editor mit Zutatenliste
-- **Rezeptur-Versionierung**: Tree-View wie bei Produkten, parent_id Linking, Versionierungs-Button
+- **Rezeptur-Verwaltung**: Card-Grid UI, Zutaten-DB mit Alkohol%/Preisen, Gebinde-Management, Expandierbare Zutatenliste
+- **Rezeptur-Versionierung**: Auto-Versionierung (v1.0), Auto-Inkrement bei Ableitungen (1.0→1.1→1.2), Datenübernahme
 - **Rezeptur-Kalkulation**: Automatische Berechnung von Volumen, Alkoholgehalt & Kosten mit Unit-Conversion
 - **Alkoholsteuer-Berechnung**: Automatische Berechnung (12€/L reiner Alkohol) im Produktformular
 - **Git-Integration**: Auto-Commit, Auto-Push, Git-Status UI, Remote-Setup ohne Terminal
@@ -320,6 +320,77 @@ git push
 
 ⚠️ **Wichtig**: JSON-Import überschreibt ALLE lokalen Daten!
 
+## Rezepturen-Workflow
+
+### Neue Rezeptur erstellen
+
+1. **Seite öffnen**: Klicke auf "Rezepturen" in der Sidebar
+2. **Neue Rezeptur**: Klicke auf den "+ Neue Rezeptur" Button
+3. **Grunddaten eingeben**:
+   - Name (z.B. "Kräuter-Mazerat Basis")
+   - Typ (Mazerat, Destillat, Ausmischung)
+   - Version (optional - wird automatisch "1.0" wenn leer)
+   - Produkt (optional - Verknüpfung zu bestehendem Produkt)
+   - Anleitung/Herstellung
+   - Ausbeute (Menge + Einheit)
+   - Notizen (optional)
+4. **Speichern**: Die Rezeptur erscheint als Karte mit Version v1.0
+
+### Zutaten hinzufügen
+
+1. **Rezeptur bearbeiten**: Klicke auf das Stift-Icon auf der Karte
+2. **Zutaten-Editor**: Im unteren Bereich findest du den Zutaten-Editor
+3. **Zutat hinzufügen**:
+   - Wähle eine Zutat aus der Dropdown-Liste
+   - Gib Menge und Einheit ein
+   - Optional: Notizen hinzufügen
+   - Sortierreihenfolge wird automatisch gesetzt
+4. **Speichern**: Die Zutaten werden in der Karte angezeigt
+
+### Zutatenliste anzeigen
+
+- **Expandierbar**: Klicke auf "X Zutaten" in der Karte
+- **Details**: Zutat + Menge/Einheit werden angezeigt
+- **Sortiert**: Nach sort_order (aufsteigend)
+
+### Rezeptur versionieren
+
+1. **Version erstellen**: Klicke auf das GitBranch-Icon (Verzweigungs-Symbol)
+2. **Daten übernehmen**: Alle Daten der Basis-Rezeptur werden vorausgefüllt
+3. **Änderungen vornehmen**: Modifiziere nur was sich ändern soll
+4. **Version**: Wird automatisch inkrementiert (1.0 → 1.1 → 1.2)
+5. **Speichern**: Neue Version ist mit der Basis-Rezeptur verknüpft
+6. **Badges**: Die Karte zeigt:
+   - Typ-Badge (Mazerat/Destillat/Ausmischung)
+   - Version-Badge (z.B. "v1.1")
+   - Ableitungs-Badge ("Abgeleitet" mit GitBranch-Icon)
+
+### Bilder & Tags
+
+- **Bilder hochladen**: Nach dem Speichern kannst du im Bearbeitungsmodus Bilder hochladen (max. 5)
+- **Tags zuweisen**: Im Bearbeitungsmodus findest du den Tag-Selector
+- **Inline-Editing**: In der Kartenansicht kannst du Tags direkt hinzufügen/entfernen
+
+### Kalkulation
+
+- **Im Bearbeitungsmodus**: Der Rezeptur-Kalkulator zeigt:
+  - Gesamtvolumen (basierend auf Zutaten)
+  - Alkoholgehalt (berechnet aus Zutaten-Alkohol%)
+  - Kosten (basierend auf Zutaten-Preisen)
+- **Unit-Conversion**: Automatische Umrechnung verschiedener Einheiten (ml, L, g, kg)
+
+### Quick-Add Funktionen
+
+Direkt von der Karte aus:
+- **+ URL**: Weblink schnell hinzufügen (z.B. Inspiration, Quelle)
+- **+ Dokument**: PDF/Dokument verknüpfen
+
+### Favoriten & Suche
+
+- **Stern-Icon**: Rezeptur als Favorit markieren
+- **Suche**: Durchsucht Name, Anleitung, Notizen
+- **Tag-Filter**: Filtere nach Tags (Dropdown rechts)
+
 ## Versionierung
 
 - **Major** (X.0.0): Große Funktionserweiterungen
@@ -334,5 +405,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 0.9.1 (Production Build & Git-Integration)  
-**Letztes Update**: 7. Dezember 2025
+**Aktuelle Version**: 1.0.0 (Production Release)  
+**Letztes Update**: 21. Dezember 2025

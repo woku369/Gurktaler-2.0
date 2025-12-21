@@ -7,6 +7,60 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.0.0] - 2025-12-21 🎉
+
+### 🎊 PRODUCTION RELEASE
+
+**Gurktaler 2.0 erreicht Version 1.0.0** - Alle Kern-Features implementiert und stabil!
+
+### ✨ Neu
+
+#### 🔄 Rezepturen-Versionierung (Final)
+- **Version-Feld in RecipeForm**: Benutzer kann Version manuell eingeben oder leer lassen
+- **Auto-Versionierung**: Neue Rezepturen erhalten automatisch Version "1.0" wenn leer
+- **Auto-Inkrement**: Abgeleitete Versionen werden automatisch inkrementiert (1.0 → 1.1 → 1.2)
+- **Datenübernahme**: GitBranch-Button übernimmt alle Daten der Basis-Rezeptur
+- **Version-Badges**: RecipeCard zeigt 3 Badges:
+  - Typ-Badge (Mazerat/Destillat/Ausmischung) - immer sichtbar
+  - Version-Badge (z.B. "v1.1") - wenn Version gesetzt
+  - Ableitungs-Badge ("Abgeleitet" mit GitBranch-Icon) - wenn parent_id existiert
+- **Hybrid UI**: Expandierbare Zutatenliste in RecipeCard (Klick auf "X Zutaten")
+
+### 📚 Dokumentation
+
+- **README.md**: Vollständig aktualisiert mit Rezepturen-Workflow
+- **ROADMAP.md**: Phase 10 (v1.0.0) als erledigt markiert
+- **Anleitungssektion**: Ausführliche Beschreibung des Rezepturen-Workflows:
+  - Neue Rezeptur erstellen
+  - Zutaten hinzufügen
+  - Zutatenliste anzeigen (expandierbar)
+  - Rezeptur versionieren (mit Datenübernahme)
+  - Bilder & Tags verwalten
+  - Kalkulation nutzen
+  - Quick-Add Funktionen
+  - Favoriten & Suche
+
+### 🎯 Status
+
+Alle Features der Roadmap Phase 1-10 implementiert:
+- ✅ Projekt-Verwaltung mit Status-Tracking
+- ✅ Produkt-Versionierung (hierarchisch)
+- ✅ Rezeptur-Verwaltung mit Versionierung
+- ✅ Zutaten-DB mit Gebinde-Management
+- ✅ Rezeptur-Kalkulation (Volumen, Alkohol%, Kosten)
+- ✅ Notizen mit Markdown-Editor
+- ✅ Kontakte mit vCard-Import
+- ✅ Weblinks & Recherche
+- ✅ Tag-System mit Inline-Editing
+- ✅ Favoriten-System
+- ✅ Global Search über alle Entitäten
+- ✅ Git-Integration (Auto-Commit/Push/Pull)
+- ✅ Bild-Upload (Base64)
+- ✅ Excel-Import/Export
+- ✅ Windows Installer (NSIS)
+
+---
+
 ## [0.9.3] - 2025-12-11
 
 ### 🔥 KRITISCHE BUGFIXES
