@@ -15,6 +15,8 @@ import {
   GitBranch,
   GitCommit,
   RefreshCw,
+  Server,
+  Cloud,
 } from "lucide-react";
 import {
   getAvailableProviders,
@@ -45,6 +47,7 @@ import {
   type GitStatus,
   type GitConfig,
 } from "@/renderer/services/git";
+import { synologySync } from "@/renderer/services/sync";
 
 function Settings() {
   const [exportStatus, setExportStatus] = useState<
@@ -72,6 +75,14 @@ function Settings() {
     Array<{ name: string; url: string; type: string }>
   >([]);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+
+  // Synology Sync State
+  const [syncStatus, setSyncStatus] = useState(synologySync.getSyncStatus());
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
+  const [networkPath, setNetworkPath] = useState(
+    localStorage.getItem("sync_network_path") || "Y:\\zweipunktnull\\data.json"
+  );
 
   // Git-Status laden
   useEffect(() => {
@@ -136,6 +147,49 @@ function Settings() {
       setImportStatus("idle");
       setStatusMessage("");
     }, 3000);
+  };
+
+  const handleSyncConnect = async () => {
+    if (!networkPath) {
+      setSyncMessage("❌ Bitte Netzwerkpfad eingeben");
+      return;
+    }
+
+    setSyncMessage("🔄 Teste Verbindung...");
+    const success = await synologySync.configure(networkPath);
+
+    if (success) {
+      setSyncStatus(synologySync.getSyncStatus());
+      setSyncMessage("✅ Netzwerkpfad erreichbar");
+    } else {
+      setSyncMessage("❌ Netzwerkpfad nicht erreichbar");
+    }
+
+    setTimeout(() => setSyncMessage(""), 5000);
+  };
+
+  const handleSyncSync = async () => {
+    setIsSyncing(true);
+    setSyncMessage("🔄 Synchronisiere...");
+
+    try {
+      await synologySync.sync();
+      setSyncStatus(synologySync.getSyncStatus());
+      setSyncMessage("✅ Synchronisation erfolgreich");
+    } catch (error) {
+      setSyncMessage("❌ Synchronisation fehlgeschlagen");
+      console.error(error);
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncMessage(""), 5000);
+    }
+  };
+
+  const handleSyncDisconnect = () => {
+    synologySync.disconnect();
+    setSyncStatus(synologySync.getSyncStatus());
+    setSyncMessage("Verbindung getrennt");
+    setTimeout(() => setSyncMessage(""), 3000);
   };
 
   const handleGitPull = async () => {
@@ -431,6 +485,118 @@ function Settings() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* WebDAV Sync */}
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-gurktaler-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gurktaler-100 rounded-vintage flex items-center justify-center">
+              <Server className="w-5 h-5 text-gurktaler-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-800 font-heading">
+                Synology Netzwerk-Synchronisation
+              </h2>
+              <p className="text-sm text-slate-500 font-body">
+                Daten über Netzlaufwerk synchronisieren
+              </p>
+            </div>
+          </div>
+
+          {!syncStatus.isConnected ? (
+            <div className="space-y-4">
+              <p className="text-slate-600">
+                Verbinde das Synology-Netzlaufwerk (z.B.
+                Y:\zweipunktnull\data.json oder
+                \\100.121.103.107\Gurktaler\zweipunktnull\data.json)
+              </p>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Netzwerkpfad zur data.json
+                  </label>
+                  <input
+                    type="text"
+                    value={networkPath}
+                    onChange={(e) => setNetworkPath(e.target.value)}
+                    placeholder="Y:\zweipunktnull\data.json"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-mono text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Beispiele: Y:\zweipunktnull\data.json oder
+                    \\100.121.103.107\Gurktaler\zweipunktnull\data.json
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleSyncConnect}
+                  className="w-full px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors font-medium"
+                >
+                  Verbindung testen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-gurktaler-50 rounded-lg p-4 border border-gurktaler-200">
+                <div className="flex items-start gap-3">
+                  <Cloud className="w-5 h-5 text-gurktaler-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gurktaler-900">
+                      ✅ Verbunden mit:{" "}
+                      <strong className="font-mono text-xs">
+                        {syncStatus.networkPath}
+                      </strong>
+                    </p>
+                    {syncStatus.lastSync && (
+                      <p className="text-xs text-gurktaler-600 mt-1">
+                        Letzte Synchronisation:{" "}
+                        {new Date(syncStatus.lastSync).toLocaleString("de-DE", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSyncSync}
+                  disabled={isSyncing}
+                  className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}
+                  />
+                  Jetzt synchronisieren
+                </button>
+
+                <button
+                  onClick={handleSyncDisconnect}
+                  className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                >
+                  Trennen
+                </button>
+              </div>
+            </div>
+          )}
+
+          {syncMessage && (
+            <div
+              className={`mt-4 p-3 rounded-lg text-sm ${
+                syncMessage.includes("✅")
+                  ? "bg-green-50 text-green-800 border border-green-200"
+                  : syncMessage.includes("❌")
+                  ? "bg-red-50 text-red-800 border border-red-200"
+                  : "bg-blue-50 text-blue-800 border border-blue-200"
+              }`}
+            >
+              {syncMessage}
+            </div>
+          )}
         </div>
 
         {/* Git Integration */}

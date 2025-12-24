@@ -11,7 +11,11 @@ contextBridge.exposeInMainWorld('electron', {
             'git:status', 'git:commit', 'git:push', 'git:pull', 'git:add-remote', 'git:list-remotes',
             'git:resolve-conflict-remote', 'git:abort-merge',
             'file:select', 'file:open', 'file:show', 'file:exists',
-            'logs:open'
+            'logs:open',
+            'sync:read', 'sync:write', 'sync:test',
+            'file:readJson', 'file:writeJson', 'file:listDirectory',
+            'file:uploadImage', 'file:uploadDocument', 'file:deleteFile',
+            'file:moveFile', 'file:readImage', 'file:createDirectory'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);
@@ -32,4 +36,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // App info
     getVersion: () => ipcRenderer.invoke('app:version'),
+
+    // Synology Sync
+    syncRead: (networkPath: string) => ipcRenderer.invoke('sync:read', networkPath),
+    syncWrite: (networkPath: string, content: string) => ipcRenderer.invoke('sync:write', networkPath, content),
+    syncTest: (networkPath: string) => ipcRenderer.invoke('sync:test', networkPath),
+
+    // Zentrale NAS-Speicher APIs
+    fileReadJson: (filePath: string) => ipcRenderer.invoke('file:readJson', filePath),
+    fileWriteJson: (filePath: string, data: unknown) => ipcRenderer.invoke('file:writeJson', filePath, data),
+    fileListDirectory: (dirPath: string) => ipcRenderer.invoke('file:listDirectory', dirPath),
+    fileUploadImage: (targetPath: string, dataUrl: string) => ipcRenderer.invoke('file:uploadImage', targetPath, dataUrl),
+    fileUploadDocument: (targetPath: string, buffer: Buffer) => ipcRenderer.invoke('file:uploadDocument', targetPath, buffer),
+    fileDeleteFile: (filePath: string) => ipcRenderer.invoke('file:deleteFile', filePath),
+    fileMoveFile: (sourcePath: string, targetPath: string) => ipcRenderer.invoke('file:moveFile', sourcePath, targetPath),
+    fileReadImage: (filePath: string) => ipcRenderer.invoke('file:readImage', filePath),
+    fileCreateDirectory: (dirPath: string) => ipcRenderer.invoke('file:createDirectory', dirPath),
 })

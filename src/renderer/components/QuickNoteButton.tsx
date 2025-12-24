@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { Plus, X, Save } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, X, Save, Camera } from "lucide-react";
 import { notes as notesService } from "@/renderer/services/storage";
 
 export default function QuickNoteButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Nur auf Mobile anzeigen (Browser, nicht Electron)
   const isElectron =
@@ -14,22 +16,63 @@ export default function QuickNoteButton() {
 
   if (isElectron) return null;
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    // Convert zu Base64 und zur Liste hinzufügen
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setSelectedImages((prev) => [...prev, dataUrl]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Input resetten für erneute Auswahl
+    e.target.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSave = async () => {
-    if (!title.trim() && !content.trim()) return;
+    if (!title.trim() && !content.trim() && selectedImages.length === 0) return;
 
     setIsSaving(true);
     try {
-      notesService.create({
+      // Note erstellen
+      const note = notesService.create({
         title: title.trim() || "Schnelle Notiz",
         content: content.trim(),
-        project_id: null,
-        is_markdown: false,
-        attachments: [],
+        type: "note",
+        project_id: undefined,
       });
+
+      // Bilder speichern (wenn vorhanden)
+      if (selectedImages.length > 0 && note) {
+        const { images: imagesService } = await import(
+          "@/renderer/services/storage"
+        );
+        selectedImages.forEach((dataUrl, index) => {
+          imagesService.create({
+            entity_type: "note",
+            entity_id: note.id,
+            data_url: dataUrl,
+            file_name: `quick-note-${Date.now()}-${index}.jpg`,
+            caption: "",
+          });
+        });
+      }
 
       // Reset & Close
       setTitle("");
       setContent("");
+      setSelectedImages([]);
       setIsOpen(false);
     } catch (error) {
       console.error("Fehler beim Speichern:", error);
@@ -95,6 +138,54 @@ export default function QuickNoteButton() {
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-gurktaler-500 resize-none"
               />
 
+              {/* Foto-Upload */}
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full px-4 py-3 border-2 border-dashed border-gurktaler-300 rounded-lg text-gurktaler-600 hover:border-gurktaler-500 hover:bg-gurktaler-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Camera className="w-5 h-5" />
+                  Foto hinzufügen
+                </button>
+                {selectedImages.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {selectedImages.length} Foto
+                    {selectedImages.length !== 1 ? "s" : ""} ausgewählt
+                  </p>
+                )}
+              </div>
+
+              {/* Bild-Vorschau */}
+              {selectedImages.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {selectedImages.map((dataUrl, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={dataUrl}
+                        alt={`Foto ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Foto entfernen"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <button
@@ -105,7 +196,12 @@ export default function QuickNoteButton() {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={isSaving || (!title.trim() && !content.trim())}
+                  disabled={
+                    isSaving ||
+                    (!title.trim() &&
+                      !content.trim() &&
+                      selectedImages.length === 0)
+                  }
                   className="flex-1 px-6 py-3 bg-gurktaler-500 text-white rounded-lg font-semibold hover:bg-gurktaler-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   <Save className="w-5 h-5" />

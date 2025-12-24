@@ -441,6 +441,211 @@ function registerFileHandlers() {
             return { success: false, error: String(error.message || error) }
         }
     })
+
+    // Synology Sync - Daten lesen
+    ipcMain.handle('sync:read', async (_event, networkPath: string) => {
+        try {
+            // Unterstützt: Y:\data.json oder \\192.168.0.9\Gurktaler\data.json
+            if (!fs.existsSync(networkPath)) {
+                return { success: false, error: 'Datei nicht gefunden' }
+            }
+
+            const content = fs.readFileSync(networkPath, 'utf-8')
+            return { success: true, data: content }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Synology Sync - Daten schreiben
+    ipcMain.handle('sync:write', async (_event, networkPath: string, content: string) => {
+        try {
+            // Ordner erstellen falls nicht vorhanden
+            const dir = path.dirname(networkPath)
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true })
+            }
+
+            fs.writeFileSync(networkPath, content, 'utf-8')
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Synology Sync - Prüfen ob Pfad erreichbar
+    ipcMain.handle('sync:test', async (_event, networkPath: string) => {
+        try {
+            const dir = path.dirname(networkPath)
+            const accessible = fs.existsSync(dir)
+            return { success: true, accessible }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // ===== Zentrale NAS-Speicher-Architektur =====
+
+    // JSON-Datei lesen (optimiert)
+    ipcMain.handle('file:readJson', async (_event, filePath: string) => {
+        try {
+            if (!fs.existsSync(filePath)) {
+                // Datei existiert nicht -> leeres Array zurückgeben
+                return { success: true, data: [] }
+            }
+            const content = fs.readFileSync(filePath, 'utf-8')
+            const data = JSON.parse(content)
+            return { success: true, data }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // JSON-Datei schreiben (optimiert)
+    ipcMain.handle('file:writeJson', async (_event, filePath: string, data: unknown) => {
+        try {
+            const dir = path.dirname(filePath)
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true })
+            }
+            const content = JSON.stringify(data, null, 2)
+            fs.writeFileSync(filePath, content, 'utf-8')
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Verzeichnis auslesen
+    ipcMain.handle('file:listDirectory', async (_event, dirPath: string) => {
+        try {
+            if (!fs.existsSync(dirPath)) {
+                return { success: true, files: [] }
+            }
+            const files = fs.readdirSync(dirPath)
+            const fileInfos = files.map(name => {
+                const fullPath = path.join(dirPath, name)
+                const stats = fs.statSync(fullPath)
+                return {
+                    name,
+                    path: fullPath,
+                    isDirectory: stats.isDirectory(),
+                    size: stats.size,
+                    modified: stats.mtime.toISOString()
+                }
+            })
+            return { success: true, files: fileInfos }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Bild hochladen (Binary)
+    ipcMain.handle('file:uploadImage', async (_event, targetPath: string, dataUrl: string) => {
+        try {
+            // Data URL zu Buffer: data:image/png;base64,iVBORw0KG...
+            const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
+            if (!matches || matches.length !== 3) {
+                return { success: false, error: 'Ungültiges Data-URL Format' }
+            }
+
+            const base64Data = matches[2]
+            const buffer = Buffer.from(base64Data, 'base64')
+
+            const dir = path.dirname(targetPath)
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true })
+            }
+
+            fs.writeFileSync(targetPath, buffer)
+            return { success: true, path: targetPath }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Dokument hochladen (Binary)
+    ipcMain.handle('file:uploadDocument', async (_event, targetPath: string, buffer: Buffer) => {
+        try {
+            const dir = path.dirname(targetPath)
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true })
+            }
+
+            fs.writeFileSync(targetPath, buffer)
+            return { success: true, path: targetPath }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Datei löschen
+    ipcMain.handle('file:deleteFile', async (_event, filePath: string) => {
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath)
+            }
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Datei verschieben/umbenennen
+    ipcMain.handle('file:moveFile', async (_event, sourcePath: string, targetPath: string) => {
+        try {
+            const targetDir = path.dirname(targetPath)
+            if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true })
+            }
+
+            fs.renameSync(sourcePath, targetPath)
+            return { success: true, path: targetPath }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Bild lesen (als Data URL)
+    ipcMain.handle('file:readImage', async (_event, filePath: string) => {
+        try {
+            if (!fs.existsSync(filePath)) {
+                return { success: false, error: 'Bild nicht gefunden' }
+            }
+
+            const buffer = fs.readFileSync(filePath)
+            const base64 = buffer.toString('base64')
+            
+            // MIME-Type erkennen
+            const ext = path.extname(filePath).toLowerCase()
+            const mimeTypes: Record<string, string> = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.png': 'image/png',
+                '.gif': 'image/gif',
+                '.webp': 'image/webp',
+                '.bmp': 'image/bmp'
+            }
+            const mimeType = mimeTypes[ext] || 'image/jpeg'
+
+            const dataUrl = `data:${mimeType};base64,${base64}`
+            return { success: true, dataUrl }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Verzeichnis erstellen
+    ipcMain.handle('file:createDirectory', async (_event, dirPath: string) => {
+        try {
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true })
+            }
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
 }
 
 let localServer: http.Server | null = null

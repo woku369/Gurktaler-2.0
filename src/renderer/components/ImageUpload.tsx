@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, X, Image as ImageIcon, Link2 } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Link2, Camera } from "lucide-react";
 import { images as imagesService } from "@/renderer/services/storage";
 import type { Image } from "@/shared/types";
 
@@ -150,12 +150,23 @@ export default function ImageUpload({
       {/* Upload Area */}
       {images.length < maxImages && (
         <>
+          {/* Mobile Upload Button - Large Touch-Friendly Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="md:hidden w-full flex items-center justify-center gap-3 py-4 px-6 bg-gurktaler-500 hover:bg-gurktaler-600 text-white rounded-lg transition-colors text-base font-medium shadow-sm"
+          >
+            <Camera className="w-6 h-6" />
+            Foto hinzufügen
+          </button>
+
+          {/* Desktop Drag & Drop Zone - Hidden on Mobile */}
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+            className={`hidden md:block border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
               isDragging
                 ? "border-gurktaler-500 bg-gurktaler-50"
                 : "border-slate-300 hover:border-slate-400 bg-slate-50"
@@ -168,15 +179,17 @@ export default function ImageUpload({
             <p className="text-xs text-slate-500">
               PNG, JPG, GIF bis 5MB pro Bild
             </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => handleFileSelect(e.target.files)}
-              className="hidden"
-            />
           </div>
+
+          {/* Hidden File Input for Both Mobile and Desktop */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+          />
 
           {/* URL Input Toggle */}
           <div className="mt-3">

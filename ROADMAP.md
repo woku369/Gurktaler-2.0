@@ -187,7 +187,39 @@
 
 ---
 
-## Phase 9: Android-App (v0.9.x)
+## Phase 9: NAS-Integration & Multi-Device (v1.1.x)
+
+### Infrastruktur
+| Status | Aufgabe                  | Beschreibung                                   |
+| ------ | ------------------------ | ---------------------------------------------- |
+| ✅     | Tailscale VPN Setup      | CGNAT-Lösung, Synology NAS Zugriff            |
+| ✅     | SMB/CIFS Netzlaufwerk    | Y:\ Drive Mapping                              |
+| 🔄     | Electron IPC Handlers    | 9 File-Operations (JSON, Images, Documents)    |
+| 🔄     | NAS Storage Provider     | Abstraktionsschicht für zentrale Speicherung   |
+| 🔄     | Migration Service        | LocalStorage → NAS (einmalig, automatisch)     |
+| 🔄     | Setup Service            | Verbindungstest, Verzeichnisinit, Console-Tools|
+| 📋     | Entity Services Refactor | notes.ts, products.ts, etc. → NAS statt LocalStorage |
+| 📋     | Binäre Bildspeicherung   | Base64 → Binary Files (90% Speichereinsparung)|
+| 📋     | Document Service         | PDF/Excel/Word Upload & Management            |
+| 📋     | Multi-User Konfliktlösung| Version-Tracking, Optimistic Locking          |
+
+---
+
+## Phase 10: Projekt-Planung & Visualisierung (v1.2.x)
+
+### Gantt-Export
+| Status | Aufgabe                 | Beschreibung                                    |
+| ------ | ----------------------- | ----------------------------------------------- |
+| 📋     | Projekt-Auswahl Dialog  | Multi-Select mit Checkboxen                     |
+| 📋     | Dauer-Eingabe UI        | Startdatum + Dauer pro Projekt                  |
+| 📋     | Gantt-Chart Generator   | Frappe Gantt oder eigene SVG-Lösung             |
+| 📋     | Timeline-Visualisierung | Überlappungen erkennen, Farben, Notizen         |
+| 📋     | Export-Funktionen       | HTML/PNG/PDF Download                           |
+| 📋     | Live-Preview            | Interaktive Vorschau vor Export                 |
+
+---
+
+## Phase 11: Android-App (v1.3.x)
 
 | Status | Aufgabe         | Beschreibung             |
 | ------ | --------------- | ------------------------ |
@@ -198,7 +230,7 @@
 
 ---
 
-## Phase 10: Polish & Release (v1.0.0) ✅
+## Phase 12: Polish & Release (v1.0.0) ✅
 
 | Status | Aufgabe        | Beschreibung                                  |
 | ------ | -------------- | --------------------------------------------- |
@@ -218,11 +250,16 @@
 - [ ] Kostenkalkulation
 - [ ] Produktionsplanung
 - [ ] Mehrsprachigkeit (DE/EN)
-- [ ] **Google Contacts OAuth Integration** - Live-Sync statt manueller vCard-Import (geplant für v0.9.x)
+- [ ] **Google Contacts OAuth Integration** - Live-Sync statt manueller vCard-Import
   - OAuth 2.0 Authentifizierung
   - Google People API Integration
   - Automatische Synchronisation
   - Conflict Resolution bei Updates
+- [ ] **Gantt-Chart Erweiterungen** (nach v1.2.x)
+  - Meilensteine definieren
+  - Abhängigkeiten zwischen Projekten
+  - Ressourcenzuweisung (Kontakte zu Projekten)
+  - Critical Path Analyse
 
 ---
 
@@ -232,4 +269,4 @@ Siehe [CHANGELOG.md](./CHANGELOG.md) für detaillierte Versionshistorie.
 
 ---
 
-**Letzte Aktualisierung:** 21. Dezember 2025 - Release v1.0.0
+**Letzte Aktualisierung:** 24. Dezember 2025 - NAS-Integration Phase 9 aktiv

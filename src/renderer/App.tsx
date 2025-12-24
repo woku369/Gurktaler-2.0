@@ -18,6 +18,8 @@ import Settings from "./pages/Settings";
 import DesignPreview from "./pages/DesignPreview";
 import QuickNoteButton from "./components/QuickNoteButton";
 import { getGitConfig, isGitRepository, pullChanges } from "./services/git";
+import { synologySync } from "./services/sync";
+import { setupService } from "./services/setup";
 import { AlertCircle, Download, RefreshCw } from "lucide-react";
 
 function App() {
@@ -71,7 +73,44 @@ function App() {
       }
     };
 
+    const performWebDAVSync = async () => {
+      // WebDAV Auto-Sync beim App-Start
+      if (synologySync.isConnected()) {
+        console.log("🔄 WebDAV Auto-Sync beim Start...");
+        try {
+          await synologySync.downloadData();
+          console.log("✅ WebDAV Auto-Sync erfolgreich");
+        } catch (error) {
+          console.error("❌ WebDAV Auto-Sync fehlgeschlagen:", error);
+        }
+      }
+    };
+
+    const performNasSetup = async () => {
+      // NAS-Setup beim App-Start (nur wenn noch nicht migriert)
+      try {
+        console.log("🚀 Prüfe NAS-Setup...");
+        const connected = await setupService.testConnection();
+
+        if (connected) {
+          console.log("✅ NAS-Verbindung OK");
+
+          // Migration automatisch durchführen (wird übersprungen wenn bereits erledigt)
+          await setupService.runFullSetup();
+        } else {
+          console.warn(
+            "⚠️ NAS nicht erreichbar - App läuft im Legacy-Modus (LocalStorage)"
+          );
+        }
+      } catch (error) {
+        console.error("❌ NAS-Setup fehlgeschlagen:", error);
+        console.warn("⚠️ App läuft im Legacy-Modus (LocalStorage)");
+      }
+    };
+
     performAutoPull();
+    performWebDAVSync();
+    performNasSetup();
   }, []);
 
   return (
