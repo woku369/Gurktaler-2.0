@@ -413,6 +413,60 @@ Direkt von der Karte aus:
 - **Suche**: Durchsucht Name, Anleitung, Notizen
 - **Tag-Filter**: Filtere nach Tags (Dropdown rechts)
 
+## Mobile PWA - Setup & Betrieb
+
+**Progressive Web App mit vollständiger Schreib-/Lesefunktion**
+
+### Architektur
+
+Die mobile App verwendet eine Custom Node.js API (Port 3001), da das Synology FileStation Upload API defekt ist:
+
+- **Browser** → nginx (Port 80) → Custom API (Port 3001) → Dateisystem
+- **Desktop App** → Direkter Y:\\ Drive Zugriff (keine API)
+
+### Server-Start (nach jedem NAS-Neustart)
+
+```bash
+ssh admin@100.121.103.107
+cd /volume1/Gurktaler/api
+nohup node server.js > server.log 2>&1 &
+```
+
+**Prüfen:**
+```bash
+cat server.log  # "🚀 Gurktaler API Server running on port 3001"
+ps aux | grep node  # Prozess läuft
+```
+
+### Zugriff
+
+- **Desktop-App**: Wie gewohnt
+- **Mobile (Browser)**: `http://100.121.103.107/gurktaler/`
+- **Installation (Android)**: Browser-Menü → "Zum Startbildschirm hinzufügen"
+
+### Features
+
+✅ Vollständige CRUD-Operationen (Erstellen, Lesen, Bearbeiten, Löschen)  
+✅ QuickNote-Button für schnelle Notizen  
+✅ Offline-Funktionalität (Service Worker)  
+✅ Automatische Synchronisation mit Desktop-App via NAS  
+✅ Identische UI wie Desktop-App  
+
+### Troubleshooting
+
+**Server läuft nicht:**
+```bash
+cd /volume1/Gurktaler/api
+nohup node server.js > server.log 2>&1 &
+```
+
+**Browser zeigt alte Version:**
+- DevTools (F12) → Application → Service Workers → Unregister
+- Cache löschen (Strg+Shift+Delete)
+- Incognito-Fenster verwenden
+
+**Weitere Details:** Siehe [docs/MOBILE_API.md](docs/MOBILE_API.md)
+
 ## Versionierung
 
 - **Major** (X.0.0): Große Funktionserweiterungen
@@ -427,5 +481,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 1.0.0 (Production Release)  
-**Letztes Update**: 21. Dezember 2025
+**Aktuelle Version**: 1.1.0 (Mobile Write Support)  
+**Letztes Update**: 26. Dezember 2025

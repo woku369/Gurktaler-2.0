@@ -58,7 +58,7 @@ export default function ContainerImportDialog({
 
     try {
       const parsed = await parseExcelFile(selectedFile);
-      const existing = containersService.getAll();
+      const existing = await containersService.getAll();
       const result = validateContainers(parsed, existing);
 
       setImportResult(result);
@@ -70,32 +70,35 @@ export default function ContainerImportDialog({
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!importResult) return;
 
     let importedCount = 0;
 
     // Import gültige Gebinde
-    importResult.valid.forEach((cont, index) => {
+    for (const [index, cont] of importResult.valid.entries()) {
       if (selectedValid.has(index)) {
-        containersService.create(convertToContainer(cont));
+        await containersService.create(convertToContainer(cont));
         importedCount++;
       }
-    });
+    }
 
     // Import Duplikate basierend auf Aktion
     if (duplicateAction === "overwrite") {
-      importResult.duplicates.forEach((cont, index) => {
+      for (const [index, cont] of importResult.duplicates.entries()) {
         if (selectedDuplicates.has(index)) {
-          const existing = containersService
-            .getAll()
-            .find((e) => e.name.toLowerCase() === cont.name.toLowerCase());
+          const existing = (await containersService.getAll()).find(
+            (e) => e.name.toLowerCase() === cont.name.toLowerCase()
+          );
           if (existing) {
-            containersService.update(existing.id, convertToContainer(cont));
+            await containersService.update(
+              existing.id,
+              convertToContainer(cont)
+            );
             importedCount++;
           }
         }
-      });
+      }
     }
 
     alert(`${importedCount} Gebinde erfolgreich importiert!`);

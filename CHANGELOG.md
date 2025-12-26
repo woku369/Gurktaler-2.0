@@ -7,6 +7,47 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.1.0] - 2025-12-26 📱
+
+### ✨ Neu
+
+#### 📱 Mobile PWA - Vollständige Schreibfunktion
+- **Custom Node.js API Server**: Bypassed defekte Synology FileStation Upload API
+  - Port 3001 (localhost only), Zero Dependencies
+  - Endpoints: `GET/POST /api/json?path=<file>`
+  - Direkter Filesystem-Zugriff via fs.promises
+  - Auto-Directory-Creation
+- **CustomApiStorageProvider**: Neue StorageProvider-Implementierung
+  - fetch()-basiert für Browser-Kontext
+  - Same-Origin `/api/` Requests (kein CORS)
+  - Platform-Detection: Electron = Y:\\ Drive, Browser = Custom API
+- **nginx Reverse Proxy**: `/api/` → `http://127.0.0.1:3001`
+- **Vite Config**: `base: '/gurktaler/'` für korrekte Asset-Pfade
+- **Vollständige CRUD-Operationen** auf Mobile/Tablet
+- **QuickNote-Button** funktioniert jetzt auch mobil
+- **Automatische Synchronisation** mit Desktop-App via NAS
+
+### 🐛 Bugfixes
+- **PWA Asset Loading**: Korrektur der base-Path-Konfiguration
+- **Service Worker Caching**: Dokumentierte Workarounds für hartnäckiges Caching
+
+### 📚 Dokumentation
+- **docs/MOBILE_API.md**: Vollständige Custom API Dokumentation
+  - Architektur-Übersicht
+  - Setup-Anleitung
+  - Troubleshooting Guide
+- **README.md**: Mobile PWA Setup-Sektion hinzugefügt
+  - Server-Start Anleitung
+  - Troubleshooting
+  - Feature-Übersicht
+
+### 🔧 Technische Details
+- **FileStation Upload API Problem**: Diagnostiziert als defekt (hängt indefinitely)
+- **Lösung**: Eigener API-Server umgeht alle Synology-APIs komplett
+- **Security**: Server nur auf localhost exposed, nginx proxied requests
+
+---
+
 ## [1.0.0] - 2025-12-21 🎉
 
 ### 🎊 PRODUCTION RELEASE

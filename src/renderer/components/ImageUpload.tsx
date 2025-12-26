@@ -34,8 +34,11 @@ export default function ImageUpload({
     loadImages();
   }, [entityId]);
 
-  const loadImages = () => {
-    const existingImages = imagesService.getByEntity(entityType, entityId);
+  const loadImages = async () => {
+    const existingImages = await imagesService.getByEntity(
+      entityType,
+      entityId
+    );
     setImages(existingImages);
   };
 
@@ -53,11 +56,11 @@ export default function ImageUpload({
 
       // Convert to base64 data URL
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const dataUrl = e.target?.result as string;
 
         // Save to storage
-        imagesService.create({
+        await imagesService.create({
           entity_type: entityType,
           entity_id: entityId,
           data_url: dataUrl,
@@ -67,7 +70,7 @@ export default function ImageUpload({
 
         processedCount++;
         if (processedCount === filesToProcess) {
-          loadImages();
+          await loadImages();
           onUpload?.();
         }
       };
@@ -100,14 +103,14 @@ export default function ImageUpload({
       const blob = await response.blob();
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const dataUrl = e.target?.result as string;
 
         // Extract filename from URL or use default
         const urlParts = imageUrl.split("/");
         const fileName = urlParts[urlParts.length - 1] || "image-from-url.jpg";
 
-        imagesService.create({
+        await imagesService.create({
           entity_type: entityType,
           entity_id: entityId,
           data_url: dataUrl,
@@ -115,7 +118,7 @@ export default function ImageUpload({
           caption: "",
         });
 
-        loadImages();
+        await loadImages();
         onUpload?.();
         setImageUrl("");
         setShowUrlInput(false);
@@ -131,14 +134,14 @@ export default function ImageUpload({
     }
   };
 
-  const removeImage = (id: string) => {
-    imagesService.delete(id);
-    loadImages();
+  const removeImage = async (id: string) => {
+    await imagesService.delete(id);
+    await loadImages();
   };
 
-  const updateCaption = (id: string, caption: string) => {
-    imagesService.update(id, { caption });
-    loadImages();
+  const updateCaption = async (id: string, caption: string) => {
+    await imagesService.update(id, { caption });
+    await loadImages();
   };
 
   return (

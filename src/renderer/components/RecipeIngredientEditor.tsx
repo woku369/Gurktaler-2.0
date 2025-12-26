@@ -27,9 +27,9 @@ export default function RecipeIngredientEditor({
     loadData();
   }, [recipeId]);
 
-  const loadData = () => {
-    setIngredients(ingredientsService.getAll());
-    const allRecipeIngredients = recipeIngredientsService.getAll();
+  const loadData = async () => {
+    setIngredients(await ingredientsService.getAll());
+    const allRecipeIngredients = await recipeIngredientsService.getAll();
     const filtered = allRecipeIngredients.filter(
       (ri: RecipeIngredient) => ri.recipe_id === recipeId
     );
@@ -40,7 +40,7 @@ export default function RecipeIngredientEditor({
     setRecipeIngredients(filtered);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!selectedIngredientId || !amount) return;
 
     const maxOrder =
@@ -48,7 +48,7 @@ export default function RecipeIngredientEditor({
         ? Math.max(...recipeIngredients.map((ri) => ri.sort_order))
         : 0;
 
-    recipeIngredientsService.create({
+    await recipeIngredientsService.create({
       recipe_id: recipeId,
       ingredient_id: selectedIngredientId,
       amount: parseFloat(amount),
@@ -63,46 +63,46 @@ export default function RecipeIngredientEditor({
     setUnit("ml");
     setNotes("");
     setShowAddForm(false);
-    loadData();
+    await loadData();
   };
 
-  const handleRemove = (id: string) => {
+  const handleRemove = async (id: string) => {
     if (confirm("Zutat aus Rezeptur entfernen?")) {
-      recipeIngredientsService.delete(id);
-      loadData();
+      await recipeIngredientsService.delete(id);
+      await loadData();
     }
   };
 
-  const moveUp = (index: number) => {
+  const moveUp = async (index: number) => {
     if (index === 0) return;
     const updated = [...recipeIngredients];
     [updated[index - 1].sort_order, updated[index].sort_order] = [
       updated[index].sort_order,
       updated[index - 1].sort_order,
     ];
-    recipeIngredientsService.update(updated[index - 1].id, {
+    await recipeIngredientsService.update(updated[index - 1].id, {
       sort_order: updated[index - 1].sort_order,
     });
-    recipeIngredientsService.update(updated[index].id, {
+    await recipeIngredientsService.update(updated[index].id, {
       sort_order: updated[index].sort_order,
     });
-    loadData();
+    await loadData();
   };
 
-  const moveDown = (index: number) => {
+  const moveDown = async (index: number) => {
     if (index === recipeIngredients.length - 1) return;
     const updated = [...recipeIngredients];
     [updated[index].sort_order, updated[index + 1].sort_order] = [
       updated[index + 1].sort_order,
       updated[index].sort_order,
     ];
-    recipeIngredientsService.update(updated[index].id, {
+    await recipeIngredientsService.update(updated[index].id, {
       sort_order: updated[index].sort_order,
     });
-    recipeIngredientsService.update(updated[index + 1].id, {
+    await recipeIngredientsService.update(updated[index + 1].id, {
       sort_order: updated[index + 1].sort_order,
     });
-    loadData();
+    await loadData();
   };
 
   const getIngredientName = (ingredientId: string): string => {

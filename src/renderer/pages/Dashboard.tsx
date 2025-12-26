@@ -59,11 +59,11 @@ function Dashboard() {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = () => {
-    const allProjects = projects.getAll();
-    const allProducts = products.getAll();
-    const allRecipes = recipes.getAll();
-    const allNotes = notes.getAll();
+  const loadDashboardData = async () => {
+    const allProjects = await projects.getAll();
+    const allProducts = await products.getAll();
+    const allRecipes = await recipes.getAll();
+    const allNotes = await notes.getAll();
 
     // Update stats
     setStats([
@@ -133,7 +133,12 @@ function Dashboard() {
     setRecentItems(sortedItems);
 
     // Load favorites
-    const allFavorites = favorites.getAll();
+    const allFavorites = await favorites.getAll();
+    const allContacts = await contacts.getAll();
+    const allWeblinks = await weblinks.getAll();
+    const allIngredients = await ingredients.getAll();
+    const allContainers = await containers.getAll();
+
     const favItems = allFavorites.slice(0, 8).map((fav) => {
       let name = "";
       let icon = Star;
@@ -165,25 +170,25 @@ function Dashboard() {
           route = "/notes";
           break;
         case "contact":
-          const cont = contacts.getAll().find((c) => c.id === fav.entity_id);
+          const cont = allContacts.find((c) => c.id === fav.entity_id);
           name = cont?.name || "Unbekannter Kontakt";
           icon = Users;
           route = "/contacts";
           break;
         case "weblink":
-          const web = weblinks.getAll().find((w) => w.id === fav.entity_id);
+          const web = allWeblinks.find((w) => w.id === fav.entity_id);
           name = web?.title || "Unbekannter Link";
           icon = ExternalLink;
           route = "/research";
           break;
         case "ingredient":
-          const ing = ingredients.getAll().find((i) => i.id === fav.entity_id);
+          const ing = allIngredients.find((i) => i.id === fav.entity_id);
           name = ing?.name || "Unbekannte Zutat";
           icon = Beaker;
           route = "/ingredients";
           break;
         case "container":
-          const con = containers.getAll().find((c) => c.id === fav.entity_id);
+          const con = allContainers.find((c) => c.id === fav.entity_id);
           name = con?.name || "Unbekanntes Gebinde";
           icon = Archive;
           route = "/containers";

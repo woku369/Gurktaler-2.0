@@ -53,20 +53,20 @@ function Research() {
     loadData();
   }, []);
 
-  const loadData = () => {
-    setWeblinks(weblinksService.getAll());
-    setProjects(projectsService.getAll());
+  const loadData = async () => {
+    setWeblinks(await weblinksService.getAll());
+    setProjects(await projectsService.getAll());
   };
 
-  const handleSubmit = (
+  const handleSubmit = async (
     data: Omit<Weblink, "id" | "created_at" | "updated_at">
   ) => {
     if (editingWeblink) {
-      weblinksService.update(editingWeblink.id, data);
+      await weblinksService.update(editingWeblink.id, data);
     } else {
-      weblinksService.create(data);
+      await weblinksService.create(data);
     }
-    loadData();
+    await loadData();
     setIsModalOpen(false);
     setEditingWeblink(null);
   };
@@ -76,10 +76,10 @@ function Research() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Weblink wirklich löschen?")) {
-      weblinksService.delete(id);
-      loadData();
+  const handleDelete = async (id: string) => {
+    if (confirm("Weblink wirklich l\u00f6schen?")) {
+      await weblinksService.delete(id);
+      await loadData();
     }
   };
 
@@ -218,24 +218,25 @@ function Research() {
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => {
-                      favoritesService.toggle("weblink", weblink.id);
-                      loadData();
+                    onClick={async () => {
+                      const existing = await favoritesService.getByEntity(
+                        "weblink",
+                        weblink.id
+                      );
+                      if (existing) {
+                        await favoritesService.delete(existing.id);
+                      } else {
+                        await favoritesService.create({
+                          entity_type: "weblink",
+                          entity_id: weblink.id,
+                        });
+                      }
+                      await loadData();
                     }}
                     className="p-1 hover:bg-slate-100 rounded"
-                    title={
-                      favoritesService.isFavorite("weblink", weblink.id)
-                        ? "Aus Favoriten entfernen"
-                        : "Zu Favoriten hinzufügen"
-                    }
+                    title="Favorit"
                   >
-                    <Star
-                      className={`w-4 h-4 ${
-                        favoritesService.isFavorite("weblink", weblink.id)
-                          ? "text-yellow-500 fill-yellow-500"
-                          : "text-slate-400"
-                      }`}
-                    />
+                    <Star className="w-4 h-4 text-slate-400" />
                   </button>
                   <button
                     onClick={() => handleEdit(weblink)}

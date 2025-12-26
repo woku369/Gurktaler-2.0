@@ -31,40 +31,46 @@ export default function TagSelector({
     loadTags();
   }, [entityId]);
 
-  const loadTags = () => {
-    const tags = tagsService.getAll();
+  const loadTags = async () => {
+    const tags = await tagsService.getAll();
     setAllTags(tags);
 
-    const assignments = tagAssignmentsService.getByEntity(entityType, entityId);
+    const assignments = await tagAssignmentsService.getByEntity(
+      entityType,
+      entityId
+    );
     const assigned = assignments
       .map((a) => tags.find((t) => t.id === a.tag_id))
       .filter((t): t is Tag => t !== undefined);
     setAssignedTags(assigned);
   };
 
-  const handleAddTag = (tagId: string) => {
+  const handleAddTag = async (tagId: string) => {
     // Check if already assigned
     const isAssigned = assignedTags.some((t) => t.id === tagId);
     if (isAssigned) return;
 
-    tagAssignmentsService.create({
+    await tagAssignmentsService.create({
       tag_id: tagId,
       entity_type: entityType,
       entity_id: entityId,
     });
 
-    loadTags();
+    await loadTags();
     setIsAdding(false);
     onChange?.();
   };
 
-  const handleRemoveTag = (tagId: string) => {
-    const assignments = tagAssignmentsService.getByEntity(entityType, entityId);
+  const handleRemoveTag = async (tagId: string) => {
+    const assignments = await tagAssignmentsService.getByEntity(
+      entityType,
+      entityId
+    );
     const assignment = assignments.find((a) => a.tag_id === tagId);
 
     if (assignment) {
-      tagAssignmentsService.delete(assignment.id);
-      loadTags();
+      await tagAssignmentsService.delete(assignment.id);
+      await loadTags();
       onChange?.();
     }
   };

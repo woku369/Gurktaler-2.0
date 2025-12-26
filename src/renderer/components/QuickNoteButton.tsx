@@ -46,7 +46,7 @@ export default function QuickNoteButton() {
     setIsSaving(true);
     try {
       // Note erstellen
-      const note = notesService.create({
+      const note = await notesService.create({
         title: title.trim() || "Schnelle Notiz",
         content: content.trim(),
         type: "note",
@@ -58,15 +58,15 @@ export default function QuickNoteButton() {
         const { images: imagesService } = await import(
           "@/renderer/services/storage"
         );
-        selectedImages.forEach((dataUrl, index) => {
-          imagesService.create({
+        for (const [index, dataUrl] of selectedImages.entries()) {
+          await imagesService.create({
             entity_type: "note",
             entity_id: note.id,
             data_url: dataUrl,
             file_name: `quick-note-${Date.now()}-${index}.jpg`,
             caption: "",
           });
-        });
+        }
       }
 
       // Reset & Close

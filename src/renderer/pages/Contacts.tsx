@@ -44,19 +44,19 @@ function Contacts() {
     loadContacts();
   }, []);
 
-  const loadContacts = () => {
-    setContacts(contactsService.getAll());
+  const loadContacts = async () => {
+    setContacts(await contactsService.getAll());
   };
 
-  const handleSubmit = (
+  const handleSubmit = async (
     data: Omit<Contact, "id" | "created_at" | "updated_at">
   ) => {
     if (editingContact) {
-      contactsService.update(editingContact.id, data);
+      await contactsService.update(editingContact.id, data);
     } else {
-      contactsService.create(data);
+      await contactsService.create(data);
     }
-    loadContacts();
+    await loadContacts();
     setIsModalOpen(false);
     setEditingContact(null);
   };
@@ -66,10 +66,10 @@ function Contacts() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("Kontakt wirklich löschen?")) {
-      contactsService.delete(id);
-      loadContacts();
+      await contactsService.delete(id);
+      await loadContacts();
     }
   };
 
@@ -190,19 +190,9 @@ function Contacts() {
                     loadContacts();
                   }}
                   className="p-1 hover:bg-slate-100 rounded"
-                  title={
-                    favoritesService.isFavorite("contact", contact.id)
-                      ? "Aus Favoriten entfernen"
-                      : "Zu Favoriten hinzufügen"
-                  }
+                  title="Favorit umschalten"
                 >
-                  <Star
-                    className={`w-4 h-4 ${
-                      favoritesService.isFavorite("contact", contact.id)
-                        ? "text-yellow-500 fill-yellow-500"
-                        : "text-slate-400"
-                    }`}
-                  />
+                  <Star className="w-4 h-4 text-slate-400" />
                 </button>
                 <button
                   onClick={() => handleEdit(contact)}

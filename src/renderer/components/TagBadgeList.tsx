@@ -90,40 +90,46 @@ export default function TagBadgeList({
     }
   }, [isAdding]);
 
-  const loadTags = () => {
-    const all = tagsService.getAll();
+  const loadTags = async () => {
+    const all = await tagsService.getAll();
     setAllTags(all);
 
-    const assignments = tagAssignmentsService.getByEntity(entityType, entityId);
+    const assignments = await tagAssignmentsService.getByEntity(
+      entityType,
+      entityId
+    );
     const assigned = assignments
       .map((a) => all.find((t) => t.id === a.tag_id))
       .filter((t): t is Tag => t !== undefined);
     setAssignedTags(assigned);
   };
 
-  const handleRemoveTag = (tagId: string) => {
-    const assignments = tagAssignmentsService.getByEntity(entityType, entityId);
+  const handleRemoveTag = async (tagId: string) => {
+    const assignments = await tagAssignmentsService.getByEntity(
+      entityType,
+      entityId
+    );
     const assignment = assignments.find((a) => a.tag_id === tagId);
     if (assignment) {
-      tagAssignmentsService.delete(assignment.id);
-      loadTags();
+      await tagAssignmentsService.delete(assignment.id);
+      await loadTags();
       onUpdate?.();
     }
   };
 
-  const handleAddTag = (tag: Tag) => {
-    tagAssignmentsService.create({
+  const handleAddTag = async (tag: Tag) => {
+    await tagAssignmentsService.create({
       tag_id: tag.id,
       entity_type: entityType,
       entity_id: entityId,
     });
-    loadTags();
+    await loadTags();
     setIsAdding(false);
     setSearchTerm("");
     onUpdate?.();
   };
 
-  const handleCreateAndAddTag = () => {
+  const handleCreateAndAddTag = async () => {
     if (!searchTerm.trim()) return;
 
     // Check if tag already exists
@@ -131,7 +137,7 @@ export default function TagBadgeList({
       (t) => t.name.toLowerCase() === searchTerm.toLowerCase()
     );
     if (existing) {
-      handleAddTag(existing);
+      await handleAddTag(existing);
       return;
     }
 
@@ -145,12 +151,12 @@ export default function TagBadgeList({
         ? availableColors[0]
         : COLOR_PALETTE[allTags.length % COLOR_PALETTE.length];
 
-    const newTag = tagsService.create({
+    const newTag = await tagsService.create({
       name: searchTerm.trim(),
       color,
     });
 
-    handleAddTag(newTag);
+    await handleAddTag(newTag);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

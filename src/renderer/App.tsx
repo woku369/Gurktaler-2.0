@@ -17,8 +17,6 @@ import Documentation from "./pages/Documentation";
 import Settings from "./pages/Settings";
 import DesignPreview from "./pages/DesignPreview";
 import QuickNoteButton from "./components/QuickNoteButton";
-import { getGitConfig, isGitRepository, pullChanges } from "./services/git";
-import { synologySync } from "./services/sync";
 import { setupService } from "./services/setup";
 import { AlertCircle, Download, RefreshCw } from "lucide-react";
 
@@ -30,62 +28,6 @@ function App() {
   }>({ show: false, type: "loading", message: "" });
 
   useEffect(() => {
-    const performAutoPull = async () => {
-      const config = getGitConfig();
-
-      // Nur wenn Auto-Pull aktiviert ist
-      if (!config.autoPush) {
-        return;
-      }
-
-      // Prüfen ob Git-Repo existiert
-      const isRepo = await isGitRepository();
-      if (!isRepo) {
-        return;
-      }
-
-      setSyncStatus({
-        show: true,
-        type: "loading",
-        message: "Synchronisiere mit Remote-Repository...",
-      });
-
-      const success = await pullChanges();
-
-      if (success) {
-        setSyncStatus({
-          show: true,
-          type: "success",
-          message: "Daten erfolgreich synchronisiert!",
-        });
-        setTimeout(() => {
-          setSyncStatus({ show: false, type: "loading", message: "" });
-        }, 2000);
-      } else {
-        // Bei Fehler (z.B. Konflikt) Warnung anzeigen
-        setSyncStatus({
-          show: true,
-          type: "error",
-          message:
-            "Sync-Konflikt! Bitte öffne Einstellungen → Git-Integration um das Problem zu lösen.",
-        });
-        // Warnung bleibt sichtbar bis User sie schließt
-      }
-    };
-
-    const performWebDAVSync = async () => {
-      // WebDAV Auto-Sync beim App-Start
-      if (synologySync.isConnected()) {
-        console.log("🔄 WebDAV Auto-Sync beim Start...");
-        try {
-          await synologySync.downloadData();
-          console.log("✅ WebDAV Auto-Sync erfolgreich");
-        } catch (error) {
-          console.error("❌ WebDAV Auto-Sync fehlgeschlagen:", error);
-        }
-      }
-    };
-
     const performNasSetup = async () => {
       // NAS-Setup beim App-Start (nur wenn noch nicht migriert)
       try {
@@ -108,8 +50,6 @@ function App() {
       }
     };
 
-    performAutoPull();
-    performWebDAVSync();
     performNasSetup();
   }, []);
 

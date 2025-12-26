@@ -52,11 +52,11 @@ export default function RecipeCalculator({
     return amount * (conversions[unit] || 0);
   };
 
-  const calculateRecipe = () => {
-    const recipeIngs = recipeIngredientsService
-      .getAll()
-      .filter((ri: RecipeIngredient) => ri.recipe_id === recipeId);
-    const allIngredients = ingredientsService.getAll();
+  const calculateRecipe = async () => {
+    const recipeIngs = (await recipeIngredientsService.getAll()).filter(
+      (ri: RecipeIngredient) => ri.recipe_id === recipeId
+    );
+    const allIngredients = await ingredientsService.getAll();
 
     let totalVolume = 0;
     let totalAlcohol = 0;

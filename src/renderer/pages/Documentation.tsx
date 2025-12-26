@@ -15,6 +15,7 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  Smartphone,
 } from "lucide-react";
 
 type Section = {
@@ -607,6 +608,113 @@ const sections: Section[] = [
       tips: [
         "Quick-Entry immer oben auf Notizen-Seite",
         "Formulare mit Tab navigieren",
+      ],
+    },
+  },
+  {
+    id: "pwa-deployment",
+    title: "PWA Mobile Deployment",
+    icon: Smartphone,
+    content: {
+      subtitle:
+        "Gurktaler 2.0 als Progressive Web App auf dem Smartphone nutzen",
+      description:
+        "Die App kann als PWA (Progressive Web App) auf dem Smartphone genutzt werden. Der Zugriff erfolgt über die Synology FileStation API, die direkt mit dem NAS kommuniziert.",
+      howTo: [
+        {
+          title: "1. Web Station auf Synology aktivieren",
+          steps: [
+            "DSM öffnen (http://100.121.103.107:5000)",
+            "Paket-Zentrum öffnen",
+            'Nach "Web Station" suchen und installieren (falls nicht vorhanden)',
+            "Web Station öffnen",
+            'Unter "Allgemein" → HTTP Backend Server: PHP 8.2 auswählen',
+            "Dienst aktivieren",
+          ],
+        },
+        {
+          title: "2. Virtuellen Host einrichten",
+          steps: [
+            'Web Station → "Virtual Host" Tab',
+            '"Erstellen" klicken',
+            'Typ: "Name-based Virtual Host"',
+            "Hostname: gurktaler.local (oder beliebig)",
+            "Port: 80 (Standard HTTP)",
+            'Root-Verzeichnis: "/web/gurktaler" (wird automatisch angelegt)',
+            "PHP: PHP 8.2 auswählen",
+            'HTTP Backend Server: "Apache HTTP Server 2.4"',
+            "Speichern",
+          ],
+        },
+        {
+          title: "3. PWA-Dateien hochladen",
+          steps: [
+            "In VS Code: npm run build ausführen (erstellt dist/ Ordner)",
+            "File Station öffnen",
+            'Zu "/web/gurktaler" navigieren (oder erstellen)',
+            "Alle Dateien aus dem dist/ Ordner hochladen:",
+            "  - index.html",
+            "  - assets/ Ordner (CSS und JS)",
+            "  - registerSW.js, sw.js, workbox-*.js",
+            "  - manifest.webmanifest",
+            "  - pwa-192x192.png, pwa-512x512.png",
+          ],
+        },
+        {
+          title: "4. Zugriff vom Smartphone (über Tailscale)",
+          steps: [
+            "Tailscale auf dem Smartphone installieren und mit demselben Account anmelden",
+            "Browser öffnen (Chrome, Safari, Edge)",
+            "URL eingeben: http://100.121.103.107/gurktaler/ (oder http://gurktaler.local)",
+            "App sollte laden",
+            "Optional: Als PWA zum Home Screen hinzufügen:",
+            '  - Chrome: Menü → "Zum Startbildschirm hinzufügen"',
+            '  - Safari: Teilen → "Zum Home-Bildschirm"',
+          ],
+        },
+        {
+          title: "5. Synology-Zugangsdaten konfigurieren",
+          steps: [
+            "In der PWA: F12 (Developer Tools) öffnen",
+            "Console Tab → folgende Befehle eingeben:",
+            '  localStorage.setItem("synology_username", "admin")',
+            '  localStorage.setItem("synology_password", "DeinPasswort")',
+            "Seite neu laden",
+            "App sollte sich automatisch mit dem NAS verbinden",
+            'Console zeigt: "🌐 Using FileStation API Storage" und "🔐 FileStation Login erfolgreich"',
+          ],
+        },
+        {
+          title: "6. Testen",
+          steps: [
+            "Projekt erstellen oder bestehende Daten ansehen",
+            "Bilder hochladen (funktioniert über FileStation API)",
+            "Notizen erstellen",
+            "Änderungen sollten sofort auf dem NAS gespeichert werden",
+            "Desktop-App öffnen → Änderungen sind sichtbar (Sync über Y:\\ Laufwerk)",
+          ],
+        },
+      ],
+      tips: [
+        "🔒 Tailscale VPN muss auf beiden Geräten (NAS + Smartphone) laufen",
+        "📡 Ohne Tailscale: Port-Forwarding einrichten (nicht empfohlen, Sicherheitsrisiko)",
+        "🔐 localStorage-Zugangsdaten werden im Browser gespeichert (nicht sicher für öffentliche Geräte)",
+        "⚡ FileStation API nutzt Session-Cookies (sid Token) für Authentifizierung",
+        "🖥️ Desktop-App nutzt Electron IPC mit Y:\\ Laufwerk (SMB)",
+        "🌐 Browser-App nutzt FileStation HTTP REST API",
+        "📱 PWA funktioniert auch offline (Service Worker cacht Dateien)",
+        "🔄 Änderungen werden sofort synchronisiert (Desktop ↔ Mobile)",
+        "📝 Kein manueller Sync nötig - beide greifen auf dieselben JSON-Dateien zu",
+        "⚠️ Bei Konflikten: Letzte Änderung gewinnt (keine Versionskontrolle)",
+      ],
+      features: [
+        "✅ Plattform-Detection: Desktop (Electron IPC) vs Browser (FileStation API)",
+        "✅ Session-Management: Automatischer Login mit localStorage-Credentials",
+        "✅ CRUD-Operationen: Lesen, Schreiben, Löschen von JSON-Dateien",
+        "✅ Bild-Upload: Base64 DataURL → Blob → FormData → FileStation Upload",
+        "✅ Directory-Management: Automatische Ordner-Erstellung (database/, images/, etc.)",
+        "✅ Fehlerbehandlung: Retry-Logik bei Session-Ablauf",
+        "✅ Offline-Fähigkeit: Service Worker cacht HTML/CSS/JS für PWA",
       ],
     },
   },

@@ -84,6 +84,15 @@ function Settings() {
     localStorage.getItem("sync_network_path") || "Y:\\zweipunktnull\\data.json"
   );
 
+  // Synology FileStation Credentials (für Browser/PWA)
+  const [synologyUsername, setSynologyUsername] = useState(
+    localStorage.getItem("synology_username") || "admin"
+  );
+  const [synologyPassword, setSynologyPassword] = useState(
+    localStorage.getItem("synology_password") || ""
+  );
+  const [showSynologyPassword, setShowSynologyPassword] = useState(false);
+
   // Git-Status laden
   useEffect(() => {
     loadGitStatus();
@@ -192,6 +201,13 @@ function Settings() {
     setTimeout(() => setSyncMessage(""), 3000);
   };
 
+  const handleSaveSynologyCredentials = () => {
+    localStorage.setItem("synology_username", synologyUsername);
+    localStorage.setItem("synology_password", synologyPassword);
+    setSyncMessage("✅ Synology-Zugangsdaten gespeichert");
+    setTimeout(() => setSyncMessage(""), 3000);
+  };
+
   const handleGitPull = async () => {
     setGitLoading(true);
     setGitError("");
@@ -252,9 +268,9 @@ function Settings() {
     saveGitConfig(newConfig);
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
-      const data = exportData();
+      const data = await exportData();
       const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -359,13 +375,13 @@ function Settings() {
     input.click();
   };
 
-  const handleContactImportConfirm = (
+  const handleContactImportConfirm = async (
     selectedContacts: Array<ParsedContact & { type: string }>
   ) => {
     try {
       let importedCount = 0;
-      selectedContacts.forEach((contact) => {
-        contactsService.create({
+      for (const contact of selectedContacts) {
+        await contactsService.create({
           name: contact.name,
           type: contact.type as any,
           company: contact.company,
@@ -375,7 +391,7 @@ function Settings() {
           notes: contact.notes,
         });
         importedCount++;
-      });
+      }
 
       setShowContactImport(false);
       setParsedContacts([]);
@@ -983,6 +999,100 @@ function Settings() {
           </div>
         </div>
 
+        {/* Synology FileStation Credentials (für PWA/Browser) */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <Cloud className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-800">
+                Synology FileStation (PWA)
+              </h2>
+              <p className="text-sm text-slate-500">
+                Zugangsdaten für Browser/Mobile-Zugriff
+              </p>
+            </div>
+          </div>
+
+          {syncMessage && (
+            <div className="mb-4 p-3 rounded-lg bg-blue-50 text-blue-700 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span className="text-sm font-medium">{syncMessage}</span>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div className="py-3 border-b border-slate-100">
+              <p className="text-sm text-slate-600 mb-2">
+                Diese Zugangsdaten werden für die FileStation API benötigt, wenn
+                du die App im Browser (PWA) nutzt.
+              </p>
+              <p className="text-xs text-slate-500">
+                🖥️ Desktop-App nutzt Y:\\ Laufwerk (kein Login nötig)
+              </p>
+              <p className="text-xs text-slate-500">
+                📱 Browser/Mobile nutzt FileStation API (Login erforderlich)
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Benutzername
+                </label>
+                <input
+                  type="text"
+                  value={synologyUsername}
+                  onChange={(e) => setSynologyUsername(e.target.value)}
+                  placeholder="admin"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Passwort
+                </label>
+                <div className="relative">
+                  <input
+                    type={showSynologyPassword ? "text" : "password"}
+                    value={synologyPassword}
+                    onChange={(e) => setSynologyPassword(e.target.value)}
+                    placeholder="Dein Synology-Passwort"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() =>
+                      setShowSynologyPassword(!showSynologyPassword)
+                    }
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded"
+                  >
+                    {showSynologyPassword ? (
+                      <EyeOff className="w-4 h-4 text-slate-500" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-slate-500" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleSaveSynologyCredentials}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <CheckCircle className="w-5 h-5" />
+                Zugangsdaten speichern
+              </button>
+
+              <p className="text-xs text-amber-600">
+                ⚠️ Zugangsdaten werden unverschlüsselt in localStorage
+                gespeichert
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* AI API Keys */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -1161,7 +1271,7 @@ function Settings() {
       {showContactImport && (
         <ContactImportDialog
           contacts={parsedContacts}
-          existingContacts={contactsService.getAll()}
+          existingContacts={[]}
           onImport={handleContactImportConfirm}
           onCancel={() => {
             setShowContactImport(false);

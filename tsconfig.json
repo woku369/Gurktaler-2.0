@@ -44,6 +44,10 @@
     "include": [
         "src"
     ],
+    "exclude": [
+        "src/renderer/services/storage_legacy_backup.ts",
+        "src/renderer/services/storage_compat.ts"
+    ],
     "references": [
         {
             "path": "./tsconfig.node.json"

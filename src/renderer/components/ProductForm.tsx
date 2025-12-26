@@ -65,7 +65,10 @@ export default function ProductForm({
 
   // Load containers on mount
   useEffect(() => {
-    setContainers(containersService.getAll());
+    const loadContainers = async () => {
+      setContainers(await containersService.getAll());
+    };
+    loadContainers();
   }, []);
 
   // Calculate alcohol tax: 12 EUR per liter of pure alcohol

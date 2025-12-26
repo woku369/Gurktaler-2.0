@@ -40,7 +40,10 @@ export default function RecipeForm({
   );
 
   useEffect(() => {
-    setProducts(productsService.getAll());
+    const loadProducts = async () => {
+      setProducts(await productsService.getAll());
+    };
+    loadProducts();
   }, []);
 
   const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {

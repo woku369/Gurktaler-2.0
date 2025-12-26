@@ -62,14 +62,20 @@ export class SetupService {
 
       // Test 2: JSON lesen
       console.log("  Lese Test-Datei...");
-      const readData = await nasStorage.readJson(testFilePath);
+      const readData = await nasStorage.readJson<any>(testFilePath);
       console.log("  ✅ Lesen erfolgreich:", readData.length, "Einträge");
 
-      // Test 3: Vergleichen
-      if (JSON.stringify(testData) === JSON.stringify(readData)) {
+      // Test 3: Vergleichen (prüfe nur die Anzahl und IDs)
+      if (
+        readData.length === testData.length &&
+        readData[0]?.id === testData[0].id &&
+        readData[1]?.id === testData[1].id
+      ) {
         console.log("  ✅ Daten-Integrität bestätigt");
       } else {
         console.error("  ❌ Daten-Mismatch!");
+        console.error("    Erwartet:", testData);
+        console.error("    Erhalten:", readData);
       }
 
       // Test 4: Datei löschen

@@ -50,7 +50,7 @@ export default function IngredientImportDialog({
 
     try {
       const parsed = await parseExcelFile(selectedFile);
-      const existing = ingredientsService.getAll();
+      const existing = await ingredientsService.getAll();
       const result = validateIngredients(parsed, existing);
 
       setImportResult(result);
@@ -64,32 +64,35 @@ export default function IngredientImportDialog({
     }
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (!importResult) return;
 
     let importedCount = 0;
 
     // Import gültige Zutaten
-    importResult.valid.forEach((ing, index) => {
+    for (const [index, ing] of importResult.valid.entries()) {
       if (selectedValid.has(index)) {
-        ingredientsService.create(convertToIngredient(ing));
+        await ingredientsService.create(convertToIngredient(ing));
         importedCount++;
       }
-    });
+    }
 
     // Import Duplikate basierend auf Aktion
     if (duplicateAction === "overwrite") {
-      importResult.duplicates.forEach((ing, index) => {
+      for (const [index, ing] of importResult.duplicates.entries()) {
         if (selectedDuplicates.has(index)) {
-          const existing = ingredientsService
-            .getAll()
-            .find((e) => e.name.toLowerCase() === ing.name.toLowerCase());
+          const existing = (await ingredientsService.getAll()).find(
+            (e) => e.name.toLowerCase() === ing.name.toLowerCase()
+          );
           if (existing) {
-            ingredientsService.update(existing.id, convertToIngredient(ing));
+            await ingredientsService.update(
+              existing.id,
+              convertToIngredient(ing)
+            );
             importedCount++;
           }
         }
-      });
+      }
     }
 
     alert(`${importedCount} Zutat(en) erfolgreich importiert!`);

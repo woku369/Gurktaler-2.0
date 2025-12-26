@@ -31,44 +31,44 @@ export default function ContactProjectSelector({
     loadProjects();
   }, [contactId]);
 
-  const loadProjects = () => {
-    const projects = projectsService.getAll();
+  const loadProjects = async () => {
+    const projects = await projectsService.getAll();
     setAllProjects(projects);
 
-    const assignments = cpaService.getByContact(contactId);
+    const assignments = await cpaService.getByContact(contactId);
     const assigned: ProjectWithRole[] = [];
-    assignments.forEach((a) => {
+    for (const a of assignments) {
       const project = projects.find((p) => p.id === a.project_id);
       if (project) {
         assigned.push({ ...project, role: a.role });
       }
-    });
+    }
     setAssignedProjects(assigned);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!selectedProjectId) return;
 
-    cpaService.create({
+    await cpaService.create({
       contact_id: contactId,
       project_id: selectedProjectId,
       role: role.trim() || undefined,
     });
 
-    loadProjects();
+    await loadProjects();
     setIsAdding(false);
     setSelectedProjectId("");
     setRole("");
     onChange?.();
   };
 
-  const handleRemove = (projectId: string) => {
-    const assignments = cpaService.getByContact(contactId);
+  const handleRemove = async (projectId: string) => {
+    const assignments = await cpaService.getByContact(contactId);
     const assignment = assignments.find((a) => a.project_id === projectId);
 
     if (assignment) {
-      cpaService.delete(assignment.id);
-      loadProjects();
+      await cpaService.delete(assignment.id);
+      await loadProjects();
       onChange?.();
     }
   };
