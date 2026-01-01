@@ -181,6 +181,87 @@ Response: {"success":true}
 
 **Desktop App öffnen** → Daten sollten sofort sichtbar sein (sync via NAS).
 
+## Automatisierte Server-Verwaltung
+
+### Deployment Script
+
+**deploy-pwa.ps1** - Automatisches Deployment nach Build:
+
+```powershell
+.\deploy-pwa.ps1         # Deployment mit Change-Detection
+.\deploy-pwa.ps1 -Force  # Force-Deployment ohne Hash-Check
+```
+
+Features:
+- Hash-basierte Änderungserkennung (MD5)
+- Automatisches Löschen alter Dateien
+- Vollständige dist/ → NAS Kopie
+- Überspringt Deployment wenn keine Änderungen
+
+### Server Status Check
+
+**check-server.ps1** - Prüft ob API Server läuft:
+
+```powershell
+.\check-server.ps1  # Zeigt Server-Status
+```
+
+Testet API Endpoint `/api/json?path=/database/projects.json` und zeigt HTTP Status.
+
+### Remote Server Start/Restart
+
+**start-server.ps1** - SSH-basierte Server-Steuerung:
+
+```powershell
+.\start-server.ps1           # Startet Server (oder zeigt Status)
+.\start-server.ps1 -Status   # Zeigt Status & Log
+.\start-server.ps1 -Restart  # Startet Server neu
+.\start-server.ps1 -Stop     # Stoppt Server
+```
+
+Features:
+- SSH-Verbindung zum NAS (admin@100.121.103.107)
+- Automatische Prozess-Erkennung (PID)
+- Server-Log Ausgabe (tail -10)
+- API Endpoint Test nach Start
+- Nohup für persistente Ausführung
+
+**Voraussetzung:** OpenSSH Client in Windows oder plink.exe
+
+Installation OpenSSH (Windows 10/11):
+```powershell
+# PowerShell als Administrator
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+```
+
+SSH-Key Setup (optional, verhindert Passwort-Abfragen):
+```powershell
+ssh-keygen -t ed25519
+ssh-copy-id admin@100.121.103.107
+```
+
+### Workflow nach Code-Änderungen
+
+1. **Build:**
+   ```powershell
+   npm run build
+   ```
+
+2. **Deploy:**
+   ```powershell
+   .\deploy-pwa.ps1
+   ```
+
+3. **Test auf Mobile:**
+   - PWA öffnen: http://100.121.103.107/gurktaler/
+   - Hard-Refresh: Chrome → Menü → App neu laden
+   - Schreiboperation testen (QuickNote, Projekt erstellen)
+
+4. **Bei Server-Problemen:**
+   ```powershell
+   .\start-server.ps1 -Restart
+   ```
+
 ## Troubleshooting
 
 ### Server läuft nicht

@@ -7,6 +7,69 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [Unveröffentlicht]
+
+---
+
+## [1.1.1] - 2026-01-01 🐛
+
+### 🐛 Kritischer Bug-Fix
+
+#### Desktop-EXE startet mit leerem Fenster - GEFIXT
+- **Problem:** Production Build lud Assets mit falschem `/gurktaler/` Prefix
+- **Root Cause:** Vite `base` Pfad vermischte Desktop- und PWA-Anforderungen
+- **Lösung:** Separate Build-Prozesse mit unterschiedlichen base-Pfaden
+
+### ✨ Neue Features
+
+#### Separate Build-System für Desktop & PWA
+- **`npm run build:desktop`** - Erstellt EXE mit Root-Pfaden (`/assets/...`)
+- **`npm run build:pwa`** - Erstellt PWA mit Subdir-Pfaden (`/gurktaler/assets/...`)
+- **`npm run build:all`** - Beide Builds nacheinander
+- **`npm run deploy:pwa`** - Build + automatischer Upload zum NAS
+- **Environment Variable:** `VITE_BASE_PATH` steuert Asset-Pfade
+
+### 🔧 Technische Details
+
+#### Änderungen
+- **vite.config.ts:** `base` nutzt jetzt `process.env.VITE_BASE_PATH`
+- **package.json:** Neue Scripts mit `cross-env` für plattformübergreifende Env-Vars
+- **Build-Output:** Desktop → `build-output/`, PWA → `dist/`
+
+#### Bestätigte Fixes
+- ✅ Desktop-EXE lädt korrekt (`/assets/index-xxx.js`)
+- ✅ PWA lädt korrekt (`/gurktaler/assets/index-xxx.js`)
+- ✅ Beide Plattformen funktionieren unabhängig
+- ✅ Tailscale-Konfiguration unverändert
+- ✅ Keine Änderungen am Backend (nginx, Node.js API, NAS-Zugriff)
+
+### 📚 Dokumentation
+- README.md: Build-Scripts Sektion hinzugefügt
+- ROADMAP.md: Phase 9 abgeschlossen, Phase 11 (Server-Status UI) geplant
+- Documentation.tsx: Build-Prozess Anleitung ergänzt
+
+---
+
+### 🛠️ Verwaltung & Automatisierung
+- **start-server.ps1**: SSH-basierte Remote-Server-Steuerung
+  - Status-Abfrage mit Log-Ausgabe
+  - Start, Restart, Stop Funktionen
+  - Automatische PID-Erkennung
+  - API-Endpoint-Test nach Start
+- **check-server.ps1**: Schneller Server-Status-Check via HTTP
+- **deploy-pwa.ps1**: Automatisiertes Deployment mit Hash-basierter Änderungserkennung
+
+### 📚 Dokumentation
+- **In-App "Anleitungen"**: Neue "Mobile PWA" Sektion mit:
+  - Installations-Anleitung (Android/iOS)
+  - Erste Schritte
+  - Schreib-Operationen testen
+  - Troubleshooting-Tipps
+- **MOBILE_API.md**: Erweitert um Automatisierungs-Scripts
+- **README.md**: Server-Management Sektion mit Remote-Steuerung
+
+---
+
 ## [1.1.0] - 2025-12-26 📱
 
 ### ✨ Neu

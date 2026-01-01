@@ -194,10 +194,11 @@
 | ------ | ------------------------ | ---------------------------------------------- |
 | ✅     | Tailscale VPN Setup      | CGNAT-Lösung, Synology NAS Zugriff            |
 | ✅     | SMB/CIFS Netzlaufwerk    | Y:\ Drive Mapping                              |
-| 🔄     | Electron IPC Handlers    | 9 File-Operations (JSON, Images, Documents)    |
-| 🔄     | NAS Storage Provider     | Abstraktionsschicht für zentrale Speicherung   |
-| 🔄     | Migration Service        | LocalStorage → NAS (einmalig, automatisch)     |
-| 🔄     | Setup Service            | Verbindungstest, Verzeichnisinit, Console-Tools|
+| ✅     | Electron IPC Handlers    | 9 File-Operations (JSON, Images, Documents)    |
+| ✅     | NAS Storage Provider     | Abstraktionsschicht für zentrale Speicherung   |
+| ✅     | Migration Service        | LocalStorage → NAS (einmalig, automatisch)     |
+| ✅     | Setup Service            | Verbindungstest, Verzeichnisinit, Console-Tools|
+| 📋     | Deployment-Skript ins Buildscript integrieren | Das PowerShell-Deployment-Skript (deploy-pwa.ps1) muss in den Buildprozess integriert werden, sodass nach jedem Build alle Dateien automatisch auf dem NAS aktuell gehalten werden. |
 | 📋     | Entity Services Refactor | notes.ts, products.ts, etc. → NAS statt LocalStorage |
 | 📋     | Binäre Bildspeicherung   | Base64 → Binary Files (90% Speichereinsparung)|
 | 📋     | Document Service         | PDF/Excel/Word Upload & Management            |
@@ -219,14 +220,22 @@
 
 ---
 
-## Phase 11: Android-App (v1.3.x)
+## Phase 11: PWA Optimierung & Monitoring (v1.2.x)
+
+| Status | Aufgabe                   | Beschreibung                                   |
+| ------ | ------------------------- | ---------------------------------------------- |
+| 📋     | Server-Status UI          | Node.js API Server Status in Settings anzeigen|
+| 📋     | Auto-Start API Server     | Synology Task Scheduler Setup                  |
+| 📋     | Log-Viewer in App         | Echtzeit-Logs vom Node.js Server               |
+| 📋     | Server-Health-Check       | Periodische Prüfung auf Erreichbarkeit         |
+
+## Phase 12: Native Mobile (v1.3.x)
 
 | Status | Aufgabe         | Beschreibung             |
 | ------ | --------------- | ------------------------ |
-| 📋     | PWA-Setup       | Manifest, Service Worker |
-| 📋     | Mobile UI       | Responsive Design        |
-| 📋     | Quick-Entry     | Schnelle Notiz mobil     |
-| 📋     | Capacitor-Build | APK erstellen            |
+| 📋     | Capacitor-Build | APK/IPA erstellen        |
+| 📋     | Native Features | Kamera, Push, Offline    |
+| 📋     | App Store Deploy| iOS & Android Stores     |
 
 ---
 

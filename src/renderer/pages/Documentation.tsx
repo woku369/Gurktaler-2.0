@@ -39,8 +39,10 @@ const sections: Section[] = [
     content: {
       subtitle: "Gurktaler 2.0 - Produktentwicklung & Wissensmanagement",
       description:
-        "Gurktaler 2.0 ist eine Desktop-Anwendung zur Verwaltung von Produktentwicklungsprojekten, Rezepturen, Notizen und Kontakten. Die App nutzt zentralen NAS-Speicher (Synology) über Tailscale VPN für Multi-Gerät-Synchronisation.",
+        "Gurktaler 2.0 ist eine Desktop- und Mobile-Anwendung zur Verwaltung von Produktentwicklungsprojekten, Rezepturen, Notizen und Kontakten. Die App nutzt zentralen NAS-Speicher (Synology) über Tailscale VPN für Multi-Gerät-Synchronisation.",
       features: [
+        "Desktop-App (Windows) mit direktem NAS-Zugriff",
+        "Mobile PWA (iOS/Android) mit vollständiger Schreibfunktion",
         "Projekt- und Produktverwaltung mit Versionierung",
         "Rezepturverwaltung mit Zutatendatenbank",
         "Gebindeverwaltung (Flaschen, Etiketten, Verschlüsse)",
@@ -50,6 +52,60 @@ const sections: Section[] = [
         "Volltext-Suche über alle Bereiche",
         "Bild-Upload (lokal & URL)",
         "JSON Export/Import",
+        "Automatische Synchronisation zwischen Desktop und Mobile",
+      ],
+    },
+  },
+  {
+    id: "mobile",
+    title: "Mobile PWA",
+    icon: Smartphone,
+    content: {
+      subtitle: "Gurktaler unterwegs - PWA Installation & Nutzung",
+      description:
+        "Die Progressive Web App (PWA) ermöglicht volle Gurktaler-Funktionalität auf Smartphone und Tablet - mit vollständiger Schreib- und Leseberechtigung. Alle Daten werden auf dem NAS gespeichert und automatisch mit der Desktop-App synchronisiert.",
+      howTo: [
+        {
+          title: "Installation auf Android/iOS",
+          steps: [
+            "Verbinde zum Tailscale VPN (wichtig!)",
+            "Öffne Chrome/Safari: http://100.121.103.107/gurktaler/",
+            'Android: Chrome-Menü → "Zum Startbildschirm hinzufügen"',
+            'iOS: Safari-Teilen → "Zum Home-Bildschirm"',
+            "PWA-Icon erscheint auf dem Home-Screen",
+            "App läuft jetzt wie native App im Vollbild",
+          ],
+        },
+        {
+          title: "Erste Schritte mit der PWA",
+          steps: [
+            "App über Home-Screen-Icon öffnen",
+            "Dashboard zeigt Übersicht aller Daten",
+            "Navigation über Bottom-Bar oder Burger-Menü",
+            "QuickNote-Button (💭) für schnelle Notizen",
+            "Alle Daten werden sofort auf NAS gespeichert",
+            "Desktop-App zeigt Änderungen automatisch an",
+          ],
+        },
+        {
+          title: "Schreib-Operationen testen",
+          steps: [
+            "Erstelle testweise ein neues Projekt",
+            "Oder nutze QuickNote-Button für Notiz",
+            "Warte 1-2 Sekunden auf Speicherung",
+            "Öffne Desktop-App → Daten sollten sofort sichtbar sein",
+            "Bei Problemen: start-server.ps1 -Restart ausführen",
+          ],
+        },
+      ],
+      tips: [
+        "PWA funktioniert nur über Tailscale VPN (100.121.103.107)",
+        "Bei Offline-Betrieb: Cached Version wird geladen (Read-Only)",
+        "Hard-Refresh: Chrome-Menü → 'App neu laden' (löscht Cache)",
+        "Desktop und Mobile nutzen gleiche JSON-Dateien auf NAS",
+        "Änderungen sind sofort auf allen Geräten sichtbar",
+        'Server-Status prüfen: Windows-Desktop → "check-server.ps1" ausführen',
+        'Server neustarten: Windows-Desktop → "start-server.ps1 -Restart"',
       ],
     },
   },
@@ -729,18 +785,95 @@ const sections: Section[] = [
         "✅ Phase 7: Tag-System & Volltext-Suche komplett",
         "✅ Phase 8: Synology NAS-Integration mit Tailscale VPN komplett",
         "✅ Phase 9: Production Build & Installer (NSIS) komplett",
+        "✅ Phase 9: Separate Build-System für Desktop & PWA",
         "🔄 Phase B1: NAS-Storage-Layer & Migration (aktiv)",
         "📋 Phase B2: Entity-Services-Refactoring (geplant)",
         "📋 Phase B3: Binäre Bildspeicherung (geplant)",
         "📋 Phase 10: Multi-User-Konfliktauflösung",
-        "📋 Phase 11: Android PWA",
+        "📋 Phase 11: Server-Status UI (geplant)",
         "📋 Phase 12: Performance-Optimierung",
       ],
       tips: [
-        "Aktuelle Version: 0.9.1 (siehe CHANGELOG.md)",
+        "Aktuelle Version: 1.1.1 - Bug-Fix: Desktop-EXE lädt korrekt (siehe CHANGELOG.md)",
         "Feature-Requests via GitHub Issues",
         "Regelmäßige Updates alle 2-4 Wochen",
         "NAS-Sync über Tailscale macht Multi-Device-Nutzung möglich (Heim, Büro, unterwegs)",
+        "Custom API Server (Port 3001) ermöglicht Mobile-Schreibzugriff",
+        "Detaillierte Mobile-Dokumentation: docs/MOBILE_API.md",
+      ],
+    },
+  },
+  {
+    id: "build",
+    title: "Build & Deployment",
+    icon: Settings,
+    content: {
+      subtitle: "Desktop-EXE und Mobile PWA erstellen",
+      description:
+        "Gurktaler 2.0 unterstützt zwei separate Build-Prozesse: Desktop (Windows EXE) und Mobile (PWA für Browser). Beide Plattformen nutzen unterschiedliche Asset-Pfade.",
+      howTo: [
+        {
+          title: "Desktop-App bauen (Windows EXE)",
+          steps: [
+            "Terminal öffnen im Projekt-Verzeichnis",
+            "Befehl ausführen: npm run build",
+            "Oder explizit: npm run build:desktop",
+            "Warten (ca. 1-2 Minuten)",
+            "Ergebnis: build-output/Gurktaler 2.0-1.1.1-Setup.exe",
+            "Installer testen durch Ausführen der EXE",
+            "Installer verteilen via E-Mail, USB oder Download-Link",
+          ],
+        },
+        {
+          title: "Mobile PWA bauen & deployen",
+          steps: [
+            "Terminal öffnen im Projekt-Verzeichnis",
+            "Nur Build: npm run build:pwa",
+            "Build + Auto-Deploy: npm run deploy:pwa",
+            "Bei Auto-Deploy: dist/ wird automatisch zum NAS kopiert",
+            "Zielverzeichnis: Y:\\web\\html\\gurktaler\\",
+            "PWA ist sofort verfügbar: http://100.121.103.107/gurktaler/",
+            "Auf Android/iOS: Browser öffnen → URL aufrufen → Als PWA installieren",
+          ],
+        },
+        {
+          title: "Beide Builds erstellen",
+          steps: [
+            "Befehl: npm run build:all",
+            "Erstellt Desktop-EXE + PWA nacheinander",
+            "Empfohlen für Release-Vorbereitung",
+            "Desktop: build-output/, PWA: dist/",
+            "PWA manuell deployen mit: .\\deploy-pwa.ps1",
+          ],
+        },
+        {
+          title: "Manuelles PWA-Deployment",
+          steps: [
+            "PowerShell öffnen im Projekt-Verzeichnis",
+            "Befehl: .\\deploy-pwa.ps1",
+            "Script kopiert dist/* nach \\\\DS124-RockingK\\web\\html\\gurktaler\\",
+            "Alle Dateien werden überschrieben",
+            "Hinweis erscheint: Zugriff via http://100.121.103.107/gurktaler/",
+          ],
+        },
+      ],
+      features: [
+        "✅ Separate Builds: Desktop und PWA mit unterschiedlichen Asset-Pfaden",
+        "✅ Desktop: Lädt Assets von / (Root)",
+        "✅ PWA: Lädt Assets von /gurktaler/ (Subdir)",
+        "✅ Auto-Deploy: PWA wird automatisch auf NAS kopiert",
+        "✅ cross-env: Plattformübergreifende Environment Variables",
+        "✅ Kein manuelles Kopieren mehr nötig (npm run deploy:pwa)",
+      ],
+      tips: [
+        "Standard-Build (npm run build) erstellt Desktop-EXE",
+        "PWA-Deploy prüft: NAS muss unter Y:\\ oder UNC-Pfad erreichbar sein",
+        "Bei Fehlern: Prüfe Tailscale VPN-Verbindung",
+        "Desktop-EXE benötigt Y:\\ gemapptes Laufwerk zur Laufzeit",
+        "PWA benötigt Node.js API Server auf Port 3001 (check-server.ps1)",
+        "Build-Zeit: Desktop ~2 Min, PWA ~15 Sek",
+        "Asset-Pfade sind der einzige Unterschied zwischen Builds",
+        "Beide Builds greifen auf dieselben NAS-Daten zu",
       ],
     },
   },
@@ -888,6 +1021,7 @@ export default function Documentation() {
         </h3>
         <div className="space-y-1 text-sm text-gurktaler-700">
           <p>• README.md - Projektübersicht und Installation</p>
+          <p>• docs/MOBILE_API.md - Mobile PWA Setup & Custom API Server</p>
           <p>• ROADMAP.md - Entwicklungsplan und geplante Features</p>
           <p>• CHANGELOG.md - Versionshistorie und Änderungen</p>
           <p>• DATENMODELL.md - Technische Datenbankstruktur</p>

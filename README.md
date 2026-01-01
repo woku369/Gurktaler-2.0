@@ -120,12 +120,50 @@ npm run electron:dev
 
 ### Produktions-Build
 
+#### Desktop-App (Windows EXE)
 ```bash
-# Windows 64-bit Installer erstellen
+# Standard Build (Desktop)
 npm run build
+
+# Oder explizit Desktop
+npm run build:desktop
+```
+**Ergebnis:** `build-output/Gurktaler 2.0-1.1.1-Setup.exe`
+
+#### Mobile PWA (Android/iOS)
+```bash
+# Nur PWA Build
+npm run build:pwa
+
+# PWA Build + automatisches Deployment zum NAS
+npm run deploy:pwa
+```
+**Ergebnis:** `dist/` Ordner wird auf NAS kopiert (`Y:\web\html\gurktaler\`)
+
+#### Beide Builds
+```bash
+# Desktop + PWA nacheinander
+npm run build:all
 ```
 
-Der Installer wird im `release/` Ordner erstellt.
+### Verfügbare Scripts
+
+| Script | Zweck |
+|--------|-------|
+| `npm run dev` | Entwicklungsserver (Vite) |
+| `npm run build` | Desktop-EXE (Standard) |
+| `npm run build:desktop` | Desktop-EXE (explizit) |
+| `npm run build:pwa` | Mobile PWA Build |
+| `npm run deploy:pwa` | PWA Build + NAS Upload |
+| `npm run build:all` | Desktop + PWA |
+
+### Deployment
+
+**Desktop:** Installer verteilen (E-Mail, USB, Download-Link)
+**Mobile PWA:** Automatisch via `npm run deploy:pwa` oder manuell:
+```powershell
+.\deploy-pwa.ps1
+```
 
 ## Projektstruktur
 
@@ -424,7 +462,58 @@ Die mobile App verwendet eine Custom Node.js API (Port 3001), da das Synology Fi
 - **Browser** → nginx (Port 80) → Custom API (Port 3001) → Dateisystem
 - **Desktop App** → Direkter Y:\\ Drive Zugriff (keine API)
 
-### Server-Start (nach jedem NAS-Neustart)
+### Server-Management
+
+**Automatischer Start nach NAS-Neustart** (einmalig einrichten):
+
+```bash
+# Synology DSM → Systemsteuerung → Aufgabenplanung
+# Erstellen → Ausgelöste Aufgabe → Benutzerdefiniertes Script
+# Benutzer: root
+# Ereignis: Hochfahren
+# Script:
+cd /volume1/Gurktaler/api
+nohup node server.js > server.log 2>&1 &
+sleep 2
+echo "$(date): Gurktaler API Server gestartet" >> /var/log/gurktaler-startup.log
+```
+
+**Remote-Verwaltung (Windows Desktop)**:
+
+Von deinem Windows-Rechner aus kannst du den Server über PowerShell steuern:
+
+```powershell
+# Server-Status prüfen
+.\check-server.ps1
+
+# Server starten (falls gestoppt)
+.\start-server.ps1
+
+# Server Status & Log anzeigen
+.\start-server.ps1 -Status
+
+# Server neu starten
+.\start-server.ps1 -Restart
+
+# Server stoppen
+.\start-server.ps1 -Stop
+```
+
+**Voraussetzung**: OpenSSH Client in Windows installiert:
+```powershell
+# PowerShell als Administrator
+Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
+```
+
+**Deployment nach Build**:
+
+```powershell
+# Nach npm run build:
+.\deploy-pwa.ps1         # Hash-basiertes Deployment
+.\deploy-pwa.ps1 -Force  # Force-Deployment (überschreibt alles)
+```
+
+### Manueller Server-Start (Fallback)
 
 ```bash
 ssh admin@100.121.103.107

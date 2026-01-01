@@ -73,7 +73,7 @@ export default defineConfig({
             '@types': path.resolve(__dirname, './src/shared/types'),
         },
     },
-    base: process.env.NODE_ENV === 'production' ? '/gurktaler/' : './',
+    base: process.env.VITE_BASE_PATH || './',
     build: {
         outDir: 'dist',
         emptyOutDir: true,

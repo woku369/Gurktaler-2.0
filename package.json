@@ -1,6 +1,6 @@
 {
     "name": "gurktaler-2.0",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Projektverwaltungstool und Think-Tank für Gurktaler Kräuterlikör-Entwicklung",
     "main": "dist-electron/main.js",
     "author": "Gurktaler Team",
@@ -8,7 +8,11 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "build": "tsc && vite build && electron-builder",
+        "build": "npm run build:desktop",
+        "build:desktop": "tsc && cross-env VITE_BASE_PATH=/ vite build && electron-builder",
+        "build:pwa": "tsc && cross-env VITE_BASE_PATH=/gurktaler/ vite build",
+        "build:all": "npm run build:desktop && npm run build:pwa",
+        "deploy:pwa": "npm run build:pwa && powershell -ExecutionPolicy Bypass -File ./deploy-pwa.ps1",
         "preview": "vite preview",
         "electron:dev": "vite",
         "lint": "eslint src --ext ts,tsx"
@@ -34,6 +38,7 @@
         "@vitejs/plugin-react": "^4.2.0",
         "autoprefixer": "^10.4.16",
         "concurrently": "^8.2.2",
+        "cross-env": "^10.1.0",
         "electron": "^28.0.0",
         "electron-builder": "^24.9.1",
         "eslint": "^8.54.0",
