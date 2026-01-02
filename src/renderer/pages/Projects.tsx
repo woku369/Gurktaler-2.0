@@ -113,6 +113,10 @@ function Projects() {
     handleEdit(project);
   };
 
+  const handleQuickAddImage = (project: Project) => {
+    handleEdit(project);
+  };
+
   const handleCopyName = (projectId: string) => {
     setCopiedProjectId(projectId);
     setTimeout(() => setCopiedProjectId(null), 2000);
@@ -207,6 +211,7 @@ function Projects() {
               onDelete={() => handleDelete(project.id)}
               onAddUrl={() => handleQuickAddUrl(project)}
               onAddDocument={() => handleQuickAddDocument(project)}
+              onAddImage={() => handleQuickAddImage(project)}
               onCopy={() => handleCopyName(project.id)}
               onUpdate={loadProjects}
             />

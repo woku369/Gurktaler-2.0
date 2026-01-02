@@ -86,15 +86,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const TypeIcon = config?.icon || FlaskConical;
 
   return (
-    <div className="bg-paper border-vintage rounded-vintage shadow-paper p-4 hover:shadow-lg transition-shadow">
-      {/* Header with Icon and Actions */}
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-paper border-vintage rounded-vintage shadow-paper hover:shadow-lg transition-shadow overflow-hidden">
+      {/* Titel Section */}
+      <div className="px-4 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-distillery/10 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-distillery/10 flex items-center justify-center flex-shrink-0">
             <TypeIcon className="w-4 h-4 text-distillery" />
           </div>
-          <div>
-            <h3 className="font-semibold text-distillery">{recipe.name}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-distillery break-words">
+              {recipe.name}
+            </h3>
             {recipe.version && (
               <span className="text-xs text-gray-500">
                 Version {recipe.version}
@@ -102,7 +104,19 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             )}
           </div>
         </div>
+      </div>
 
+      {/* Action Buttons Row */}
+      <div className="px-4 pb-2 flex items-center justify-between">
+        {/* Type Badge */}
+        {config && (
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${config.color}`}
+          >
+            <TypeIcon className="w-3 h-3" />
+            {config.label}
+          </span>
+        )}
         <div className="flex items-center gap-1">
           <button
             onClick={onCopy}
@@ -148,16 +162,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         </div>
       </div>
 
-      {/* Type Badge */}
-      {config && (
+      {/* Content Section */}
+      <div className="px-4 pb-4">
+        {/* Version und Parent Badges */}
         <div className="mb-3 flex items-center gap-2 flex-wrap">
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${config.color}`}
-          >
-            <TypeIcon className="w-3 h-3" />
-            {config.label}
-          </span>
-
           {/* Version Badge */}
           {recipe.version && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-distillery/10 text-distillery font-medium">
@@ -173,139 +181,139 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             </span>
           )}
         </div>
-      )}
 
-      {/* Image */}
-      <div className="mb-3">
-        <div className="w-full h-24 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
-          {mainImage ? (
-            <img
-              src={mainImage.data_url}
-              alt={recipe.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <TypeIcon className="w-8 h-8 text-gray-300" />
-          )}
-        </div>
-      </div>
-
-      {/* Description */}
-      {recipe.description && (
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-          {recipe.description}
-        </p>
-      )}
-
-      {/* Recipe Details */}
-      <div className="space-y-1.5 mb-3 text-sm">
-        {recipe.yield_amount && recipe.yield_unit && (
-          <div className="flex items-center justify-between">
-            <span className="text-gray-500">Ausbeute:</span>
-            <span className="text-distillery font-medium">
-              {recipe.yield_amount} {recipe.yield_unit}
-            </span>
-          </div>
-        )}
-        {recipe.instructions && (
-          <div className="text-xs text-gray-500 italic line-clamp-2">
-            {recipe.instructions}
-          </div>
-        )}
-      </div>
-
-      {/* Expandable Ingredients List */}
-      {recipeIngredientsList.length > 0 && (
+        {/* Image */}
         <div className="mb-3">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded transition-colors text-sm font-medium text-gray-700"
-          >
-            <span className="flex items-center gap-2">
-              <Beaker className="w-4 h-4" />
-              {recipeIngredientsList.length} Zutat
-              {recipeIngredientsList.length !== 1 ? "en" : ""}
-            </span>
-            {isExpanded ? (
-              <ChevronUp className="w-4 h-4" />
+          <div className="w-full h-24 bg-gray-100 rounded flex items-center justify-center overflow-hidden">
+            {mainImage ? (
+              <img
+                src={mainImage.data_url}
+                alt={recipe.name}
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <ChevronDown className="w-4 h-4" />
+              <TypeIcon className="w-8 h-8 text-gray-300" />
             )}
-          </button>
+          </div>
+        </div>
 
-          {isExpanded && (
-            <div className="mt-2 space-y-1.5 px-2">
-              {recipeIngredientsList
-                .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-                .map((ri) => {
-                  const ingredient = ingredients.find(
-                    (ing) => ing.id === ri.ingredient_id
-                  );
-                  return (
-                    <div
-                      key={ri.id}
-                      className="flex items-start justify-between text-xs py-1.5 border-b border-gray-100 last:border-0"
-                    >
-                      <span className="font-medium text-gray-700 flex-1">
-                        {ingredient?.name || "Unbekannte Zutat"}
-                      </span>
-                      <span className="text-gray-600 ml-2 whitespace-nowrap">
-                        {ri.amount} {ri.unit}
-                      </span>
-                    </div>
-                  );
-                })}
+        {/* Description */}
+        {recipe.description && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+            {recipe.description}
+          </p>
+        )}
+
+        {/* Recipe Details */}
+        <div className="space-y-1.5 mb-3 text-sm">
+          {recipe.yield_amount && recipe.yield_unit && (
+            <div className="flex items-center justify-between">
+              <span className="text-gray-500">Ausbeute:</span>
+              <span className="text-distillery font-medium">
+                {recipe.yield_amount} {recipe.yield_unit}
+              </span>
+            </div>
+          )}
+          {recipe.instructions && (
+            <div className="text-xs text-gray-500 italic line-clamp-2">
+              {recipe.instructions}
             </div>
           )}
         </div>
-      )}
 
-      {/* Tags */}
-      <div className="mb-3">
-        <TagBadgeList
-          entityType="recipe"
-          entityId={recipe.id}
-          onUpdate={onUpdate}
-        />
-      </div>
-
-      {/* Documents */}
-      {documents.length > 0 && (
-        <div className="mb-3 space-y-1">
-          {documents.map((doc) => (
-            <a
-              key={doc.id}
-              href={doc.path}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-distillery hover:underline"
+        {/* Expandable Ingredients List */}
+        {recipeIngredientsList.length > 0 && (
+          <div className="mb-3">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded transition-colors text-sm font-medium text-gray-700"
             >
-              <FileText className="w-3 h-3" />
-              <span className="truncate">{doc.name || doc.path}</span>
-              <ExternalLink className="w-3 h-3 flex-shrink-0" />
-            </a>
-          ))}
-        </div>
-      )}
+              <span className="flex items-center gap-2">
+                <Beaker className="w-4 h-4" />
+                {recipeIngredientsList.length} Zutat
+                {recipeIngredientsList.length !== 1 ? "en" : ""}
+              </span>
+              {isExpanded ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
 
-      {/* Quick Add Buttons */}
-      <div className="flex gap-2 pt-2 border-t border-gray-200">
-        {onQuickAddUrl && (
-          <button
-            onClick={() => onQuickAddUrl(recipe)}
-            className="flex-1 text-xs py-1.5 border border-distillery text-distillery rounded hover:bg-distillery/5 transition-colors"
-          >
-            + URL
-          </button>
+            {isExpanded && (
+              <div className="mt-2 space-y-1.5 px-2">
+                {recipeIngredientsList
+                  .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+                  .map((ri) => {
+                    const ingredient = ingredients.find(
+                      (ing) => ing.id === ri.ingredient_id
+                    );
+                    return (
+                      <div
+                        key={ri.id}
+                        className="flex items-start justify-between text-xs py-1.5 border-b border-gray-100 last:border-0"
+                      >
+                        <span className="font-medium text-gray-700 flex-1">
+                          {ingredient?.name || "Unbekannte Zutat"}
+                        </span>
+                        <span className="text-gray-600 ml-2 whitespace-nowrap">
+                          {ri.amount} {ri.unit}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
         )}
-        {onQuickAddDocument && (
-          <button
-            onClick={() => onQuickAddDocument(recipe)}
-            className="flex-1 text-xs py-1.5 border border-distillery text-distillery rounded hover:bg-distillery/5 transition-colors"
-          >
-            + Dokument
-          </button>
+
+        {/* Tags */}
+        <div className="mb-3">
+          <TagBadgeList
+            entityType="recipe"
+            entityId={recipe.id}
+            onUpdate={onUpdate}
+          />
+        </div>
+
+        {/* Documents */}
+        {documents.length > 0 && (
+          <div className="mb-3 space-y-1">
+            {documents.map((doc) => (
+              <a
+                key={doc.id}
+                href={doc.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs text-distillery hover:underline"
+              >
+                <FileText className="w-3 h-3" />
+                <span className="truncate">{doc.name || doc.path}</span>
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+              </a>
+            ))}
+          </div>
         )}
+
+        {/* Quick Add Buttons */}
+        <div className="flex gap-2 pt-2 border-t border-gray-200">
+          {onQuickAddUrl && (
+            <button
+              onClick={() => onQuickAddUrl(recipe)}
+              className="flex-1 text-xs py-1.5 border border-distillery text-distillery rounded hover:bg-distillery/5 transition-colors"
+            >
+              + URL
+            </button>
+          )}
+          {onQuickAddDocument && (
+            <button
+              onClick={() => onQuickAddDocument(recipe)}
+              className="flex-1 text-xs py-1.5 border border-distillery text-distillery rounded hover:bg-distillery/5 transition-colors"
+            >
+              + Dokument
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

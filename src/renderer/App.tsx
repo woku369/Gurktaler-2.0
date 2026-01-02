@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
+import ProjectTimeline from "./pages/ProjectTimeline";
 import Products from "./pages/Products";
 import Recipes from "./pages/Recipes";
 import Ingredients from "./pages/Ingredients";
@@ -105,6 +106,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
           <Route path="projects" element={<Projects />} />
+          <Route path="project-timeline" element={<ProjectTimeline />} />
           <Route path="products" element={<Products />} />
           <Route path="recipes" element={<Recipes />} />
           <Route path="ingredients" element={<Ingredients />} />

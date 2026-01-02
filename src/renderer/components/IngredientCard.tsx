@@ -6,6 +6,7 @@ import {
   ExternalLink,
   FileText,
   Beaker,
+  ImagePlus,
 } from "lucide-react";
 import TagBadgeList from "@/renderer/components/TagBadgeList";
 import type { Ingredient, Image, Document } from "@/shared/types";
@@ -19,6 +20,7 @@ interface IngredientCardProps {
   onDelete: () => void;
   onAddUrl: () => void;
   onAddDocument: () => void;
+  onAddImage: () => void;
   onCopy: () => void;
   onUpdate?: () => void;
 }
@@ -32,6 +34,7 @@ export default function IngredientCard({
   onDelete,
   onAddUrl,
   onAddDocument,
+  onAddImage,
   onCopy,
   onUpdate,
 }: IngredientCardProps) {
@@ -50,8 +53,60 @@ export default function IngredientCard({
 
   return (
     <div className="bg-white rounded-vintage border-vintage border-distillery-200 shadow-paper hover:shadow-vintage transition-all duration-200 overflow-hidden">
-      {/* Header mit Thumbnail und Actions */}
-      <div className="flex gap-4 p-4">
+      {/* Titel Section */}
+      <div className="px-4 pt-4 pb-2">
+        <h3 className="text-lg font-heading font-bold text-distillery-900 break-words">
+          {ingredient.name}
+        </h3>
+      </div>
+
+      {/* Action Buttons Row */}
+      <div className="px-4 pb-2 flex items-center justify-between">
+        {ingredient.category && (
+          <span className="inline-block px-2 py-0.5 text-xs bg-distillery-100 text-distillery-700 rounded-full font-body">
+            {ingredient.category}
+          </span>
+        )}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleCopyName}
+            className="p-1.5 text-distillery-600 hover:text-gurktaler-600 hover:bg-distillery-50 rounded transition-colors"
+            title="Name kopieren"
+          >
+            <Copy className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onToggleFavorite}
+            className={`p-1.5 rounded transition-colors ${
+              isFavorite
+                ? "text-yellow-500 hover:text-yellow-600"
+                : "text-distillery-400 hover:text-yellow-500 hover:bg-distillery-50"
+            }`}
+            title={
+              isFavorite ? "Von Favoriten entfernen" : "Zu Favoriten hinzufügen"
+            }
+          >
+            <Star className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
+          </button>
+          <button
+            onClick={onEdit}
+            className="p-1.5 text-distillery-600 hover:text-gurktaler-600 hover:bg-distillery-50 rounded transition-colors"
+            title="Bearbeiten"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 text-distillery-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            title="Löschen"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content Section mit Thumbnail */}
+      <div className="flex gap-4 px-4 pb-4">
         {/* Thumbnail-Bereich */}
         <div className="flex-shrink-0 w-24 h-24 bg-distillery-50 rounded-vintage border-vintage border-distillery-200 overflow-hidden">
           {image ? (
@@ -67,64 +122,7 @@ export default function IngredientCard({
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Name und Kategorie */}
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-heading font-bold text-distillery-900 truncate">
-                {ingredient.name}
-              </h3>
-              {ingredient.category && (
-                <span className="inline-block px-2 py-0.5 text-xs bg-distillery-100 text-distillery-700 rounded-full font-body">
-                  {ingredient.category}
-                </span>
-              )}
-            </div>
-
-            {/* Action Buttons - IMMER SICHTBAR */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleCopyName}
-                className="p-1.5 text-distillery-600 hover:text-gurktaler-600 hover:bg-distillery-50 rounded transition-colors"
-                title="Name kopieren"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onToggleFavorite}
-                className={`p-1.5 rounded transition-colors ${
-                  isFavorite
-                    ? "text-yellow-500 hover:text-yellow-600"
-                    : "text-distillery-400 hover:text-yellow-500 hover:bg-distillery-50"
-                }`}
-                title={
-                  isFavorite
-                    ? "Von Favoriten entfernen"
-                    : "Zu Favoriten hinzufügen"
-                }
-              >
-                <Star
-                  className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`}
-                />
-              </button>
-              <button
-                onClick={onEdit}
-                className="p-1.5 text-distillery-600 hover:text-gurktaler-600 hover:bg-distillery-50 rounded transition-colors"
-                title="Bearbeiten"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={onDelete}
-                className="p-1.5 text-distillery-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                title="Löschen"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
           {/* Details */}
           <div className="text-sm text-distillery-600 space-y-1 font-body">
             {ingredient.alcohol_percentage && (
@@ -163,11 +161,18 @@ export default function IngredientCard({
       {/* Quick Actions Footer */}
       <div className="border-t border-distillery-100 px-4 py-2 bg-distillery-25 flex items-center gap-2">
         <button
+          onClick={onAddImage}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-distillery-200 text-distillery-700 rounded hover:bg-distillery-50 transition-colors font-body font-semibold"
+        >
+          <ImagePlus className="w-3.5 h-3.5" />
+          Bild
+        </button>
+        <button
           onClick={onAddUrl}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-distillery-200 text-distillery-700 rounded hover:bg-distillery-50 transition-colors font-body font-semibold"
         >
           <ExternalLink className="w-3.5 h-3.5" />
-          URL hinzufügen
+          URL
         </button>
         <button
           onClick={onAddDocument}

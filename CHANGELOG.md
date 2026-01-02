@@ -11,6 +11,61 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.2.0] - 2026-01-02 🎉
+
+### ✨ Neue Features
+
+#### Gantt-Chart Projektzeitplanung
+- **Projekt-Timeline-Verwaltung:** Projekte können mit Zeitplanung versehen werden
+  - Startdatum und Dauer in Wochen
+  - Team-Zuordnung aus Kontakten
+  - Projektabhängigkeiten (4 Typen: finish-to-start, start-to-start, finish-to-finish, start-to-finish)
+  - Meilensteine mit Datum und Completion-Status
+  - Fortschrittsanzeige 0-100%
+- **Interaktive Gantt-Ansicht:**
+  - Quartalsweise Timeline-Darstellung (1-3 Jahre wählbar)
+  - Projekt-Balken mit individuellen Farben (3px dicker Rahmen)
+  - Fortschrittsanzeige als Überlagerung
+  - Projektnamen über dem Balken positioniert
+  - Drag & Drop zum Ändern der Anzeigereihenfolge
+  - Doppelklick auf Balken öffnet Projektkarte (vorbereitet)
+  - Rich Hover-Tooltip mit allen Projektdetails, Team, Abhängigkeiten, Meilensteinen
+  - Meilenstein-Dreiecke mit Completion-Status
+  - Dependency-Pfeile zwischen Projekten (farbcodiert)
+- **PDF-Export:** Gantt-Chart als Landscape A4 PDF exportieren
+- **Navigation:** Neuer Menüpunkt "Zeitplanung" mit Calendar-Icon
+
+#### Verbesserte Card-Layouts
+- **Neue 3-Ebenen-Struktur für alle Cards:**
+  - Titel ganz oben in eigener Section
+  - Action-Buttons (Status/Type + Icons) in separater Zeile
+  - Content mit Thumbnail unten
+- **Vorteile:**
+  - Titel wird nicht mehr von Icons verdeckt
+  - Vollständiger Titel sichtbar (break-words statt truncate)
+  - Übersichtlichere, einheitliche Darstellung
+- **Betrifft alle Kategorien:** Projects, Products, Recipes, Ingredients, Containers
+
+#### Bild-Upload Button
+- Neuer "Bild"-Button in allen Card-Footern
+- Einheitlich neben URL- und Dokument-Buttons
+- Öffnet Edit-Formular für Bild-Upload
+- Verfügbar für: Projects, Products, Ingredients, Containers
+
+### 🐛 Bug-Fixes
+
+#### Gantt-Chart Verbesserungen
+- Doppelte Tooltip-Anzeige behoben (title-Attribut entfernt)
+- Projektname-Positionierung optimiert (top: -8px)
+- Ungenutzte Variable entfernt
+
+### 📚 Abhängigkeiten
+
+#### Hinzugefügt
+- `jspdf@^2.5.2` - PDF-Export für Gantt-Charts
+
+---
+
 ## [1.1.1] - 2026-01-01 🐛
 
 ### 🐛 Kritischer Bug-Fix

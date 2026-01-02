@@ -183,6 +183,10 @@ function Ingredients() {
     handleEdit(ingredient);
   };
 
+  const handleQuickAddImage = (ingredient: Ingredient) => {
+    handleEdit(ingredient);
+  };
+
   const handleCopyName = () => {
     // Clipboard copy happens in IngredientCard
   };
@@ -509,6 +513,7 @@ function Ingredients() {
               onDelete={() => handleDelete(ingredient.id)}
               onAddUrl={() => handleQuickAddUrl(ingredient)}
               onAddDocument={() => handleQuickAddDocument(ingredient)}
+              onAddImage={() => handleQuickAddImage(ingredient)}
               onCopy={handleCopyName}
               onUpdate={loadData}
             />

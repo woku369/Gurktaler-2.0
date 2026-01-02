@@ -205,6 +205,19 @@ function Containers() {
     setShowForm(true);
   };
 
+  const handleQuickAddImage = (container: Container) => {
+    setEditingContainer(container);
+    setFormData({
+      name: container.name,
+      type: container.type,
+      volume: container.volume,
+      notes: container.notes,
+      price: container.price,
+      documents: container.documents || [],
+    });
+    setShowForm(true);
+  };
+
   const handleCopyName = (containerId: string) => {
     setCopiedContainerId(containerId);
     setTimeout(() => setCopiedContainerId(null), 2000);
@@ -512,6 +525,7 @@ function Containers() {
               onDelete={() => handleDelete(container.id)}
               onAddUrl={() => handleQuickAddUrl(container)}
               onAddDocument={() => handleQuickAddDocument(container)}
+              onAddImage={() => handleQuickAddImage(container)}
               onCopy={() => handleCopyName(container.id)}
               onUpdate={loadData}
             />

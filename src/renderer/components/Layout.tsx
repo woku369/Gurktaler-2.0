@@ -18,11 +18,13 @@ import {
   Leaf,
   Menu,
   X,
+  Calendar,
 } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/projects", icon: FolderKanban, label: "Projekte" },
+  { to: "/project-timeline", icon: Calendar, label: "Zeitplanung" },
   { to: "/products", icon: Package, label: "Produkte" },
   { to: "/recipes", icon: FlaskConical, label: "Rezepturen" },
   { to: "/ingredients", icon: Beaker, label: "Zutaten" },

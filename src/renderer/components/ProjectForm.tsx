@@ -1,7 +1,13 @@
 import { useState, FormEvent } from "react";
 import TagSelector from "./TagSelector";
 import DocumentManager from "./DocumentManager";
-import type { Project, ProjectStatus, Document } from "@/shared/types";
+import ProjectTimelineForm from "./ProjectTimelineForm";
+import type {
+  Project,
+  ProjectStatus,
+  Document,
+  ProjectTimeline,
+} from "@/shared/types";
 
 interface ProjectFormProps {
   project?: Project;
@@ -26,8 +32,12 @@ export default function ProjectForm({
   const [status, setStatus] = useState<ProjectStatus>(
     project?.status || "active"
   );
+  const [color, setColor] = useState(project?.color || "#3b82f6");
   const [documents, setDocuments] = useState<Document[]>(
     project?.documents || []
+  );
+  const [timeline, setTimeline] = useState<ProjectTimeline | undefined>(
+    project?.timeline
   );
 
   const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
@@ -61,6 +71,8 @@ export default function ProjectForm({
 
     onSubmit({
       name: name.trim(),
+      timeline,
+      color,
       description: description.trim() || undefined,
       status,
       documents: documents.length > 0 ? documents : undefined,
@@ -120,12 +132,43 @@ export default function ProjectForm({
           onChange={(e) => setStatus(e.target.value as ProjectStatus)}
           className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
         >
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {statusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Color Picker */}
+      <div>
+        <label
+          htmlFor="color"
+          className="block text-sm font-medium text-slate-700 mb-1"
+        >
+          Projekt-Farbe (für Timeline)
+        </label>
+        <div className="flex items-center gap-3">
+          <input
+            id="color"
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-10 w-20 border border-slate-200 rounded-lg cursor-pointer"
+          />
+          <div className="flex-1">
+            <div className="text-xs text-slate-500">
+              Wird als Rahmen im Gantt-Chart angezeigt
+            </div>
+            <div
+              className="mt-1 h-6 rounded border-4"
+              style={{
+                borderColor: color,
+                backgroundColor: status === "completed" ? "#cbd5e1" : "#65a30d",
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Tags */}
@@ -150,6 +193,18 @@ export default function ProjectForm({
           />
         </div>
       )}
+
+      {/* Timeline / Gantt */}
+      <div className="border-t pt-4">
+        <h3 className="text-sm font-medium text-slate-700 mb-3">
+          Zeitplanung (Gantt-Chart)
+        </h3>
+        <ProjectTimelineForm
+          timeline={timeline}
+          onChange={setTimeline}
+          currentProjectId={project?.id}
+        />
+      </div>
 
       {/* Buttons */}
       <div className="flex gap-3 pt-4">

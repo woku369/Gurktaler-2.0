@@ -30,12 +30,44 @@ export interface BaseEntity {
     updated_at?: string;
 }
 
+// Timeline for Gantt Chart
+export interface ProjectMilestone {
+    id: string;
+    name: string;
+    date: string; // ISO Date
+    completed: boolean;
+}
+
+export type DependencyType = 
+    | 'finish-to-start'   // Start nach Ende von X (klassisch)
+    | 'start-to-start'    // Start parallel mit X
+    | 'finish-to-finish'  // Ende gleichzeitig mit X
+    | 'start-to-finish';  // Start mit Ende von X (selten)
+
+export interface ProjectDependency {
+    projectId: string; // Abhängiges Projekt
+    type: DependencyType;
+}
+
+export interface ProjectTimeline {
+    enabled: boolean; // In Timeline aufnehmen
+    startDate: string; // ISO Date
+    durationWeeks: number; // Geschätzte Dauer in Wochen
+    team: string[]; // Contact-IDs der involvierten Personen
+    dependencies: ProjectDependency[]; // Projekt-Abhängigkeiten mit Typ
+    milestones: ProjectMilestone[];
+    progress?: number; // Manueller Fortschritt 0-100%
+    sortOrder?: number; // Anzeigereihenfolge im Gantt-Chart
+}
+
 // Project
 export interface Project extends BaseEntity {
     name: string;
     description?: string;
     status: ProjectStatus;
     documents?: Document[]; // Pfad-basierte Dokumente
+    timeline?: ProjectTimeline; // Gantt-Chart Zeitplanung
+    color?: string; // Hex-Farbe für Timeline-Visualisierung (z.B. "#3b82f6")
 }
 
 // Product with versioning - Produktdatenbank (versionierbar)

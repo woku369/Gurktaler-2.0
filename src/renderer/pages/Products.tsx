@@ -121,6 +121,10 @@ function Products() {
     handleEdit(product);
   };
 
+  const handleQuickAddImage = (product: Product) => {
+    handleEdit(product);
+  };
+
   const handleCopyName = () => {
     // Clipboard copy happens in ProductCard
   };
@@ -231,6 +235,7 @@ function Products() {
               onCreateVersion={() => handleCreateVersion(product)}
               onAddUrl={() => handleQuickAddUrl(product)}
               onAddDocument={() => handleQuickAddDocument(product)}
+              onAddImage={() => handleQuickAddImage(product)}
               onCopy={handleCopyName}
               onUpdate={loadData}
             />
