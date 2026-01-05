@@ -693,8 +693,8 @@ function startLocalServer(): Promise<number> {
         // KRITISCHER FIX: Fester Port für persistentes localStorage
         // Random-Port (listen(0)) ändert sich bei jedem Start
         // → Neue Origin → Neuer LocalStorage → DATENVERLUST!
-        const FIXED_PORT = 58888
-        localServer.listen(FIXED_PORT, () => {
+        const FIXED_PORT = 3456  // Port geändert (58888/58889 waren blockiert)
+        localServer.listen(FIXED_PORT, '127.0.0.1', () => {
             console.log('Local server started on FIXED port:', FIXED_PORT)
             resolve(FIXED_PORT)
         })

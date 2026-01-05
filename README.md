@@ -8,6 +8,36 @@
 - Produktideen und deren Versionierung
 - Rezepturen (Mazerate, Destillate, Ausmischungen)
 - Projekten für Kleinserienproduktion
+
+## 🌐 PWA (Mobile Web-App) Nutzung
+
+### Voraussetzung: API-Server muss laufen
+
+Die PWA greift über einen Custom API Server (Port 3001) auf die NAS-Daten zu. Dieser muss manuell gestartet werden:
+
+**Option 1: Mit PowerShell-Skript (empfohlen)**
+```powershell
+.\start-api-server.ps1
+```
+
+**Option 2: Direkt mit Node.js**
+```powershell
+node server.js
+```
+
+⚠️ **Wichtig:** 
+- Der Server muss während der PWA-Nutzung laufen
+- Das Terminal/PowerShell-Fenster nicht schließen
+- Server läuft auf `http://localhost:3001`
+- Bei 502 Bad Gateway Fehler: Server neu starten
+
+### PWA aufrufen
+
+Nach dem Start des Servers:
+- Desktop: `http://localhost:3000/gurktaler/` (während `npm run dev` läuft)
+- Produktiv: `http://NAS-IP/gurktaler/` (nach Deployment)
+
+
 - Recherche-Material und Marktbegleiter-Analyse
 - Kontakten und Ressourcen
 

@@ -257,7 +257,7 @@ export class NasStorageProvider implements StorageProvider {
 
 /**
  * Custom API Storage Provider
- * Implementierung für Browser-Zugriff via Custom Node.js API auf Port 3001
+ * Implementierung für Browser-Zugriff via Custom Node.js API auf Port 3002
  * Bypassed broken FileStation Upload API
  */
 export class CustomApiStorageProvider implements StorageProvider {
@@ -265,7 +265,8 @@ export class CustomApiStorageProvider implements StorageProvider {
   private baseUrl: string;
 
   constructor(config?: Partial<StorageConfig>) {
-    this.baseUrl = ""; // Same-Origin = kein CORS
+    // Verwende absolute URL mit Port 8080
+    this.baseUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
     
     const basePath = config?.basePath || "/database";
     this.config = {
@@ -322,8 +323,8 @@ export class CustomApiStorageProvider implements StorageProvider {
   }
 
   async listFiles(_dirPath: string): Promise<FileInfo[]> {
-    // Not implemented for now
-    console.warn("listFiles not implemented in CustomApiStorageProvider");
+    // Mock implementation - returns empty array for compatibility
+    // CustomAPI doesn't need directory listing
     return [];
   }
 
@@ -342,9 +343,25 @@ export class CustomApiStorageProvider implements StorageProvider {
     throw new Error("Image reading not yet implemented in CustomApiStorageProvider");
   }
 
-  async deleteFile(_filePath: string): Promise<void> {
-    // TODO: Implement file deletion
-    throw new Error("File deletion not yet implemented in CustomApiStorageProvider");
+  async deleteFile(filePath: string): Promise<void> {
+    try {
+      const url = `${this.baseUrl}/api/json?path=${encodeURIComponent(filePath)}`;
+      const response = await fetch(url, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Custom API deleteFile failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error("Custom API deleteFile returned success=false");
+      }
+    } catch (error) {
+      console.error(`Custom API deleteFile error for ${filePath}:`, error);
+      throw error;
+    }
   }
 
   async deleteImage(_relativePath: string): Promise<void> {
@@ -679,7 +696,7 @@ export const nasStorage = new Proxy({} as StorageProvider, {
         console.log("🖥️ Using Electron IPC Storage");
         _storageInstance = new NasStorageProvider();
       } else {
-        console.log("🌐 Using Custom API Storage (Port 3001)");
+        console.log("🌐 Using Custom API Storage (Port 8080)");
         _storageInstance = new CustomApiStorageProvider();
       }
     }

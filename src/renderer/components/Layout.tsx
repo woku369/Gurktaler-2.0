@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -19,7 +19,10 @@ import {
   Menu,
   X,
   Calendar,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
+import { SetupService } from "../services/setup";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -40,10 +43,67 @@ const navItems = [
 
 function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [serverStatus, setServerStatus] = useState<
+    "checking" | "online" | "offline"
+  >("checking");
+  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+  const setupService = new SetupService();
 
   // Platform Detection: Prüfe ob wir in Electron (Desktop) oder Browser (Mobile/PWA) laufen
   const isElectron =
     typeof window !== "undefined" && (window as any).electron !== undefined;
+
+  // Server-Status prüfen
+  const checkServerStatus = async () => {
+    // Nur im Browser-Modus prüfen (nicht in Electron)
+    if (isElectron) {
+      setServerStatus("offline");
+      return;
+    }
+
+    setServerStatus("checking");
+    try {
+      const connected = await setupService.testConnection();
+      setServerStatus(connected ? "online" : "offline");
+      setLastCheck(new Date());
+    } catch (error) {
+      setServerStatus("offline");
+      setLastCheck(new Date());
+    }
+  };
+
+  // Initial check und regelmäßige Prüfung
+  useEffect(() => {
+    checkServerStatus();
+    const interval = setInterval(checkServerStatus, 30000); // Alle 30 Sekunden
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = () => {
+    switch (serverStatus) {
+      case "online":
+        return "text-green-500";
+      case "offline":
+        return "text-red-500";
+      case "checking":
+        return "text-yellow-500";
+    }
+  };
+
+  const getStatusIcon = () => {
+    return serverStatus === "offline" ? WifiOff : Wifi;
+  };
+
+  const getStatusText = () => {
+    switch (serverStatus) {
+      case "online":
+        return "NAS-Server online";
+      case "offline":
+        return "NAS-Server offline";
+      case "checking":
+        return "Prüfe Verbindung...";
+    }
+  };
 
   return (
     <div className="flex h-screen bg-gurktaler-100">
@@ -67,6 +127,24 @@ function Layout() {
               Gurktaler 2.0
             </h1>
           </div>
+
+          {/* Server-Status Indicator (Mobile) */}
+          {!isElectron && (
+            <button
+              onClick={checkServerStatus}
+              className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-vintage hover:bg-gurktaler-50 transition-colors"
+              title={`${getStatusText()}${
+                lastCheck
+                  ? "\nLetzte Prüfung: " + lastCheck.toLocaleTimeString()
+                  : ""
+              }`}
+            >
+              {(() => {
+                const StatusIcon = getStatusIcon();
+                return <StatusIcon className={`w-4 h-4 ${getStatusColor()}`} />;
+              })()}
+            </button>
+          )}
         </div>
       )}
 
@@ -142,6 +220,40 @@ function Layout() {
 
         {/* Footer */}
         <div className="p-4 border-t-vintage border-distillery-200 bg-gurktaler-50">
+          {/* Server-Status Indicator (Desktop/Sidebar) */}
+          {!isElectron && (
+            <button
+              onClick={checkServerStatus}
+              className="w-full mb-3 flex items-center gap-3 px-3 py-2.5 rounded-vintage hover:bg-white transition-all text-left"
+              title={`${getStatusText()}${
+                lastCheck
+                  ? "\nLetzte Prüfung: " + lastCheck.toLocaleTimeString()
+                  : ""
+              }`}
+            >
+              {(() => {
+                const StatusIcon = getStatusIcon();
+                return <StatusIcon className={`w-5 h-5 ${getStatusColor()}`} />;
+              })()}
+              <div className="flex-1">
+                <span
+                  className={`font-body text-sm font-medium ${getStatusColor()}`}
+                >
+                  {serverStatus === "online"
+                    ? "NAS Online"
+                    : serverStatus === "offline"
+                    ? "NAS Offline"
+                    : "Prüfe..."}
+                </span>
+                {lastCheck && (
+                  <div className="text-xs text-distillery-500">
+                    {lastCheck.toLocaleTimeString()}
+                  </div>
+                )}
+              </div>
+            </button>
+          )}
+
           <NavLink
             to="/settings"
             onClick={() => !isElectron && setIsMobileMenuOpen(false)}
