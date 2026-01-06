@@ -27,8 +27,8 @@ const PROVIDERS: Record<AIProvider, ProviderConfig> = {
   openai: {
     name: 'ChatGPT',
     apiUrl: 'https://api.openai.com/v1/chat/completions',
-    defaultModel: 'gpt-4-turbo-preview',
-    models: ['gpt-4-turbo-preview', 'gpt-4', 'gpt-3.5-turbo'],
+    defaultModel: 'gpt-4o',
+    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'],
   },
   claude: {
     name: 'Claude',

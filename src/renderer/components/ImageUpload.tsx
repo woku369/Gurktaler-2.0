@@ -10,7 +10,8 @@ interface ImageUploadProps {
     | "note"
     | "recipe"
     | "ingredient"
-    | "container";
+    | "container"
+    | "contact";
   entityId: string;
   maxImages?: number;
   onUpload?: () => void;

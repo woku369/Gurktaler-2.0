@@ -1,6 +1,8 @@
 import { useState, FormEvent } from "react";
 import ContactProjectSelector from "./ContactProjectSelector";
 import DocumentManager from "./DocumentManager";
+import ImageUpload from "./ImageUpload";
+import TagSelector from "./TagSelector";
 import type { Contact, Document } from "@/shared/types";
 
 interface ContactFormProps {
@@ -189,6 +191,20 @@ export default function ContactForm({
         </div>
       )}
 
+      {/* Tags */}
+      {contact && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Tags / Kategorien
+          </label>
+          <TagSelector entityType="contact" entityId={contact.id} />
+          <p className="text-xs text-slate-500 mt-1">
+            Nutze Tags um eigene Kategorien über die Standard-Typen hinaus zu
+            definieren
+          </p>
+        </div>
+      )}
+
       {/* Documents */}
       {contact && (
         <div>
@@ -198,6 +214,17 @@ export default function ContactForm({
             onDelete={handleDeleteDocument}
             onOpen={handleOpenDocument}
             onShowInFolder={handleShowInFolder}
+          />
+        </div>
+      )}
+
+      {/* Images */}
+      {contact && (
+        <div>
+          <ImageUpload
+            entityType="contact"
+            entityId={contact.id}
+            maxImages={3}
           />
         </div>
       )}

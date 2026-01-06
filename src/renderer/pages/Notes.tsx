@@ -9,6 +9,7 @@ import {
   Trash2,
   Edit2,
   Star,
+  ExternalLink,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Modal from "@/renderer/components/Modal";
@@ -43,6 +44,21 @@ const typeLabels = {
   todo: "Aufgabe",
   research: "Recherche",
 };
+
+// Calculate text color (black/white) based on background luminance
+function getTextColor(bgColor: string): string {
+  // Convert hex to RGB
+  const hex = bgColor.replace("#", "");
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+
+  // Calculate relative luminance (WCAG formula)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  // Return black for light backgrounds, white for dark backgrounds
+  return luminance > 0.5 ? "#000000" : "#FFFFFF";
+}
 
 function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -349,6 +365,19 @@ function Notes() {
               </div>
               <h3 className="font-medium text-slate-800 mb-2">{note.title}</h3>
 
+              {/* URL Link */}
+              {note.url && (
+                <a
+                  href={note.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-gurktaler-600 hover:text-gurktaler-700 mb-2"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {note.url}
+                </a>
+              )}
+
               {/* Image Preview entfernt - Images werden async geladen */}
 
               <div className="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none">
@@ -360,8 +389,11 @@ function Notes() {
                   {noteTags.map((tag) => (
                     <span
                       key={tag.id}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                      style={{ backgroundColor: tag.color }}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: tag.color,
+                        color: getTextColor(tag.color),
+                      }}
                     >
                       {tag.name}
                     </span>

@@ -148,6 +148,7 @@ export interface Note extends BaseEntity {
     title: string;
     content?: string;
     type: NoteType;
+    url?: string; // Optional URL reference
 }
 
 // Tag
@@ -160,7 +161,7 @@ export interface Tag extends BaseEntity {
 // Tag Assignment
 export interface TagAssignment extends BaseEntity {
     tag_id: string;
-    entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container';
+    entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container' | 'contact' | 'image';
     entity_id: string;
 }
 
@@ -215,7 +216,7 @@ export interface Container extends BaseEntity {
 
 // Image
 export interface Image extends BaseEntity {
-    entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container';
+    entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container' | 'contact';
     entity_id: string;
     data_url: string; // Base64 encoded image
     file_name: string;

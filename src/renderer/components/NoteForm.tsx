@@ -38,6 +38,7 @@ export default function NoteForm({
   const [content, setContent] = useState(note?.content || "");
   const [type, setType] = useState<NoteType>(note?.type || "note");
   const [projectId, setProjectId] = useState(note?.project_id || "");
+  const [url, setUrl] = useState(note?.url || "");
   const [showPreview, setShowPreview] = useState(false);
 
   const handleSubmit = (e: FormEvent) => {
@@ -53,6 +54,7 @@ export default function NoteForm({
       content: content.trim(),
       type,
       project_id: projectId || undefined,
+      url: url.trim() || undefined,
     });
   };
 
@@ -152,6 +154,23 @@ export default function NoteForm({
             );
           })}
         </div>
+      </div>
+
+      {/* URL Field */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          URL (optional)
+        </label>
+        <input
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          placeholder="https://example.com"
+        />
+        <p className="text-xs text-slate-500 mt-1">
+          Verknüpfe eine Website oder Ressource mit dieser Notiz
+        </p>
       </div>
 
       {/* Project Assignment */}

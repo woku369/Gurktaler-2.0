@@ -13,9 +13,25 @@ interface TagSelectorProps {
     | "note"
     | "recipe"
     | "ingredient"
-    | "container";
+    | "container"
+    | "contact";
   entityId: string;
   onChange?: () => void;
+}
+
+// Calculate text color (black/white) based on background luminance
+function getTextColor(bgColor: string): string {
+  // Convert hex to RGB
+  const hex = bgColor.replace("#", "");
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+
+  // Calculate relative luminance (WCAG formula)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  // Return black for light backgrounds, white for dark backgrounds
+  return luminance > 0.5 ? "#000000" : "#FFFFFF";
 }
 
 export default function TagSelector({
@@ -85,8 +101,11 @@ export default function TagSelector({
         {assignedTags.map((tag) => (
           <span
             key={tag.id}
-            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-white"
-            style={{ backgroundColor: tag.color }}
+            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium"
+            style={{
+              backgroundColor: tag.color,
+              color: getTextColor(tag.color),
+            }}
           >
             {tag.name}
             <button
@@ -134,8 +153,11 @@ export default function TagSelector({
                 <button
                   key={tag.id}
                   onClick={() => handleAddTag(tag.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium text-white hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: tag.color }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium hover:opacity-80 transition-opacity"
+                  style={{
+                    backgroundColor: tag.color,
+                    color: getTextColor(tag.color),
+                  }}
                 >
                   {tag.name}
                 </button>

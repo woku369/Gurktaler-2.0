@@ -21,6 +21,7 @@ import {
   Calendar,
   Wifi,
   WifiOff,
+  Image,
 } from "lucide-react";
 import { SetupService } from "../services/setup";
 
@@ -35,6 +36,7 @@ const navItems = [
   { to: "/notes", icon: StickyNote, label: "Notizen" },
   { to: "/contacts", icon: Users, label: "Kontakte" },
   { to: "/research", icon: Globe, label: "Recherche" },
+  { to: "/gallery", icon: Image, label: "Bildergalerie" },
   { to: "/ai-assistant", icon: Bot, label: "KI-Assistent" },
   { to: "/tags", icon: Tag, label: "Tags" },
   { to: "/search", icon: Search, label: "Suche" },

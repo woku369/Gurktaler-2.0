@@ -9,6 +9,151 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unveröffentlicht]
 
+### ✨ Neue Features
+
+#### 🖼️ Bildergalerie
+- **Zentrale Bildverwaltung:** Neue Galerie-Seite mit Sidebar-Button
+  - Übersicht aller Bilder aus allen Kategorien (Projekte, Produkte, Rezepturen, Zutaten, Gebinde, Kontakte, Notizen)
+  - Drag-and-Drop Upload (Desktop) + Button-Upload (Mobile)
+  - Responsive Grid-Ansicht (2-5 Spalten je nach Bildschirmgröße)
+  - Hover-Effekte mit Edit/Delete Buttons
+- **Filter & Suche:**
+  - Filter nach Kategorie (Projekt/Produkt/Rezeptur/etc)
+  - Filter nach Tags
+  - Volltext-Suche (Dateiname + Beschreibung)
+  - "Filter zurücksetzen" Button
+- **Bearbeitungs-Modal:**
+  - Beschreibung hinzufügen/bearbeiten
+  - Kategorie ändern (entityType)
+  - Entity-ID ändern (Zuordnung zu anderer Entität)
+  - Tags hinzufügen/entfernen über Dropdown
+  - Visuelles Tag-Management mit farbigen Badges
+- **Gallery Service Layer:** `gallery.ts` mit erweiterten Metadaten-Funktionen
+  - `getAllGalleryImages()` - Alle Bilder mit aufgelösten Tags
+  - `getFilteredImages()` - Gefilterte Bildliste
+  - `uploadToGallery()` - Direkter Upload ohne Entity-Zuordnung
+  - `updateImageMetadata()` - Nachträgliche Metadaten-Änderung
+  - `addTagToImage()` / `removeTagFromImage()` - Tag-Verwaltung
+
+#### 🤖 KI-Assistent Modell-Updates
+- **GPT-4o:** Hauptmodell von `gpt-4-turbo-preview` auf neuestes `gpt-4o` aktualisiert
+- **GPT-4o-mini:** Günstigeres Modell zu Auswahlliste hinzugefügt
+- **Modell-Array:** `['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo']`
+
+### 🐛 Fieldtest Bugfixes
+
+#### KRITISCH: Zutaten anlegen nicht möglich
+- **Bug:** Nach Create-Operation fehlte die `documents`-Property im formData State
+- **Fix:** `documents: newIngredient.documents || []` in Ingredients.tsx Line 127 hinzugefügt
+- **Impact:** Rezept-Erstellung war komplett blockiert
+
+#### Tag-Beschriftung: Kontrast bei hellen Farben
+- **Problem:** Weiße Text-Farbe auf gelben/hellen Tags kaum lesbar
+- **Lösung:** Luminanz-basierte Textfarbe mit WCAG-Berechnung
+  - Formel: `(0.299*R + 0.587*G + 0.114*B) / 255`
+  - Threshold: 0.5 (schwarz für luminance > 0.5, weiß für <= 0.5)
+- **Komponenten:** TagBadgeList.tsx, TagSelector.tsx, Notes.tsx
+
+#### PWA Speicher-Feedback
+- **Problem:** Keine visuelle Bestätigung nach Save-Operationen (lange NAS-Sync)
+- **Lösung:** Toast-Component mit Auto-Dismiss
+  - Types: success, error, info
+  - Dauer: 3000ms (konfigurierbar)
+  - Position: fixed bottom-4 right-4
+  - Animation: slide-up (bestehende CSS Keyframes)
+- **Integration:** Ingredients.tsx mit Success-Messages bei Create/Update
+
+#### Notizen: Formatierung in Vorschau
+- **Problem:** Markdown-Zeilenumbrüche und Absätze wurden nicht korrekt dargestellt
+- **Ursprüngliche Lösung:** remarkBreaks Plugin (später entfernt wegen fehlender Dependency)
+- **Status:** ReactMarkdown ohne Plugins (Standard-Rendering)
+
+#### URL zu Notizen hinzufügen
+- **Feature:** Optional URL-Feld für externe Ressourcen-Verknüpfung
+- **Schema:** `url?: string` Property zu Note Interface hinzugefügt
+- **UI:** 
+  - Input-Feld (type="url") in NoteForm mit Validation
+  - ExternalLink-Icon mit klickbarem Link in Notes-Karten
+  - Hilfetext: "Verknüpfe eine Website oder Ressource mit dieser Notiz"
+
+#### Bilderupload: Alle Kategorien
+- **Problem:** ContactForm hatte keine ImageUpload-Komponente
+- **Fix:** ImageUpload zu ContactForm.tsx hinzugefügt (maxImages: 3)
+- **Typen:** `Image.entity_type` erweitert um `'contact'`
+
+#### Kontakte: Custom Kategorien
+- **Problem:** Fixe Typen (Lieferant/Partner/Kunde) zu limitierend
+- **Lösung:** Tags-System für Contacts aktiviert
+  - TagSelector zu ContactForm hinzugefügt
+  - Hilfetext: "Nutze Tags um eigene Kategorien über die Standard-Typen hinaus zu definieren"
+  - entityType in TagSelector/TagBadgeList erweitert um `'contact'`
+
+### 🔧 Technische Verbesserungen
+
+#### Type System Updates
+- **TagAssignment.entity_type:** Erweitert um `'contact'` und `'image'`
+- **Image.entity_type:** Erweitert um `'contact'`
+- **Konsistenz:** Alle Tag-fähigen Komponenten unterstützen jetzt einheitliche Entity-Types
+
+#### Imports Cleanup
+- **remark-breaks:** Komplett entfernt (Package nicht installiert)
+  - Aus Notes.tsx, NoteForm.tsx entfernt
+  - ReactMarkdown nutzt Standard-Rendering
+- **Ungenutzte Imports:** Bereinigt in Gallery.tsx und GalleryImageModal.tsx
+
+#### Service Layer
+- **tagAssignments:** Keine `assign()`/`unassign()` Methoden
+  - Gallery Service nutzt `create()` mit korrekter Struktur
+  - `removeTagFromImage()` nutzt `getByEntity()` + `delete()`
+
+### 🔧 Technische Verbesserungen (Vorherige Version)
+
+#### Desktop-EXE Port-Fix
+- **Electron Server Port:** Geändert von 58888/58889 auf Port 3456
+  - Behebt Permission-Denied-Fehler unter Windows
+  - Ports 58888/58889 waren von anderen Diensten blockiert
+  - Desktop-EXE startet jetzt fehlerfrei
+
+#### Server Status Indicator (PWA)
+- **Live-Verbindungsanzeige:** Neuer visueller Indikator in der Browser-Version
+  - Zeigt NAS-Server-Status an (Online/Offline/Prüfend)
+  - Automatische Prüfung alle 30 Sekunden
+  - Mobile: Icon-Button im Header (rechts oben)
+  - Desktop: Voller Status-Display in Sidebar-Footer
+  - Farbcodiert: 🟢 Grün (online), 🔴 Rot (offline), 🟡 Gelb (prüfend)
+  - Hover zeigt Zeitpunkt der letzten Prüfung
+  - Nur in Browser-Modus sichtbar (nicht in Desktop-EXE)
+
+#### Storage Provider Improvements
+- **CustomApiStorageProvider:**
+  - `listFiles()` gibt leeres Array zurück statt Fehler zu werfen
+  - `deleteFile()` vollständig implementiert mit DELETE-Endpunkt
+  - Ermöglicht erfolgreiche Setup-Tests
+
+#### PWA Manifest Fixes
+- **Icon-Pfade korrigiert:** Alle Pfade mit `/gurktaler/` Präfix versehen
+  - `start_url: "/gurktaler/"`
+  - Icon-Pfade: `/gurktaler/icon-192.png`, `/gurktaler/icon-512.png`
+  - Shortcut-URLs: `/gurktaler/notes`, `/gurktaler/recipes`, etc.
+  - Behebt 404-Fehler für PWA-Icons
+
+#### NAS-Server Deployment
+- **API-Server auf Synology NAS:** Node.js Server auf Port 3002 (localhost)
+  - DELETE-Endpunkt hinzugefügt (zusätzlich zu GET/POST)
+  - Vollständige CORS-Header für alle Methoden
+  - Nginx Reverse Proxy auf Port 8080 (umgeht Web Station Konflikte)
+  - Task Scheduler für Auto-Start bei Boot konfiguriert
+- **Datensynchronisation:** Desktop-EXE und PWA teilen zentrale Datenbank
+  - Desktop: Y:\zweipunktnull\database\ (Netzwerk-Share)
+  - NAS: /volume1/Gurktaler/zweipunktnull/database/
+  - Bidirektionale Synchronisation verifiziert
+
+### 📝 Dokumentation
+- **SYNOLOGY_SERVER_SETUP.md:** Vollständige Anleitung für NAS-Deployment
+  - Nginx Konfiguration auf Port 8080
+  - Node.js Server Setup mit Task Scheduler
+  - CORS-Troubleshooting Guide
+
 ---
 
 ## [1.2.0] - 2026-01-02 🎉

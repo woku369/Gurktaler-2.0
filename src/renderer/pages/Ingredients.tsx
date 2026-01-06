@@ -20,6 +20,7 @@ import DocumentManager from "@/renderer/components/DocumentManager";
 import IngredientCard from "@/renderer/components/IngredientCard";
 import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
 import IngredientImportDialog from "@/renderer/components/IngredientImportDialog";
+import Toast, { ToastType } from "@/renderer/components/Toast";
 import {
   generateTemplate,
   exportIngredients,
@@ -51,7 +52,10 @@ function Ingredients() {
     notes: "",
     documents: [],
   });
-
+  const [toast, setToast] = useState<{
+    message: string;
+    type: ToastType;
+  } | null>(null);
   useEffect(() => {
     loadData();
   }, []);
@@ -110,10 +114,13 @@ function Ingredients() {
 
     if (editingIngredient) {
       await ingredientsService.update(editingIngredient.id, formData);
+      setToast({ message: "Zutat erfolgreich aktualisiert", type: "success" });
+      resetForm();
     } else {
       const newIngredient = await ingredientsService.create(
         formData as Omit<Ingredient, "id" | "created_at">
       );
+      setToast({ message: "Zutat erfolgreich erstellt", type: "success" });
       // Open the newly created ingredient for editing (to add images/tags)
       setEditingIngredient(newIngredient);
       setFormData({
@@ -123,12 +130,12 @@ function Ingredients() {
         price_per_unit: newIngredient.price_per_unit,
         unit: newIngredient.unit,
         notes: newIngredient.notes,
+        documents: newIngredient.documents || [],
       });
       await loadData();
       return; // Keep form open for images/tags
     }
 
-    resetForm();
     await loadData();
   };
 
@@ -531,6 +538,15 @@ function Ingredients() {
         onAdd={handleAddQuickUrl}
         entityName={quickUrlIngredient?.name || ""}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
