@@ -381,14 +381,20 @@ export const capacity = {
     async get(): Promise<CapacityUtilization> {
         const filePath = nasStorage.getJsonFilePath('capacity')
         try {
-            return await nasStorage.readJson<CapacityUtilization>(filePath)
+            const dataArray = await nasStorage.readJson<CapacityUtilization>(filePath)
+            // Falls das Array ein Element hat, nehme das erste, sonst default
+            if (Array.isArray(dataArray) && dataArray.length > 0) {
+                return dataArray[0]
+            }
+            return { enabled: false, quarters: [] }
         } catch {
             return { enabled: false, quarters: [] }
         }
     },
     async update(data: CapacityUtilization): Promise<void> {
         const filePath = nasStorage.getJsonFilePath('capacity')
-        await nasStorage.writeJson(filePath, data)
+        // Wrappe Objekt in Array für writeJson
+        await nasStorage.writeJson(filePath, [data])
         console.log('✅ Capacity settings updated')
     }
 }
