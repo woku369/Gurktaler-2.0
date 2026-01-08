@@ -148,20 +148,75 @@ export default function ProjectForm({
         >
           Projekt-Farbe (für Timeline)
         </label>
-        <div className="flex items-center gap-3">
-          <input
-            id="color"
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="h-10 w-20 border border-slate-200 rounded-lg cursor-pointer"
-          />
-          <div className="flex-1">
+        <div className="space-y-3">
+          {/* Farbpalette */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              "#ef4444", // red-500
+              "#f97316", // orange-500
+              "#f59e0b", // amber-500
+              "#eab308", // yellow-500
+              "#84cc16", // lime-500
+              "#10b981", // emerald-500
+              "#06b6d4", // cyan-500
+              "#3b82f6", // blue-500
+              "#8b5cf6", // violet-500
+              "#ec4899", // pink-500
+            ].map((paletteColor) => (
+              <button
+                key={paletteColor}
+                type="button"
+                onClick={() => setColor(paletteColor)}
+                className={`w-10 h-10 rounded-lg border-2 transition-all hover:scale-110 ${
+                  color === paletteColor
+                    ? "border-slate-900 ring-2 ring-slate-300"
+                    : "border-slate-300"
+                }`}
+                style={{ backgroundColor: paletteColor }}
+                title={paletteColor}
+              />
+            ))}
+            {/* Eigene Farbe */}
+            <div className="relative">
+              <input
+                id="color"
+                type="color"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="absolute inset-0 w-10 h-10 opacity-0 cursor-pointer"
+              />
+              <div
+                className={`w-10 h-10 rounded-lg border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                  ![
+                    "#ef4444",
+                    "#f97316",
+                    "#f59e0b",
+                    "#eab308",
+                    "#84cc16",
+                    "#10b981",
+                    "#06b6d4",
+                    "#3b82f6",
+                    "#8b5cf6",
+                    "#ec4899",
+                  ].includes(color)
+                    ? "border-slate-900 ring-2 ring-slate-300"
+                    : "border-slate-300"
+                }`}
+                style={{ backgroundColor: color }}
+              >
+                <span className="text-white text-xs font-bold mix-blend-difference">
+                  +
+                </span>
+              </div>
+            </div>
+          </div>
+          {/* Vorschau */}
+          <div className="flex items-center gap-2">
             <div className="text-xs text-slate-500">
               Wird als Rahmen im Gantt-Chart angezeigt
             </div>
             <div
-              className="mt-1 h-6 rounded border-4"
+              className="h-6 w-24 rounded border-4"
               style={{
                 borderColor: color,
                 backgroundColor: status === "completed" ? "#cbd5e1" : "#65a30d",

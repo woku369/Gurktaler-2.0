@@ -16,6 +16,7 @@ build-output/
 *.sqlite
 *.sqlite3
 database/*.db
+database/
 
 # Data exports (can be committed selectively)
 # data-export/

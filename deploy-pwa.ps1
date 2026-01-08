@@ -8,6 +8,27 @@ param(
 $distPath = "C:\Users\wolfg\Desktop\zweipunktnullVS\dist"
 $nasPath = "Y:\web\html\gurktaler"
 
+# ====================================
+# AUTOMATISCHES BACKUP VOR DEPLOY
+# ====================================
+Write-Host ""
+Write-Host "💾 Erstelle Backup vor Deploy..." -ForegroundColor Yellow
+try {
+    $password = "Diwk0369!"
+    $backupOutput = echo $password | ssh admin@100.121.103.107 "bash /volume1/Gurktaler/zweipunktnull/backup-nas.sh" 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "✅ Backup erfolgreich erstellt" -ForegroundColor Green
+    }
+    else {
+        Write-Host "⚠️  Backup fehlgeschlagen, Deploy wird trotzdem fortgesetzt" -ForegroundColor Yellow
+    }
+}
+catch {
+    Write-Host "⚠️  Backup konnte nicht erstellt werden: $_" -ForegroundColor Yellow
+    Write-Host "   Deploy wird trotzdem fortgesetzt..." -ForegroundColor Gray
+}
+Write-Host ""
+
 Write-Host "🚀 Gurktaler PWA Deployment" -ForegroundColor Cyan
 Write-Host "=" * 50
 

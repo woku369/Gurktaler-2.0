@@ -48,6 +48,7 @@ import {
   type GitConfig,
 } from "@/renderer/services/git";
 import { synologySync } from "@/renderer/services/sync";
+import { nasStorage } from "@/renderer/services/nasStorage";
 
 function Settings() {
   const [exportStatus, setExportStatus] = useState<
@@ -62,6 +63,13 @@ function Settings() {
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [editingKey, setEditingKey] = useState<AIProvider | null>(null);
+
+  // Backup State
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupMessage, setBackupMessage] = useState("");
+  const [backupList, setBackupList] = useState<
+    Array<{ name: string; created: Date; size: number }>
+  >([]);
 
   // Git-Integration State
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
@@ -97,7 +105,57 @@ function Settings() {
   useEffect(() => {
     loadGitStatus();
     loadRemotes();
+    loadBackups();
   }, []);
+
+  const loadBackups = async () => {
+    try {
+      const provider = nasStorage;
+      if ("baseUrl" in provider) {
+        const response = await fetch(`${provider.baseUrl}/api/backups`);
+        const result = await response.json();
+        if (result.success) {
+          setBackupList(result.backups);
+        }
+      }
+    } catch (error) {
+      console.error("Fehler beim Laden der Backup-Liste:", error);
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    setBackupLoading(true);
+    setBackupMessage("");
+
+    try {
+      const provider = nasStorage;
+      if (!("baseUrl" in provider)) {
+        setBackupMessage(
+          "❌ Backup nur über Browser-PWA verfügbar (Desktop nutzt direkten Zugriff)"
+        );
+        setBackupLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${provider.baseUrl}/api/backup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setBackupMessage("✅ Backup erfolgreich erstellt!");
+        await loadBackups(); // Liste aktualisieren
+      } else {
+        setBackupMessage(`❌ Backup fehlgeschlagen: ${result.error}`);
+      }
+    } catch (error: any) {
+      setBackupMessage(`❌ Fehler: ${error.message}`);
+    } finally {
+      setBackupLoading(false);
+    }
+  };
 
   const loadGitStatus = async () => {
     const status = await getGitStatus();
@@ -613,6 +671,101 @@ function Settings() {
               {syncMessage}
             </div>
           )}
+        </div>
+
+        {/* NAS Backup */}
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-gurktaler-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gurktaler-100 rounded-vintage flex items-center justify-center">
+              <Server className="w-5 h-5 text-gurktaler-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-800 font-heading">
+                Datenbank-Backup
+              </h2>
+              <p className="text-sm text-slate-500 font-body">
+                Sichere deine Daten auf dem NAS
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCreateBackup}
+                disabled={backupLoading}
+                className="px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center gap-2"
+              >
+                {backupLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Erstelle Backup...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Backup jetzt erstellen
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={loadBackups}
+                className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium flex items-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Aktualisieren
+              </button>
+            </div>
+
+            {backupMessage && (
+              <div
+                className={`p-3 rounded-lg text-sm ${
+                  backupMessage.includes("✅")
+                    ? "bg-green-50 text-green-800 border border-green-200"
+                    : "bg-red-50 text-red-800 border border-red-200"
+                }`}
+              >
+                {backupMessage}
+              </div>
+            )}
+
+            {backupList.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">
+                  Verfügbare Backups ({backupList.length})
+                </h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {backupList.map((backup) => (
+                    <div
+                      key={backup.name}
+                      className="p-3 bg-slate-50 border border-slate-200 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-slate-800">
+                            {backup.name}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(backup.created).toLocaleString("de-DE")}
+                          </p>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {(backup.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  💡 Wiederherstellung per SSH:{" "}
+                  <code className="bg-slate-100 px-1 py-0.5 rounded">
+                    bash /volume1/Gurktaler/zweipunktnull/restore-nas.sh
+                  </code>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Git Integration */}

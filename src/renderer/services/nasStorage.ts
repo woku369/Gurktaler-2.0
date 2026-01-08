@@ -329,18 +329,63 @@ export class CustomApiStorageProvider implements StorageProvider {
   }
 
   async uploadImage(
-    _entityType: string,
-    _entityId: string,
-    _dataUrl: string,
-    _index: number
+    entityType: string,
+    entityId: string,
+    dataUrl: string,
+    index: number
   ): Promise<string> {
-    // TODO: Implement image upload via custom API or keep using FileStation
-    throw new Error("Image upload not yet implemented in CustomApiStorageProvider");
+    try {
+      const url = `${this.baseUrl}/api/image`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entityType,
+          entityId,
+          dataUrl,
+          index,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Custom API uploadImage failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error("Custom API uploadImage returned success=false");
+      }
+
+      return result.relativePath;
+    } catch (error) {
+      console.error("Custom API uploadImage error:", error);
+      throw error;
+    }
   }
 
-  async readImage(_relativePath: string): Promise<string> {
-    // TODO: Implement image reading via custom API
-    throw new Error("Image reading not yet implemented in CustomApiStorageProvider");
+  async readImage(relativePath: string): Promise<string> {
+    try {
+      const url = `${this.baseUrl}/api/image?path=${encodeURIComponent(relativePath)}`;
+      const response = await fetch(url, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Custom API readImage failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error("Custom API readImage returned success=false");
+      }
+
+      return result.dataUrl;
+    } catch (error) {
+      console.error("Custom API readImage error:", error);
+      throw error;
+    }
   }
 
   async deleteFile(filePath: string): Promise<void> {
@@ -364,9 +409,25 @@ export class CustomApiStorageProvider implements StorageProvider {
     }
   }
 
-  async deleteImage(_relativePath: string): Promise<void> {
-    // TODO: Implement image deletion
-    throw new Error("Image deletion not yet implemented in CustomApiStorageProvider");
+  async deleteImage(relativePath: string): Promise<void> {
+    try {
+      const url = `${this.baseUrl}/api/image?path=${encodeURIComponent(relativePath)}`;
+      const response = await fetch(url, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Custom API deleteImage failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error("Custom API deleteImage returned success=false");
+      }
+    } catch (error) {
+      console.error("Custom API deleteImage error:", error);
+      throw error;
+    }
   }
 
   async createDirectory(dirPath: string): Promise<void> {
