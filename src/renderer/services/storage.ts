@@ -4,7 +4,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
-    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite
+    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite, CapacityUtilization
 } from '@/shared/types'
 import { nasStorage } from './nasStorage'
 
@@ -374,4 +374,21 @@ export async function importData(jsonString: string): Promise<boolean> {
         console.error('❌ Import fehlgeschlagen:', error)
     }
     return false
+}
+
+// Capacity Utilization (global timeline setting)
+export const capacity = {
+    async get(): Promise<CapacityUtilization> {
+        const filePath = nasStorage.getJsonFilePath('capacity')
+        try {
+            return await nasStorage.readJson<CapacityUtilization>(filePath)
+        } catch {
+            return { enabled: false, quarters: [] }
+        }
+    },
+    async update(data: CapacityUtilization): Promise<void> {
+        const filePath = nasStorage.getJsonFilePath('capacity')
+        await nasStorage.writeJson(filePath, data)
+        console.log('✅ Capacity settings updated')
+    }
 }

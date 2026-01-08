@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
-import { Calendar, Download, Settings as SettingsIcon } from "lucide-react";
-import { Project } from "../../shared/types";
+import {
+  Calendar,
+  Download,
+  Settings as SettingsIcon,
+  BarChart3,
+} from "lucide-react";
+import { Project, CapacityUtilization } from "../../shared/types";
 import * as storage from "../services/storage.ts";
 import GanttChart from "../components/GanttChart.tsx";
+import CapacitySettingsModal from "../components/CapacitySettingsModal.tsx";
 import { exportTimelineToPDF } from "../services/timelineExport.ts";
 
 export default function ProjectTimeline() {
@@ -10,6 +16,12 @@ export default function ProjectTimeline() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [timelineYears, setTimelineYears] = useState(2);
   const [loading, setLoading] = useState(true);
+  const [showCapacity, setShowCapacity] = useState(false);
+  const [showCapacitySettings, setShowCapacitySettings] = useState(false);
+  const [capacityData, setCapacityData] = useState<CapacityUtilization>({
+    enabled: false,
+    quarters: [],
+  });
 
   useEffect(() => {
     loadData();
@@ -17,20 +29,60 @@ export default function ProjectTimeline() {
 
   const loadData = async () => {
     setLoading(true);
-    const [allProjects, allContacts] = await Promise.all([
+    const [allProjects, allContacts, capacityData] = await Promise.all([
       storage.projects.getAll(),
       storage.contacts.getAll(),
+      storage.capacity.get(),
     ]);
     setProjects(allProjects);
     setContacts(allContacts);
+    setCapacityData(capacityData);
+    setShowCapacity(capacityData.enabled);
     setLoading(false);
   };
 
   // Filter: Nur Projekte mit aktivierter Timeline
   const timelineProjects = projects.filter((p) => p.timeline?.enabled);
 
-  const handleExportPDF = () => {
-    exportTimelineToPDF(timelineProjects, contacts, timelineYears);
+  const handleExportPDF = async () => {
+    // Prüfe ob PWA (hat window.storageProvider mit baseUrl) oder Desktop (Electron)
+    const isPWA =
+      (window as any).storageProvider &&
+      "baseUrl" in (window as any).storageProvider;
+
+    let saveToNAS = false;
+    if (isPWA) {
+      // Nur in PWA: Dialog für NAS-Speicherung
+      saveToNAS = window.confirm(
+        "PDF auf NAS speichern?\n\n" +
+          "JA = Auf NAS speichern (Zugriff von überall)\n" +
+          "NEIN = Lokal herunterladen"
+      );
+    }
+
+    const result = await exportTimelineToPDF(
+      timelineProjects,
+      contacts,
+      timelineYears,
+      saveToNAS,
+      showCapacity ? capacityData : undefined
+    );
+
+    if (result.success) {
+      if (saveToNAS && result.url) {
+        // Option zum Öffnen
+        const openPDF = window.confirm(
+          `${result.message}\n\nDatei: ${result.filename}\n\nPDF jetzt öffnen?`
+        );
+        if (openPDF) {
+          window.open(result.url, "_blank");
+        }
+      } else {
+        alert(result.message);
+      }
+    } else {
+      alert(result.message);
+    }
   };
 
   const handleProjectClick = (project: Project) => {
@@ -115,13 +167,42 @@ export default function ProjectTimeline() {
               </span>
               <select
                 value={timelineYears}
-                onChange={(e) => setTimelineYears(parseInt(e.target.value))}
+                onChange={(e) => setTimelineYears(parseFloat(e.target.value))}
                 className="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-gurktaler-500"
               >
+                <option value={0.5}>6 Monate</option>
                 <option value={1}>1 Jahr</option>
                 <option value={2}>2 Jahre</option>
                 <option value={3}>3 Jahre</option>
               </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showCapacity"
+                checked={showCapacity}
+                onChange={async (e) => {
+                  const enabled = e.target.checked;
+                  setShowCapacity(enabled);
+                  const current = await storage.capacity.get();
+                  await storage.capacity.update({ ...current, enabled });
+                }}
+                className="w-4 h-4 text-gurktaler-600 border-slate-300 rounded focus:ring-2 focus:ring-gurktaler-500"
+              />
+              <label
+                htmlFor="showCapacity"
+                className="text-sm font-medium text-slate-700 cursor-pointer"
+              >
+                Kapazitätsauslastung anzeigen
+              </label>
+              <button
+                onClick={() => setShowCapacitySettings(true)}
+                className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Kapazität konfigurieren"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
@@ -146,6 +227,8 @@ export default function ProjectTimeline() {
           contacts={contacts}
           years={timelineYears}
           onProjectClick={handleProjectClick}
+          showCapacity={showCapacity}
+          capacityData={capacityData}
           onReorder={handleReorder}
         />
       </div>
@@ -222,6 +305,16 @@ export default function ProjectTimeline() {
           </div>
         </div>
       </div>
+
+      {/* Capacity Settings Modal */}
+      {showCapacitySettings && (
+        <CapacitySettingsModal
+          onClose={() => {
+            setShowCapacitySettings(false);
+            loadData(); // Reload um neue Daten zu laden
+          }}
+        />
+      )}
     </div>
   );
 }

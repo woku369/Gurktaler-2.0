@@ -7,6 +7,64 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.3.0] - 2026-01-08
+
+### ✨ Neue Features
+
+#### 📊 Kapazitätsauslastung - Quartalsweise Ressourcenplanung
+- **Kapazitäts-Visualisierung:** Neue Timeline-Funktion zur Personalplanung
+  - Quartalsweise Eingabe von Kapazitätsprozentsätzen (Q1/26 - Q4/28, 3 Jahre = 12 Quartale)
+  - Settings-Modal mit übersichtlichem Grid-Layout (2-4 Spalten responsive)
+  - Checkbox "Kapazitätsauslastung anzeigen" zum Ein-/Ausblenden
+  - BarChart3-Icon für schnellen Zugriff auf Einstellungen
+- **Farbskala:** Ocker-Gradient zeigt Auslastungsintensität
+  - 0% = Sehr helles Ocker/Beige (rgb(248, 244, 232))
+  - 50% = Mittleres Ocker (rgb(193, 177, 151))
+  - 100% = Dunkles Ocker/Braun (rgb(139, 111, 71))
+  - Prozentanzeige in jedem Quartalssegment
+- **App-Integration:**
+  - Kapazitätsbalken unter Gantt-Chart-Projekten
+  - Automatische Quartalsaufteilung synchron zur Timeline
+  - Hover-Tooltips mit Quartal und Prozentsatz
+- **PDF-Export:**
+  - Kapazitätsbalken nach Legende, vor Projekt-Details
+  - Quartalsweise farbige Segmente mit Prozentwerten
+  - Identische Farbgebung wie in App-Ansicht
+- **Datenhaltung:**
+  - Neue Datei: database/capacity.json (global für alle Projekte)
+  - API: storage.capacity.get() und storage.capacity.update()
+  - Nicht projekt-spezifisch, sondern Timeline-weit
+- **Typisierung:**
+  - CapacityQuarter: { quarter: string, percentage: number }
+  - CapacityUtilization: { enabled: boolean, quarters: CapacityQuarter[] }
+
+### 🐛 Bugfixes
+- **HTML-Struktur:** Checkbox "Kapazitätsauslastung anzeigen" aus <select> verschoben (ungültige Verschachtelung)
+- **Null-Safety:** Optional chaining für capacity.quarters (prevents "Cannot read properties of undefined")
+  - handlePercentageChange: (capacity.quarters || []).find()
+  - getPercentage: capacity.quarters?.find()
+  - handleSave: (capacity.quarters || []).filter()
+- **SVG-Pfade:** viewBox für Dependency-Arrows (behebt "Expected number" Fehler)
+  - Entfernte %-Zeichen aus Pfad-Koordinaten
+  - viewBox="0 0 100 ${CHART_HEIGHT}" mit preserveAspectRatio="none"
+  - Angepasste strokeWidth (0.3) und strokeDasharray (1,1)
+- **Quartalslabels:** Einheitliches Format "Q1/26" statt gemischt "Q1 2026" / "Q1/26"
+  - GanttChart und CapacitySettingsModal verwenden identisches Format
+  - Ermöglicht korrekte Zuordnung gespeicherter Werte
+
+### 📁 Neue Dateien
+- src/renderer/components/CapacitySettingsModal.tsx (159 Zeilen)
+- database/capacity.json
+
+### 🔧 Geänderte Dateien
+- src/shared/types/index.ts: +CapacityQuarter, +CapacityUtilization
+- src/renderer/services/storage.ts: +capacity.get/update API
+- src/renderer/pages/ProjectTimeline.tsx: +Checkbox, +Settings-Button, +Modal-State
+- src/renderer/components/GanttChart.tsx: +Kapazitätsbalken-Rendering, SVG viewBox Fix
+- src/renderer/services/timelineExport.ts: +PDF-Kapazitätsbalken mit Ocker-Farbskala
+
+---
+
 ## [Unveröffentlicht]
 
 ### ✨ Neue Features

@@ -49,6 +49,16 @@ export interface ProjectDependency {
     type: DependencyType;
 }
 
+export interface CapacityQuarter {
+    quarter: string; // z.B. "Q1/26", "Q2/26"
+    percentage: number; // 0-100%
+}
+
+export interface CapacityUtilization {
+    enabled: boolean; // Kapazitätsbalken anzeigen
+    quarters: CapacityQuarter[]; // Quartalsweise Prozentsätze
+}
+
 export interface ProjectTimeline {
     enabled: boolean; // In Timeline aufnehmen
     startDate: string; // ISO Date
@@ -58,6 +68,7 @@ export interface ProjectTimeline {
     milestones: ProjectMilestone[];
     progress?: number; // Manueller Fortschritt 0-100%
     sortOrder?: number; // Anzeigereihenfolge im Gantt-Chart
+    capacity?: CapacityUtilization; // Kapazitätsauslastungs-Visualisierung (global für alle Projekte)
 }
 
 // Project

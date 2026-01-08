@@ -1,5 +1,9 @@
 import { useMemo, useState } from "react";
-import { Project, ProjectDependency } from "../../shared/types";
+import {
+  Project,
+  ProjectDependency,
+  CapacityUtilization,
+} from "../../shared/types";
 
 interface GanttChartProps {
   projects: Project[];
@@ -7,6 +11,8 @@ interface GanttChartProps {
   years: number;
   onProjectClick?: (project: Project) => void;
   onReorder?: (projectId: string, newIndex: number) => void;
+  showCapacity?: boolean;
+  capacityData?: CapacityUtilization;
 }
 
 interface TimelineBar {
@@ -26,6 +32,8 @@ export default function GanttChart({
   years,
   onProjectClick,
   onReorder,
+  showCapacity = false,
+  capacityData,
 }: GanttChartProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -33,8 +41,10 @@ export default function GanttChart({
   const chartData = useMemo(() => {
     // Timeline-Berechnung
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), 0, 1); // 1. Januar dieses Jahr
-    const endDate = new Date(today.getFullYear() + years, 11, 31); // 31. Dez in X Jahren
+    const startDate = new Date(today.getFullYear(), today.getMonth(), 1); // 1. Tag aktueller Monat
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + Math.ceil(years * 12)); // +X Monate
+    endDate.setDate(0); // Letzter Tag des vorherigen Monats
 
     const totalDays = Math.ceil(
       (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -99,7 +109,7 @@ export default function GanttChart({
         const x = (daysFromStart / totalDays) * 100;
 
         quarters.push({
-          label: `Q${q + 1} ${today.getFullYear() + y}`,
+          label: `Q${q + 1}/${(today.getFullYear() + y) % 100}`,
           x,
         });
       }
@@ -378,6 +388,8 @@ export default function GanttChart({
                     key={dep.projectId}
                     className="absolute top-0 left-0 w-full h-full pointer-events-none"
                     style={{ height: CHART_HEIGHT }}
+                    viewBox={`0 0 100 ${CHART_HEIGHT}`}
+                    preserveAspectRatio="none"
                   >
                     <defs>
                       <marker
@@ -392,14 +404,14 @@ export default function GanttChart({
                       </marker>
                     </defs>
                     <path
-                      d={`M ${x1}% ${y1} L ${(x1 + x2) / 2}% ${y1} L ${
+                      d={`M ${x1} ${y1} L ${(x1 + x2) / 2} ${y1} L ${
                         (x1 + x2) / 2
-                      }% ${y2} L ${x2}% ${y2}`}
+                      } ${y2} L ${x2} ${y2}`}
                       stroke={strokeColor}
-                      strokeWidth="2"
+                      strokeWidth="0.3"
                       fill="none"
                       markerEnd={`url(#arrowhead-${dep.type})`}
-                      strokeDasharray={dep.type.includes("start") ? "5,5" : "0"}
+                      strokeDasharray={dep.type.includes("start") ? "1,1" : "0"}
                     />
                   </svg>
                 );
@@ -407,6 +419,52 @@ export default function GanttChart({
             </div>
           );
         })}
+
+        {/* Capacity Utilization Bar */}
+        {showCapacity &&
+          capacityData &&
+          capacityData.quarters &&
+          capacityData.quarters.length > 0 && (
+            <div className="mt-8 mb-4">
+              <div className="text-sm font-semibold text-slate-700 mb-2">
+                Kapazitätsauslastung
+              </div>
+              <div className="relative h-8 rounded-lg overflow-hidden border border-slate-300">
+                {quarters.map((q, i) => {
+                  const nextQ = quarters[i + 1];
+                  const width = nextQ ? nextQ.x - q.x : 100 - q.x;
+
+                  // Finde Kapazität für dieses Quartal
+                  const capacity = capacityData.quarters.find(
+                    (cap) => cap.quarter === q.label
+                  );
+                  const percentage = capacity?.percentage || 0;
+
+                  // Berechne Farbintensität (Ocker-Skala: hell bei 0%, dunkel bei 100%)
+                  const r = Math.round(248 - (percentage / 100) * 109); // 248 -> 139
+                  const g = Math.round(244 - (percentage / 100) * 133); // 244 -> 111
+                  const b = Math.round(232 - (percentage / 100) * 161); // 232 -> 71
+                  const bgColor = `rgb(${r}, ${g}, ${b})`;
+
+                  return (
+                    <div
+                      key={i}
+                      className="absolute top-0 h-full flex items-center justify-center text-xs font-medium"
+                      style={{
+                        left: `${q.x}%`,
+                        width: `${width}%`,
+                        backgroundColor: percentage > 0 ? bgColor : "#f8f9fa",
+                        color: percentage > 50 ? "white" : "#334155",
+                      }}
+                      title={`${q.label}: ${percentage}%`}
+                    >
+                      {percentage > 0 && `${percentage}%`}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );
