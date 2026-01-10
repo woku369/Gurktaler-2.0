@@ -4,7 +4,8 @@
 import { v4 as uuidv4 } from 'uuid'
 import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
-    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite, CapacityUtilization
+    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite, CapacityUtilization,
+    Task, TaskStatus
 } from '@/shared/types'
 import { nasStorage } from './nasStorage'
 
@@ -397,4 +398,24 @@ export const capacity = {
         await nasStorage.writeJson(filePath, [data])
         console.log('✅ Capacity settings updated')
     }
+}
+
+// Tasks
+export const tasks = {
+    getAll: async (): Promise<Task[]> => await nasStorage.readJson<Task>(nasStorage.getJsonFilePath('tasks')),
+    getById: async (id: string): Promise<Task | undefined> => {
+        const all = await nasStorage.readJson<Task>(nasStorage.getJsonFilePath('tasks'))
+        return all.find(t => t.id === id)
+    },
+    getByProject: async (projectId: string): Promise<Task[]> => {
+        const all = await nasStorage.readJson<Task>(nasStorage.getJsonFilePath('tasks'))
+        return all.filter(t => t.project_id === projectId)
+    },
+    getByStatus: async (status: TaskStatus): Promise<Task[]> => {
+        const all = await nasStorage.readJson<Task>(nasStorage.getJsonFilePath('tasks'))
+        return all.filter(t => t.status === status)
+    },
+    create: (task: Omit<Task, 'id' | 'created_at'>) => createEntity<Task>('tasks', task),
+    update: (id: string, updates: Partial<Task>) => updateEntity<Task>('tasks', id, updates),
+    delete: (id: string) => deleteEntity<Task>('tasks', id),
 }

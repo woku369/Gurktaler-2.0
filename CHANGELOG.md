@@ -7,6 +7,113 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.5.0] - 2026-01-10
+
+### ✨ Neue Features
+
+#### 📋 Aufgabenverwaltung & TODO-Listen (Phase 12)
+- **Dashboard-Integration:** TODO-Widget im Dashboard (oben links neben Schnellzugriff)
+  - Quick-Add mit Enter-Taste für schnelles Erstellen
+  - Auto-Edit-Modal öffnet sich nach Erstellen für vollständige Details
+  - Inline-Checkbox für Status-Toggle (Offen ↔ Erledigt)
+  - Kompakte Aufgabenliste mit allen wichtigen Informationen
+
+- **Vollständiges Datenbankmodell:**
+  ```typescript
+  interface Task {
+    id: string;
+    title: string;
+    description?: string;
+    assignee?: string;
+    due_date?: string;
+    status: 'open' | 'in-progress' | 'completed';
+    priority: 'low' | 'medium' | 'high';
+    project_id?: string;
+    completed_at?: string;
+    created_at: string;
+    updated_at?: string;
+  }
+  ```
+
+- **CRUD-Operationen:**
+  - Erstellen: Quick-Add Input-Feld mit automatischer Projektzuordnung bei aktivem Filter
+  - Bearbeiten: Vollständiger Edit-Dialog mit allen Feldern
+  - Löschen: Direktes Löschen aus Liste
+  - Status-Toggle: Checkbox zum schnellen Abhaken
+
+- **Filter & Sortierung:**
+  - Status-Filter: Alle / Offen / In Arbeit / Erledigt
+  - Prioritäts-Filter: Alle / Hoch / Mittel / Niedrig
+  - Projekt-Filter: Dropdown mit allen Projekten
+  - Sortierung: Neueste zuerst / Fälligkeitsdatum / Priorität / Titel A-Z
+
+- **Projekt-Verknüpfung:**
+  - Projekt-Dropdown im Edit-Modal
+  - Projekt-Badge in Aufgabenliste (📁 Projektname)
+  - Automatische Projektzuordnung bei aktivem Projektfilter
+
+- **Priorisierung:**
+  - Hoch (🔴 Rot), Mittel (🟡 Gelb), Niedrig (⚪ Grau)
+  - Farbliche Kennzeichnung mit Icons
+  - Sortierung nach Priorität möglich
+
+- **Zuweisung & Fälligkeit:**
+  - Assignee-Feld (👤 Name)
+  - Due Date mit Datepicker (📅 Datum)
+  - Vollständige Anzeige in Aufgabenliste
+
+#### 📄 Export & Integration
+- **PDF-Export:** Druckbare TODO-Liste
+  - Checkboxen für physisches Abhaken
+  - Gruppierung nach Priorität
+  - Priority-Badges in Farbe (Hoch/Mittel/Niedrig)
+  - Alle Task-Details (Titel, Beschreibung, Assignee, Due Date, Projekt)
+  - Gurktaler 2.0 Branding mit professionellem Layout
+  - Header mit Erstellungsdatum und Aufgabenanzahl
+
+- **iCal Export (.ics):**
+  - Einzelne Tasks als .ics exportieren (Button bei jedem Task)
+  - Alle Tasks als eine .ics Datei exportieren (Header-Button)
+  - Import in Outlook, Apple Calendar, Google Calendar möglich
+  - VTODO Format mit Priorität, Status, Due Date
+  - Automatische Dateinamen-Generierung
+
+- **E-Mail-Integration:**
+  - Mailto-Link bei jedem Task (📧 Icon)
+  - Automatischer Betreff: "Aufgabe: [Titel]"
+  - Body mit allen Details:
+    - Titel und Beschreibung
+    - Zuständig und Fälligkeitsdatum
+    - Priorität und Status
+    - Projekt-Verknüpfung
+
+- **Google Calendar Sync (Vorbereitet):**
+  - OAuth2 Login/Logout UI
+  - Sync-Button für alle Tasks
+  - Einzelne Tasks zu Calendar hinzufügen
+  - Service-Datei implementiert (`googleCalendar.ts`)
+  - Erfordert Google Cloud Projekt Setup (.env.example erstellt)
+  - Optional aktivierbar mit API-Keys
+
+### 🐛 Bugfixes
+- **Projekt-Filterung:** Projekt-ID wird jetzt korrekt beim Erstellen gesetzt
+- **Auto-Projektzuordnung:** Bei aktivem Projektfilter wird neues TODO automatisch zugeordnet
+- **Edit-Modal:** Null-Checks für alle editingTask Felder verhindert TypeScript-Fehler
+
+### 📝 Dokumentation
+- **ROADMAP.md:** Phase 12 als abgeschlossen markiert (✅)
+- **Documentation.tsx:** TODO-Feature dokumentiert
+- **.env.example:** Google Calendar API Konfiguration hinzugefügt
+- **Services:** Neue Dateien `taskExport.ts` und `googleCalendar.ts`
+
+### 🎨 UI/UX Verbesserungen
+- **Dashboard-Layout:** TODO-Widget prominent platziert (oben links)
+- **Farbcodierung:** Prioritäten visuell klar unterscheidbar
+- **Icons:** Lucide Icons für alle Aktionen (Edit, Delete, Email, Calendar, iCal)
+- **Export-Buttons:** PDF (rot), iCal (lila), Google (blau/grün)
+
+---
+
 ## [1.4.0] - 2026-01-09
 
 ### ✨ Neue Features

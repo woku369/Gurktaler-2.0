@@ -229,7 +229,62 @@
 | 📋     | Log-Viewer in App         | Echtzeit-Logs vom Node.js Server               |
 | 📋     | Server-Health-Check       | Periodische Prüfung auf Erreichbarkeit         |
 
-## Phase 12: Native Mobile (v1.3.x)
+---
+
+## Phase 12: Aufgabenverwaltung & TODO-Listen (v1.5.0) ✅
+
+### TODO-Liste Dashboard-Widget
+| Status | Aufgabe                    | Beschreibung                                    |
+| ------ | -------------------------- | ----------------------------------------------- |
+| ✅     | Dashboard-Integration      | TODO-Widget im Dashboard (oben links)           |
+| ✅     | TODO-Datenbankmodell       | Task { id, title, description, assignee, due_date, status, priority, project_id, completed_at } |
+| ✅     | Aufgaben-Liste             | Übersicht aller TODOs mit Filteroptionen        |
+| ✅     | CRUD-Operationen           | Erstellen, Bearbeiten, Löschen von Aufgaben    |
+| ✅     | Zuweisung & Status         | Wer macht was? Status: Offen/In Arbeit/Erledigt|
+| ✅     | Fälligkeitsdatum           | Wann muss was fertig sein?                      |
+| ✅     | Projekt-Verknüpfung        | TODOs zu Projekten zuordnen                     |
+| ✅     | Priorisierung              | Hoch/Mittel/Niedrig mit farblicher Kennzeichnung|
+| ✅     | Auto-Edit-Modal            | Nach Erstellen öffnet sich Bearbeiten-Dialog   |
+
+### Export & Integration
+| Status | Aufgabe                    | Beschreibung                                    |
+| ------ | -------------------------- | ----------------------------------------------- |
+| ✅     | PDF-Export                 | Druckbare TODO-Liste mit Checkboxen, Gruppierung nach Priorität |
+| ✅     | E-Mail-Integration         | Einzelne TODOs per Mail versenden (mailto:)     |
+| ✅     | iCal Export                | .ics Datei für Kalender-Import (einzeln & alle) |
+| ✅     | Filter & Sortierung        | Nach Projekt, Person, Status, Datum, Priorität  |
+| 📋     | Google Calendar Sync       | OAuth2-basierte Synchronisierung (vorbereitet, API-Keys erforderlich) |
+
+### Implementierte Features
+- ✅ Quick-Add mit Enter-Taste
+- ✅ Inline-Checkbox für Status-Toggle (Erledigt ↔ Offen)
+- ✅ Prioritäts-Indikatoren mit Farben und Icons
+- ✅ Projekt-Badge in Aufgabenliste
+- ✅ Filter: Status, Priorität, Projekt
+- ✅ Sortierung: Neueste, Fälligkeitsdatum, Priorität, Titel A-Z
+- ✅ PDF-Export mit professionellem Layout
+- ✅ iCal-Export für Kalender-Apps
+- ✅ E-Mail-Sharing mit allen Details
+- ✅ Google Calendar API Integration (Optional, Setup erforderlich)
+
+---
+
+## Phase 13: Native Mobile (v1.6.x)
+| 📋     | PDF-Export                 | Druckbare TODO-Liste mit Checkboxen            |
+| 📋     | E-Mail-Integration         | Einzelne TODOs per Mail versenden (mailto:)     |
+| 📋     | Google Calendar Sync       | Aufgaben mit Fälligkeitsdatum zu Calendar       |
+| 📋     | iCal Export                | .ics Datei für Kalender-Import                  |
+| 📋     | Filter & Sortierung        | Nach Projekt, Person, Status, Datum             |
+| 📋     | Dashboard-Widget           | Übersicht offener Aufgaben auf Dashboard        |
+
+### Beispiel-Anwendungsfälle
+- "Bürgermeister anrufen - Thema: Förderantrag, Zuständig: Wolfgang, Fällig: 15.01.2026"
+- "Etikettendesign finalisieren - Projekt: Gurktaler X2, Zuständig: Grafikdesigner, Prio: Hoch"
+- "Rohstoffe bestellen - Zuständig: Einkauf, Fällig: KW 3, Status: Offen"
+
+---
+
+## Phase 13: Native Mobile (v1.6.x)
 
 | Status | Aufgabe         | Beschreibung             |
 | ------ | --------------- | ------------------------ |
@@ -239,7 +294,7 @@
 
 ---
 
-## Phase 12: Polish & Release (v1.0.0) ✅
+## Phase 14: Polish & Release (v1.0.0) ✅
 
 | Status | Aufgabe        | Beschreibung                                  |
 | ------ | -------------- | --------------------------------------------- |

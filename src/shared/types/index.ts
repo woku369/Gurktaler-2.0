@@ -10,6 +10,8 @@ export type ByproductType = 'marketing' | 'packaging' | 'label' | 'other';
 export type ContainerType = 'bottle' | 'label' | 'cap' | 'box' | 'other';
 export type DocumentType = 'file' | 'url' | 'google-photos';
 export type DocumentCategory = 'recipe' | 'analysis' | 'marketing' | 'label' | 'documentation' | 'other';
+export type TaskStatus = 'open' | 'in-progress' | 'completed';
+export type TaskPriority = 'low' | 'medium' | 'high';
 
 // Document - Pfad-basierte Dokumentenverwaltung
 export interface Document extends BaseEntity {
@@ -234,6 +236,18 @@ export interface Image extends BaseEntity {
     caption?: string;
 }
 
+// Task - TODO-Liste
+export interface Task extends BaseEntity {
+    title: string;
+    description?: string;
+    assignee?: string; // Name der zuständigen Person
+    due_date?: string; // ISO Date
+    status: TaskStatus;
+    priority: TaskPriority;
+    project_id?: string; // Optional: Verknüpfung mit Projekt
+    completed_at?: string; // ISO Date when marked as completed
+}
+
 // Favorite
 export interface Favorite extends BaseEntity {
     entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container' | 'contact' | 'weblink';
@@ -261,5 +275,6 @@ export interface DataExport {
         containers: Container[];
         images: Image[];
         favorites: Favorite[];
+        tasks: Task[];
     };
 }

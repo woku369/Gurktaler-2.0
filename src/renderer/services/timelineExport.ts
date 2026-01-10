@@ -120,21 +120,11 @@ export async function exportTimelineToPDF(
     const startX = margin + (daysFromStart / totalDays) * chartWidth;
     const width = (projectDays / totalDays) * chartWidth;
 
-    // Projektname ÜBER dem Balken (einzeilig mit Ellipsis)
+    // Projektname ÜBER dem Balken (voller Name ohne Kürzung)
     pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(7);
-    const maxTitleWidth = Math.max(30, width);
-    let title = project.name;
-    // Kürze Titel wenn zu lang
-    const textWidth = pdf.getTextWidth(title);
-    if (textWidth > maxTitleWidth) {
-      while (pdf.getTextWidth(title + '...') > maxTitleWidth && title.length > 0) {
-        title = title.slice(0, -1);
-      }
-      title = title + '...';
-    }
-    pdf.text(title, startX, currentY - 2);
+    pdf.text(project.name, startX, currentY - 2);
 
     // Farbe basierend auf Status UND Projektfarbe
     let fillColor: [number, number, number];

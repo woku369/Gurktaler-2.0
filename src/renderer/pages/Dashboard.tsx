@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { exportTasksToPDF } from "@/renderer/services/taskExport";
+import {
+  initGoogleCalendar,
+  loginGoogleCalendar,
+  logoutGoogleCalendar,
+  syncAllTasksToGoogleCalendar,
+  addTaskToGoogleCalendar,
+  isGoogleCalendarLoggedIn,
+} from "@/renderer/services/googleCalendar";
 import {
   FolderKanban,
   Package,
@@ -11,9 +20,14 @@ import {
   Users,
   Beaker,
   Archive,
+  CheckSquare,
+  Square,
+  X,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import {
-  projects,
+  projects as projectsStorage,
   products,
   recipes,
   notes,
@@ -22,8 +36,15 @@ import {
   weblinks,
   ingredients,
   containers,
+  tasks,
 } from "@/renderer/services/storage";
-import type { Favorite } from "@/shared/types";
+import type {
+  Favorite,
+  Task,
+  TaskStatus,
+  TaskPriority,
+  Project,
+} from "@/shared/types";
 
 type RecentItem = {
   type: "project" | "product" | "recipe" | "note";
@@ -54,13 +75,46 @@ function Dashboard() {
   const [favoriteItems, setFavoriteItems] = useState<
     Array<{ favorite: Favorite; name: string; icon: any; route: string }>
   >([]);
+  const [todoList, setTodoList] = useState<Task[]>([]);
+  const [allTasks, setAllTasks] = useState<Task[]>([]); // Ungefiltertes Original
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Filter & Sort States
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | "all">("all");
+  const [filterPriority, setFilterPriority] = useState<TaskPriority | "all">(
+    "all"
+  );
+  const [filterProject, setFilterProject] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<
+    "due_date" | "priority" | "title" | "created"
+  >("created");
+  const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+
+  // Google Calendar
+  const [googleCalendarReady, setGoogleCalendarReady] = useState(false);
+  const [googleCalendarLoggedIn, setGoogleCalendarLoggedIn] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
+
+    // Google Calendar initialisieren (optional)
+    initGoogleCalendar()
+      .then(() => {
+        setGoogleCalendarReady(true);
+        setGoogleCalendarLoggedIn(isGoogleCalendarLoggedIn());
+      })
+      .catch((error) => {
+        console.warn(
+          "Google Calendar konnte nicht initialisiert werden:",
+          error
+        );
+      });
   }, []);
 
   const loadDashboardData = async () => {
-    const allProjects = await projects.getAll();
+    const allProjects = await projectsStorage.getAll();
     const allProducts = await products.getAll();
     const allRecipes = await recipes.getAll();
     const allNotes = await notes.getAll();
@@ -199,11 +253,310 @@ function Dashboard() {
     });
 
     setFavoriteItems(favItems);
+
+    // Load tasks & projects
+    const loadedTasks = await tasks.getAll();
+    setAllTasks(loadedTasks);
+    applyFiltersAndSort(loadedTasks);
+
+    const loadedProjects = await projectsStorage.getAll();
+    setAvailableProjects(loadedProjects);
+  };
+
+  // Filter & Sort Logik
+  const applyFiltersAndSort = (tasksToFilter: Task[] = allTasks) => {
+    let filtered = [...tasksToFilter];
+
+    // Status Filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((t) => t.status === filterStatus);
+    }
+
+    // Priority Filter
+    if (filterPriority !== "all") {
+      filtered = filtered.filter((t) => t.priority === filterPriority);
+    }
+
+    // Project Filter
+    if (filterProject !== "all") {
+      filtered = filtered.filter((t) => t.project_id === filterProject);
+    }
+
+    // Sortierung
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "priority":
+          const priorityOrder = { high: 0, medium: 1, low: 2 };
+          return priorityOrder[a.priority] - priorityOrder[b.priority];
+        case "due_date":
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return (
+            new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+          );
+        case "title":
+          return a.title.localeCompare(b.title);
+        case "created":
+        default:
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+      }
+    });
+
+    setTodoList(filtered);
+  };
+
+  // Filter/Sort bei Änderung anwenden
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [filterStatus, filterPriority, filterProject, sortBy, allTasks]);
+
+  const handleAddTask = async () => {
+    if (!newTaskTitle.trim()) return;
+
+    const newTask = await tasks.create({
+      title: newTaskTitle,
+      status: "open",
+      priority: "medium",
+      project_id: filterProject !== "all" ? filterProject : undefined, // Projekt vorauswählen wenn Filter aktiv
+    });
+
+    setNewTaskTitle("");
+    await loadDashboardData();
+
+    // Edit-Modal direkt öffnen für weitere Details
+    setEditingTask(newTask);
+    setShowEditModal(true);
+  };
+
+  const handleToggleTask = async (task: Task) => {
+    const newStatus: TaskStatus =
+      task.status === "completed" ? "open" : "completed";
+    await tasks.update(task.id, {
+      status: newStatus,
+      completed_at:
+        newStatus === "completed" ? new Date().toISOString() : undefined,
+    });
+    await loadDashboardData();
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    await tasks.delete(id);
+    await loadDashboardData();
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTask) return;
+
+    await tasks.update(editingTask.id, {
+      title: editingTask.title,
+      description: editingTask.description,
+      assignee: editingTask.assignee,
+      due_date: editingTask.due_date,
+      priority: editingTask.priority,
+      project_id: editingTask.project_id,
+    });
+
+    setShowEditModal(false);
+    setEditingTask(null);
+    await loadDashboardData();
+  };
+
+  // iCal Export
+  const generateICalString = (task: Task): string => {
+    const now =
+      new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const dueDate = task.due_date
+      ? new Date(task.due_date)
+          .toISOString()
+          .replace(/[-:]/g, "")
+          .split(".")[0] + "Z"
+      : now;
+
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Gurktaler 2.0//TODO Export//DE",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VTODO",
+      `UID:${task.id}@gurktaler.app`,
+      `DTSTAMP:${now}`,
+      `CREATED:${
+        new Date(task.created_at)
+          .toISOString()
+          .replace(/[-:]/g, "")
+          .split(".")[0] + "Z"
+      }`,
+      `SUMMARY:${task.title}`,
+      task.description
+        ? `DESCRIPTION:${task.description.replace(/\n/g, "\\n")}`
+        : "",
+      `DUE:${dueDate}`,
+      `PRIORITY:${
+        task.priority === "high" ? "1" : task.priority === "medium" ? "5" : "9"
+      }`,
+      `STATUS:${
+        task.status === "completed"
+          ? "COMPLETED"
+          : task.status === "in-progress"
+          ? "IN-PROCESS"
+          : "NEEDS-ACTION"
+      }`,
+      task.completed_at
+        ? `COMPLETED:${
+            new Date(task.completed_at)
+              .toISOString()
+              .replace(/[-:]/g, "")
+              .split(".")[0] + "Z"
+          }`
+        : "",
+      "END:VTODO",
+      "END:VCALENDAR",
+    ]
+      .filter(Boolean)
+      .join("\r\n");
+  };
+
+  const handleExportICalSingle = (task: Task) => {
+    const icalContent = generateICalString(task);
+    const blob = new Blob([icalContent], {
+      type: "text/calendar;charset=utf-8",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${task.title
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase()}.ics`;
+    link.click();
+  };
+
+  const handleExportICalAll = () => {
+    const header = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Gurktaler 2.0//TODO Export//DE",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+    ].join("\r\n");
+
+    const todos = todoList
+      .map((task) => {
+        const lines = generateICalString(task).split("\r\n");
+        return lines.slice(5, -1).join("\r\n"); // Nur VTODO Teil ohne Calendar wrapper
+      })
+      .join("\r\n");
+
+    const footer = "END:VCALENDAR";
+    const icalContent = `${header}\r\n${todos}\r\n${footer}`;
+
+    const blob = new Blob([icalContent], {
+      type: "text/calendar;charset=utf-8",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `gurktaler_aufgaben_${
+      new Date().toISOString().split("T")[0]
+    }.ics`;
+    link.click();
+  };
+
+  // PDF Export
+  const handleExportPDF = () => {
+    exportTasksToPDF(todoList, availableProjects, {
+      title: "Gurktaler 2.0 — Aufgabenliste",
+      groupBy: "priority",
+      showCompleted: true,
+    });
+  };
+
+  // Google Calendar Functions
+  const handleGoogleCalendarLogin = async () => {
+    try {
+      await loginGoogleCalendar();
+      setGoogleCalendarLoggedIn(true);
+      alert("✅ Erfolgreich mit Google Calendar verbunden!");
+    } catch (error) {
+      console.error("Google Calendar Login fehlgeschlagen:", error);
+      alert(
+        "❌ Google Calendar Login fehlgeschlagen. Bitte versuche es erneut."
+      );
+    }
+  };
+
+  const handleGoogleCalendarLogout = () => {
+    logoutGoogleCalendar();
+    setGoogleCalendarLoggedIn(false);
+    alert("✅ Von Google Calendar abgemeldet.");
+  };
+
+  // Prevent unused warning (function wird bei Logout-Button verwendet, aber nicht alle Branches nutzen es)
+  void handleGoogleCalendarLogout;
+
+  const handleSyncToGoogleCalendar = async () => {
+    if (!googleCalendarLoggedIn) {
+      alert("⚠️ Bitte zuerst mit Google Calendar verbinden!");
+      return;
+    }
+
+    try {
+      const result = await syncAllTasksToGoogleCalendar(todoList);
+      alert(
+        `✅ Synchronisierung abgeschlossen!\n\n${result.success} Aufgaben erfolgreich synchronisiert\n${result.failed} Fehler`
+      );
+    } catch (error) {
+      console.error("Sync fehlgeschlagen:", error);
+      alert("❌ Synchronisierung fehlgeschlagen. Siehe Console für Details.");
+    }
+  };
+
+  const handleAddSingleToGoogleCalendar = async (task: Task) => {
+    if (!googleCalendarLoggedIn) {
+      alert("⚠️ Bitte zuerst mit Google Calendar verbinden!");
+      return;
+    }
+
+    try {
+      await addTaskToGoogleCalendar(task);
+      alert(`✅ "${task.title}" zu Google Calendar hinzugefügt!`);
+    } catch (error) {
+      console.error("Fehler beim Hinzufügen:", error);
+      alert("❌ Fehler beim Hinzufügen zu Google Calendar.");
+    }
   };
 
   const handleQuickAction = (route: string) => {
     navigate(route);
   };
+
+  const getPriorityColor = (priority: TaskPriority) => {
+    switch (priority) {
+      case "high":
+        return "text-red-600";
+      case "medium":
+        return "text-amber-600";
+      case "low":
+        return "text-slate-500";
+    }
+  };
+
+  const getPriorityIcon = (priority: TaskPriority) => {
+    switch (priority) {
+      case "high":
+        return <AlertCircle className="w-4 h-4" />;
+      case "medium":
+        return <Clock className="w-4 h-4" />;
+      case "low":
+        return <Clock className="w-4 h-4" />;
+    }
+  };
+
   return (
     <div className="p-8">
       {/* Header */}
@@ -242,49 +595,373 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200">
-            <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
-              <h2 className="font-heading font-semibold text-distillery-900">
-                Letzte Aktivitäten
+      {/* TODO & Schnellzugriff */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* TODO-Liste */}
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200">
+          <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
+            <div className="flex items-center justify-between">
+              <h2 className="font-heading font-semibold text-distillery-900 flex items-center gap-2">
+                <CheckSquare className="w-5 h-5" />
+                Aufgaben
               </h2>
-            </div>
-            <div className="divide-y divide-distillery-100">
-              {recentItems.length > 0 ? (
-                recentItems.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-4 hover:bg-gurktaler-50 cursor-pointer transition-colors"
+              <div className="flex gap-2">
+                {/* Google Calendar */}
+                {googleCalendarReady && (
+                  <>
+                    {!googleCalendarLoggedIn ? (
+                      <button
+                        onClick={handleGoogleCalendarLogin}
+                        className="text-sm px-3 py-1 bg-blue-500 text-white rounded-vintage hover:bg-blue-600 transition-colors font-body flex items-center gap-1"
+                        title="Mit Google Calendar verbinden"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Google
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSyncToGoogleCalendar}
+                        className="text-sm px-3 py-1 bg-green-500 text-white rounded-vintage hover:bg-green-600 transition-colors font-body flex items-center gap-1"
+                        title="Mit Google Calendar synchronisieren"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                        Sync
+                      </button>
+                    )}
+                  </>
+                )}
+
+                <button
+                  onClick={handleExportPDF}
+                  className="text-sm px-3 py-1 bg-red-500 text-white rounded-vintage hover:bg-red-600 transition-colors font-body flex items-center gap-1"
+                  title="Als PDF exportieren"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-body font-semibold text-distillery-800">
-                          {item.title}
-                        </p>
-                        <p className="text-sm text-distillery-600 capitalize font-body">
-                          {item.type}
-                        </p>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                  PDF
+                </button>
+                <button
+                  onClick={handleExportICalAll}
+                  className="text-sm px-3 py-1 bg-purple-500 text-white rounded-vintage hover:bg-purple-600 transition-colors font-body flex items-center gap-1"
+                  title="Alle als iCal exportieren"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  iCal
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="p-4">
+            {/* Filter & Sort */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <select
+                value={filterStatus}
+                onChange={(e) =>
+                  setFilterStatus(e.target.value as TaskStatus | "all")
+                }
+                className="px-2 py-1 text-sm border border-distillery-200 rounded-vintage font-body"
+              >
+                <option value="all">Alle Status</option>
+                <option value="open">Offen</option>
+                <option value="in-progress">In Arbeit</option>
+                <option value="completed">Erledigt</option>
+              </select>
+
+              <select
+                value={filterPriority}
+                onChange={(e) =>
+                  setFilterPriority(e.target.value as TaskPriority | "all")
+                }
+                className="px-2 py-1 text-sm border border-distillery-200 rounded-vintage font-body"
+              >
+                <option value="all">Alle Prioritäten</option>
+                <option value="high">Hoch</option>
+                <option value="medium">Mittel</option>
+                <option value="low">Niedrig</option>
+              </select>
+
+              <select
+                value={filterProject}
+                onChange={(e) => setFilterProject(e.target.value)}
+                className="px-2 py-1 text-sm border border-distillery-200 rounded-vintage font-body"
+              >
+                <option value="all">Alle Projekte</option>
+                {availableProjects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-2 py-1 text-sm border border-distillery-200 rounded-vintage font-body"
+              >
+                <option value="created">Neueste zuerst</option>
+                <option value="due_date">Fälligkeitsdatum</option>
+                <option value="priority">Priorität</option>
+                <option value="title">Titel A-Z</option>
+              </select>
+            </div>
+
+            {/* Add Task */}
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddTask()}
+                placeholder="Neue Aufgabe hinzufügen..."
+                className="flex-1 px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+              />
+              <button
+                onClick={handleAddTask}
+                className="px-4 py-2 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-colors font-body"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Task List */}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {todoList.length > 0 ? (
+                todoList.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-3 p-3 hover:bg-gurktaler-50 rounded-vintage transition-colors"
+                  >
+                    <button
+                      onClick={() => handleToggleTask(task)}
+                      className="flex-shrink-0 text-gurktaler-600 hover:text-gurktaler-700"
+                    >
+                      {task.status === "completed" ? (
+                        <CheckSquare className="w-5 h-5" />
+                      ) : (
+                        <Square className="w-5 h-5" />
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`font-body text-sm ${
+                          task.status === "completed"
+                            ? "line-through text-distillery-500"
+                            : "text-distillery-800"
+                        }`}
+                      >
+                        {task.title}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {task.assignee && (
+                          <span className="text-xs text-distillery-500 font-body">
+                            👤 {task.assignee}
+                          </span>
+                        )}
+                        {task.due_date && (
+                          <span className="text-xs text-distillery-500 font-body flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {new Date(task.due_date).toLocaleDateString(
+                              "de-DE",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              }
+                            )}
+                          </span>
+                        )}
+                        {task.project_id && (
+                          <span className="text-xs bg-gurktaler-100 text-gurktaler-700 px-2 py-0.5 rounded-vintage font-body">
+                            📁{" "}
+                            {availableProjects.find(
+                              (p) => p.id === task.project_id
+                            )?.name || "Projekt"}
+                          </span>
+                        )}
                       </div>
-                      <span className="text-sm text-distillery-500 font-body">
-                        {item.date}
-                      </span>
                     </div>
+                    <div
+                      className={`flex-shrink-0 ${getPriorityColor(
+                        task.priority
+                      )}`}
+                    >
+                      {getPriorityIcon(task.priority)}
+                    </div>
+                    <a
+                      href={`mailto:?subject=${encodeURIComponent(
+                        `Aufgabe: ${task.title}`
+                      )}&body=${encodeURIComponent(
+                        `Aufgabe: ${task.title}\n` +
+                          (task.description
+                            ? `\nBeschreibung: ${task.description}\n`
+                            : "") +
+                          (task.assignee
+                            ? `Zuständig: ${task.assignee}\n`
+                            : "") +
+                          (task.due_date
+                            ? `Fällig am: ${new Date(
+                                task.due_date
+                              ).toLocaleDateString("de-DE")}\n`
+                            : "") +
+                          `Priorität: ${
+                            task.priority === "high"
+                              ? "Hoch"
+                              : task.priority === "medium"
+                              ? "Mittel"
+                              : "Niedrig"
+                          }\n` +
+                          `Status: ${
+                            task.status === "open"
+                              ? "Offen"
+                              : task.status === "in-progress"
+                              ? "In Arbeit"
+                              : "Erledigt"
+                          }`
+                      )}`}
+                      className="flex-shrink-0 text-blue-600 hover:text-blue-700"
+                      title="Per E-Mail teilen"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </a>
+                    <button
+                      onClick={() => handleExportICalSingle(task)}
+                      className="flex-shrink-0 text-purple-600 hover:text-purple-700"
+                      title="Als iCal exportieren"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </button>
+                    {googleCalendarReady &&
+                      googleCalendarLoggedIn &&
+                      task.due_date && (
+                        <button
+                          onClick={() => handleAddSingleToGoogleCalendar(task)}
+                          className="flex-shrink-0 text-green-600 hover:text-green-700"
+                          title="Zu Google Calendar hinzufügen"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    <button
+                      onClick={() => handleEditTask(task)}
+                      className="flex-shrink-0 text-gurktaler-600 hover:text-gurktaler-700"
+                      title="Bearbeiten"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="flex-shrink-0 text-red-500 hover:text-red-700"
+                      title="Löschen"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-distillery-600">
-                  <p className="font-body">Noch keine Aktivitäten</p>
-                  <p className="text-sm text-distillery-500 mt-1 font-body">
-                    Erstelle dein erstes Projekt, um loszulegen.
-                  </p>
-                </div>
+                <p className="text-center text-distillery-500 py-4 font-body text-sm">
+                  Keine offenen Aufgaben
+                </p>
               )}
             </div>
           </div>
         </div>
 
+        {/* Schnellzugriff & Favoriten */}
         <div className="space-y-6">
           <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
             <h2 className="font-heading font-semibold text-distillery-900 mb-4">
@@ -346,20 +1023,205 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-gradient-to-br from-distillery-600 to-distillery-700 border-vintage border-distillery-800 rounded-vintage p-6 shadow-vintage-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
-        <div className="relative">
-          <h3 className="font-heading font-bold text-white mb-2 text-lg">
-            🌿 Seit 1865 — Entwicklungsmodus
-          </h3>
-          <p className="text-white/90 text-sm font-body leading-relaxed">
-            Dies ist eine Entwicklungsversion. Daten werden lokal im Browser
-            (LocalStorage) gespeichert. Für Synchronisation zwischen Geräten
-            nutze den JSON-Export und Git.
-          </p>
+      {/* Letzte Aktivitäten (nach unten verschoben) */}
+      <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200">
+        <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
+          <h2 className="font-heading font-semibold text-distillery-900">
+            Letzte Aktivitäten
+          </h2>
+        </div>
+        <div className="divide-y divide-distillery-100">
+          {recentItems.length > 0 ? (
+            recentItems.map((item, index) => (
+              <div
+                key={index}
+                className="p-4 hover:bg-gurktaler-50 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-body font-semibold text-distillery-800">
+                      {item.title}
+                    </p>
+                    <p className="text-sm text-distillery-600 capitalize font-body">
+                      {item.type}
+                    </p>
+                  </div>
+                  <span className="text-sm text-distillery-500 font-body">
+                    {item.date}
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-distillery-600">
+              <p className="font-body">Noch keine Aktivitäten</p>
+              <p className="text-sm text-distillery-500 mt-1 font-body">
+                Erstelle dein erstes Projekt, um loszulegen.
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Edit Task Modal */}
+      {showEditModal && editingTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-vintage shadow-vintage-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
+              <h2 className="font-heading font-semibold text-distillery-900">
+                Aufgabe bearbeiten
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-distillery-700 mb-2">
+                  Titel *
+                </label>
+                <input
+                  type="text"
+                  value={editingTask?.title || ""}
+                  onChange={(e) =>
+                    editingTask &&
+                    setEditingTask({ ...editingTask, title: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-distillery-700 mb-2">
+                  Beschreibung
+                </label>
+                <textarea
+                  value={editingTask?.description || ""}
+                  onChange={(e) =>
+                    editingTask &&
+                    setEditingTask({
+                      ...editingTask,
+                      description: e.target.value,
+                    })
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+                />
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-distillery-700 mb-2">
+                  Priorität
+                </label>
+                <select
+                  value={editingTask?.priority || "medium"}
+                  onChange={(e) =>
+                    editingTask &&
+                    setEditingTask({
+                      ...editingTask,
+                      priority: e.target.value as TaskPriority,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+                >
+                  <option value="low">Niedrig</option>
+                  <option value="medium">Mittel</option>
+                  <option value="high">Hoch</option>
+                </select>
+              </div>
+
+              {/* Assignee */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-distillery-700 mb-2">
+                  Zuständig
+                </label>
+                <input
+                  type="text"
+                  value={editingTask?.assignee || ""}
+                  onChange={(e) =>
+                    editingTask &&
+                    setEditingTask({
+                      ...editingTask,
+                      assignee: e.target.value,
+                    })
+                  }
+                  placeholder="Name der Person..."
+                  className="w-full px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+                />
+              </div>
+
+              {/* Due Date */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-distillery-700 mb-2">
+                  Fällig am
+                </label>
+                <input
+                  type="date"
+                  value={
+                    editingTask?.due_date
+                      ? editingTask.due_date.split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    editingTask &&
+                    setEditingTask({
+                      ...editingTask,
+                      due_date: e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : undefined,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+                />
+              </div>
+
+              {/* Project */}
+              <div>
+                <label className="block text-sm font-body font-semibold text-distillery-700 mb-2">
+                  Projekt
+                </label>
+                <select
+                  value={editingTask?.project_id || ""}
+                  onChange={(e) =>
+                    editingTask &&
+                    setEditingTask({
+                      ...editingTask,
+                      project_id: e.target.value || undefined,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+                >
+                  <option value="">Kein Projekt</option>
+                  {availableProjects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t-vintage border-distillery-200 flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingTask(null);
+                }}
+                className="px-4 py-2 border border-distillery-300 text-distillery-700 rounded-vintage hover:bg-distillery-50 transition-colors font-body"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-4 py-2 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-colors font-body"
+              >
+                Speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
