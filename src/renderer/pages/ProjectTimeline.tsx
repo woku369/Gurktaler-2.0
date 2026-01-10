@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Download,
@@ -12,6 +13,7 @@ import CapacitySettingsModal from "../components/CapacitySettingsModal.tsx";
 import { exportTimelineToPDF } from "../services/timelineExport.ts";
 
 export default function ProjectTimeline() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [timelineYears, setTimelineYears] = useState(2);
@@ -86,8 +88,7 @@ export default function ProjectTimeline() {
   };
 
   const handleProjectClick = (project: Project) => {
-    // TODO: Hier ProjectForm Modal öffnen oder zur Projektseite navigieren
-    console.log("Projekt öffnen:", project.name);
+    navigate(`/projects/${project.id}`);
   };
 
   const handleReorder = async (projectId: string, newIndex: number) => {

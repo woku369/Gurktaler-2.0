@@ -44,6 +44,7 @@ const sections: Section[] = [
         "Desktop-App (Windows) mit direktem NAS-Zugriff",
         "Mobile PWA (iOS/Android) mit vollständiger Schreibfunktion",
         "Projekt- und Produktverwaltung mit Versionierung",
+        "Zeitplanung (Gantt-Chart) mit Abhängigkeiten und Kapazitätsauslastung",
         "Rezepturverwaltung mit Zutatendatenbank",
         "Gebindeverwaltung (Flaschen, Etiketten, Verschlüsse)",
         "Notizen mit Markdown-Support",
@@ -51,7 +52,7 @@ const sections: Section[] = [
         "Tag-System zur Organisation",
         "Volltext-Suche über alle Bereiche",
         "Bild-Upload (lokal & URL)",
-        "JSON Export/Import",
+        "JSON Export/Import & automatisches Backup-System",
         "Automatische Synchronisation zwischen Desktop und Mobile",
       ],
     },
@@ -63,7 +64,7 @@ const sections: Section[] = [
     content: {
       subtitle: "Gurktaler unterwegs - PWA Installation & Nutzung",
       description:
-        "Die Progressive Web App (PWA) ermöglicht volle Gurktaler-Funktionalität auf Smartphone und Tablet - mit vollständiger Schreib- und Leseberechtigung. Alle Daten werden auf dem NAS gespeichert und automatisch mit der Desktop-App synchronisiert.",
+        "Die Progressive Web App (PWA) ermöglicht volle Gurktaler-Funktionalität auf Smartphone und Tablet - mit vollständiger Schreib- und Leseberechtigung. Alle Daten werden über einen Custom API Server (Port 3002) auf dem NAS gespeichert und automatisch mit der Desktop-App synchronisiert.",
       howTo: [
         {
           title: "Installation auf Android/iOS",
@@ -100,6 +101,7 @@ const sections: Section[] = [
       ],
       tips: [
         "PWA funktioniert nur über Tailscale VPN (100.121.103.107)",
+        "Server läuft auf Port 3002 (Node.js Custom API Server)",
         "Bei Offline-Betrieb: Cached Version wird geladen (Read-Only)",
         "Hard-Refresh: Chrome-Menü → 'App neu laden' (löscht Cache)",
         "Desktop und Mobile nutzen gleiche JSON-Dateien auf NAS",
@@ -569,7 +571,7 @@ const sections: Section[] = [
     icon: Settings,
     content: {
       description:
-        "Synology NAS-Integration über Tailscale VPN für Multi-Gerät-Synchronisation, Datenexport/-import als JSON, vCard-Import, API-Key-Verwaltung für KI-Assistenten.",
+        "Datenexport/-import als JSON, vCard-Import, API-Key-Verwaltung für KI-Assistenten, automatisches Backup-System über Custom API Server (Port 3002).",
       howTo: [
         {
           title: "Synology NAS-Synchronisation einrichten",
@@ -786,19 +788,22 @@ const sections: Section[] = [
         "✅ Phase 8: Synology NAS-Integration mit Tailscale VPN komplett",
         "✅ Phase 9: Production Build & Installer (NSIS) komplett",
         "✅ Phase 9: Separate Build-System für Desktop & PWA",
+        "✅ Phase 10: Zeitplanung (Gantt-Chart) mit Abhängigkeiten",
+        "✅ Phase 11: Kapazitätsauslastung quartalsweise",
+        "✅ Phase 12: Custom API Server (Port 3002) für PWA",
+        "✅ Phase 13: Backup-System (Windows + NAS)",
         "🔄 Phase B1: NAS-Storage-Layer & Migration (aktiv)",
         "📋 Phase B2: Entity-Services-Refactoring (geplant)",
         "📋 Phase B3: Binäre Bildspeicherung (geplant)",
-        "📋 Phase 10: Multi-User-Konfliktauflösung",
-        "📋 Phase 11: Server-Status UI (geplant)",
-        "📋 Phase 12: Performance-Optimierung",
+        "📋 Phase 14: Multi-User-Konfliktauflösung",
+        "📋 Phase 15: Performance-Optimierung",
       ],
       tips: [
-        "Aktuelle Version: 1.1.1 - Bug-Fix: Desktop-EXE lädt korrekt (siehe CHANGELOG.md)",
+        "Aktuelle Version: 1.4.0 - Zeitplanung mit Kalenderwochen-Grid, vereinfachte Abhängigkeiten, Orange-Farbschema (siehe CHANGELOG.md)",
         "Feature-Requests via GitHub Issues",
         "Regelmäßige Updates alle 2-4 Wochen",
         "NAS-Sync über Tailscale macht Multi-Device-Nutzung möglich (Heim, Büro, unterwegs)",
-        "Custom API Server (Port 3001) ermöglicht Mobile-Schreibzugriff",
+        "Custom API Server (Port 3002) ermöglicht Mobile-Schreibzugriff",
         "Detaillierte Mobile-Dokumentation: docs/MOBILE_API.md",
       ],
     },

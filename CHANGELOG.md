@@ -7,6 +7,91 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.4.0] - 2026-01-09
+
+### ✨ Neue Features
+
+#### 📅 Zeitplanung - Wochengrid wiederhergestellt
+- **Kalenderwochengrid:** Wöchentliche Gridlinien im Gantt-Chart
+  - Helle Linien alle 7 Tage (border-slate-100)
+  - Quartalslinien dunkleren Kontrast (border-slate-200)
+  - Dynamische Höhenberechnung basierend auf Projektanzahl
+  - Verbesserte visuelle Orientierung für präzise Projektplanung
+
+#### 🔗 Abhängigkeiten vereinfacht
+- **Einfache Abhängigkeitslogik:** "Projekt X muss abgeschlossen sein"
+  - Entfernung von 4 komplexen Abhängigkeitstypen (finish-to-start, start-to-start, finish-to-finish, start-to-finish)
+  - Nur noch eine Abhängigkeitsart: Standard finish-to-start
+  - Vereinfachte UI ohne Typ-Dropdown
+  - Label: "muss abgeschlossen sein"
+  - Tooltip "Abhängigkeit entfernen" am Delete-Button für bessere UX
+
+#### 🎨 Orange Kapazitätsfarbe
+- **Neue Farbskala:** Orange statt Ocker für bessere Unterscheidung zur Legende
+  - 0% = Sehr helles Orange (rgb(255, 243, 224))
+  - 50% = Mittleres Orange (rgb(242, 162, 112))
+  - 100% = Kräftiges dunkles Orange (rgb(230, 81, 0))
+  - Gilt für App-Ansicht und PDF-Export
+
+#### 🖱️ Doppelklick-Navigation
+- **Direkter Projektzugriff:** Doppelklick auf Projektbalken in Zeitplanung
+  - Navigiert direkt zur Projektdetailseite
+  - useNavigate Hook für React Router Integration
+  - Wiederherstellung eines Features aus früherer Version
+
+### 📚 Dokumentation
+
+#### 📖 Anleitungen aktualisiert (Documentation.tsx)
+- **Mobile PWA Deployment:** Aktualisierte Beschreibung
+  - Custom API Server Port 3002 (statt FileStation API)
+  - npm run deploy:pwa mit automatischem Backup
+  - Vereinfachte Installations-Anleitung ohne FileStation-Setup
+  - Server-Check Befehle: check-server.ps1, start-server.ps1 -Restart
+- **Zeitplanung-Features:** Neue Sektion hinzugefügt
+  - Gantt-Chart mit Abhängigkeiten
+  - Kapazitätsauslastung quartalsweise
+  - Wochengrid und Quartalslinien
+- **Roadmap:** Version 1.4.0 und abgeschlossene Phasen
+  - Phase 10: Zeitplanung ✅
+  - Phase 11: Kapazitätsauslastung ✅
+  - Phase 12: Custom API Server ✅
+  - Phase 13: Backup-System ✅
+
+#### ⚙️ Einstellungen bereinigt (Settings.tsx)
+- **Veraltete Sektion entfernt:** Synology FileStation Credentials
+  - Keine localStorage-Credentials mehr benötigt
+  - Custom API Server benötigt keine Authentifizierung
+- **Neue Server-Info Sektion:** Custom API Server (PWA)
+  - Beschreibung: Node.js Server auf Port 3002
+  - Desktop nutzt Y:\ Laufwerk (direkter NAS-Zugriff)
+  - Browser/Mobile nutzt Custom API Server (Port 3002)
+  - Server-Prüfung: check-server.ps1
+  - Server-Neustart: start-server.ps1 -Restart
+
+### 🔧 Technische Verbesserungen
+- **PDF Export:** Wochengrid und Quartalslinien durchgehend
+  - Linien gehen bis zum Ende der Chart-Höhe (nicht nur -10px)
+  - Konsistente Darstellung auf allen Seiten
+- **GanttChart Rendering:** Explizite Höhen für Grid-Linien
+  - height: ${bars.length * ROW_HEIGHT}px statt h-full
+  - Container minHeight für korrekte Positionierung
+  - Behebt Problem mit nicht sichtbarem Grid in EXE
+
+### 🗑️ Entfernte Features
+- Abhängigkeitstypen (start-to-start, finish-to-finish, start-to-finish)
+- Synology FileStation Credentials UI in Settings
+- localStorage synology_username/synology_password Verwaltung
+
+### 📁 Geänderte Dateien
+- src/renderer/components/GanttChart.tsx: +Wochengrid, +Orange-Farbskala, Höhenberechnung
+- src/renderer/components/ProjectTimelineForm.tsx: Vereinfachte Dependencies, Tooltip
+- src/renderer/services/timelineExport.ts: +Orange-Farbskala, durchgehende Gridlinien
+- src/renderer/pages/ProjectTimeline.tsx: +useNavigate, handleProjectClick Navigation
+- src/renderer/pages/Documentation.tsx: Aktualisierte Beschreibungen (Port 3002, Deployment, Roadmap)
+- src/renderer/pages/Settings.tsx: Entfernte FileStation-Sektion, +Custom API Server Info
+
+---
+
 ## [1.3.0] - 2026-01-08
 
 ### ✨ Neue Features

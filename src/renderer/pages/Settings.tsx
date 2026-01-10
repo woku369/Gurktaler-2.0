@@ -92,15 +92,6 @@ function Settings() {
     localStorage.getItem("sync_network_path") || "Y:\\zweipunktnull\\data.json"
   );
 
-  // Synology FileStation Credentials (für Browser/PWA)
-  const [synologyUsername, setSynologyUsername] = useState(
-    localStorage.getItem("synology_username") || "admin"
-  );
-  const [synologyPassword, setSynologyPassword] = useState(
-    localStorage.getItem("synology_password") || ""
-  );
-  const [showSynologyPassword, setShowSynologyPassword] = useState(false);
-
   // Git-Status laden
   useEffect(() => {
     loadGitStatus();
@@ -256,13 +247,6 @@ function Settings() {
     synologySync.disconnect();
     setSyncStatus(synologySync.getSyncStatus());
     setSyncMessage("Verbindung getrennt");
-    setTimeout(() => setSyncMessage(""), 3000);
-  };
-
-  const handleSaveSynologyCredentials = () => {
-    localStorage.setItem("synology_username", synologyUsername);
-    localStorage.setItem("synology_password", synologyPassword);
-    setSyncMessage("✅ Synology-Zugangsdaten gespeichert");
     setTimeout(() => setSyncMessage(""), 3000);
   };
 
@@ -1152,95 +1136,45 @@ function Settings() {
           </div>
         </div>
 
-        {/* Synology FileStation Credentials (für PWA/Browser) */}
+        {/* Server Info (PWA) */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Cloud className="w-5 h-5 text-blue-600" />
+              <Server className="w-5 h-5 text-blue-600" />
             </div>
             <div>
               <h2 className="font-semibold text-slate-800">
-                Synology FileStation (PWA)
+                Custom API Server (PWA)
               </h2>
               <p className="text-sm text-slate-500">
-                Zugangsdaten für Browser/Mobile-Zugriff
+                Node.js Server auf Port 3002
               </p>
             </div>
           </div>
 
-          {syncMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-blue-50 text-blue-700 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">{syncMessage}</span>
-            </div>
-          )}
-
           <div className="space-y-4">
             <div className="py-3 border-b border-slate-100">
               <p className="text-sm text-slate-600 mb-2">
-                Diese Zugangsdaten werden für die FileStation API benötigt, wenn
-                du die App im Browser (PWA) nutzt.
+                Der Custom API Server ermöglicht Schreibzugriff auf das NAS über
+                Browser/PWA.
               </p>
               <p className="text-xs text-slate-500">
-                🖥️ Desktop-App nutzt Y:\\ Laufwerk (kein Login nötig)
+                🖥️ Desktop-App nutzt Y:\\ Laufwerk (direkter NAS-Zugriff)
               </p>
               <p className="text-xs text-slate-500">
-                📱 Browser/Mobile nutzt FileStation API (Login erforderlich)
+                📱 Browser/Mobile nutzt Custom API Server (Port 3002)
               </p>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Benutzername
-                </label>
-                <input
-                  type="text"
-                  value={synologyUsername}
-                  onChange={(e) => setSynologyUsername(e.target.value)}
-                  placeholder="admin"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Passwort
-                </label>
-                <div className="relative">
-                  <input
-                    type={showSynologyPassword ? "text" : "password"}
-                    value={synologyPassword}
-                    onChange={(e) => setSynologyPassword(e.target.value)}
-                    placeholder="Dein Synology-Passwort"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <button
-                    onClick={() =>
-                      setShowSynologyPassword(!showSynologyPassword)
-                    }
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded"
-                  >
-                    {showSynologyPassword ? (
-                      <EyeOff className="w-4 h-4 text-slate-500" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-slate-500" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                onClick={handleSaveSynologyCredentials}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <CheckCircle className="w-5 h-5" />
-                Zugangsdaten speichern
-              </button>
-
-              <p className="text-xs text-amber-600">
-                ⚠️ Zugangsdaten werden unverschlüsselt in localStorage
-                gespeichert
+              <p className="text-xs text-slate-500 mt-2">
+                ⚙️ Server prüfen:{" "}
+                <code className="bg-slate-100 px-1 rounded">
+                  check-server.ps1
+                </code>
+              </p>
+              <p className="text-xs text-slate-500">
+                🔄 Server neustarten:{" "}
+                <code className="bg-slate-100 px-1 rounded">
+                  start-server.ps1 -Restart
+                </code>
               </p>
             </div>
           </div>

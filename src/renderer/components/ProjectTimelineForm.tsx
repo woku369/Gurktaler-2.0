@@ -309,12 +309,6 @@ export default function ProjectTimelineForm({
               <div className="space-y-2 mb-2">
                 {timeline.dependencies.map((dep) => {
                   const project = projects.find((p) => p.id === dep.projectId);
-                  const typeLabels = {
-                    "finish-to-start": "→ Start nach Ende",
-                    "start-to-start": "⇉ Start parallel",
-                    "finish-to-finish": "⇇ Ende gleichzeitig",
-                    "start-to-finish": "↔ Start mit Ende",
-                  };
                   return (
                     <div
                       key={dep.projectId}
@@ -325,12 +319,13 @@ export default function ProjectTimelineForm({
                           {project?.name || "Unbekannt"}
                         </span>
                         <span className="text-xs text-slate-500 ml-2">
-                          {typeLabels[dep.type]}
+                          muss abgeschlossen sein
                         </span>
                       </div>
                       <button
                         onClick={() => removeDependency(dep.projectId)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-red-600 hover:text-red-800 transition-colors"
+                        title="Abhängigkeit entfernen"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -341,10 +336,10 @@ export default function ProjectTimelineForm({
             )}
 
             {availableProjects.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="flex gap-2">
                 <select
                   id="dep-project"
-                  className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gurktaler-500"
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gurktaler-500"
                 >
                   <option value="">Projekt wählen...</option>
                   {availableProjects.map((project) => (
@@ -353,32 +348,17 @@ export default function ProjectTimelineForm({
                     </option>
                   ))}
                 </select>
-                <select
-                  id="dep-type"
-                  className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-gurktaler-500"
-                >
-                  <option value="finish-to-start">→ Start nach Ende</option>
-                  <option value="start-to-start">⇉ Start parallel</option>
-                  <option value="finish-to-finish">⇇ Ende gleichzeitig</option>
-                  <option value="start-to-finish">↔ Start mit Ende</option>
-                </select>
                 <button
                   onClick={() => {
                     const projectSelect = document.getElementById(
                       "dep-project"
                     ) as HTMLSelectElement;
-                    const typeSelect = document.getElementById(
-                      "dep-type"
-                    ) as HTMLSelectElement;
                     if (projectSelect.value) {
-                      addDependency(
-                        projectSelect.value,
-                        typeSelect.value as DependencyType
-                      );
+                      addDependency(projectSelect.value, "finish-to-start");
                       projectSelect.value = "";
                     }
                   }}
-                  className="col-span-2 flex items-center justify-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Abhängigkeit hinzufügen

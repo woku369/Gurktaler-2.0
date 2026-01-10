@@ -141,13 +141,34 @@ export default function GanttChart({
       </div>
 
       {/* Gantt Bars */}
-      <div className="relative">
-        {/* Grid Lines */}
+      <div
+        className="relative"
+        style={{ minHeight: `${bars.length * ROW_HEIGHT}px` }}
+      >
+        {/* Weekly Grid Lines (Kalenderwochen) */}
+        {Array.from({ length: Math.ceil(years * 52) }).map((_, i) => {
+          const weekX = (i / (years * 52)) * 100;
+          return (
+            <div
+              key={`week-${i}`}
+              className="absolute top-0 border-l border-slate-100"
+              style={{
+                left: `${weekX}%`,
+                height: `${bars.length * ROW_HEIGHT}px`,
+              }}
+            />
+          );
+        })}
+
+        {/* Quarterly Grid Lines */}
         {quarters.map((q, i) => (
           <div
             key={i}
-            className="absolute top-0 h-full border-l border-slate-200"
-            style={{ left: `${q.x}%` }}
+            className="absolute top-0 border-l border-slate-200"
+            style={{
+              left: `${q.x}%`,
+              height: `${bars.length * ROW_HEIGHT}px`,
+            }}
           />
         ))}
 
@@ -440,10 +461,10 @@ export default function GanttChart({
                   );
                   const percentage = capacity?.percentage || 0;
 
-                  // Berechne Farbintensität (Ocker-Skala: hell bei 0%, dunkel bei 100%)
-                  const r = Math.round(248 - (percentage / 100) * 109); // 248 -> 139
-                  const g = Math.round(244 - (percentage / 100) * 133); // 244 -> 111
-                  const b = Math.round(232 - (percentage / 100) * 161); // 232 -> 71
+                  // Berechne Farbintensität (Orange-Skala: hell bei 0%, dunkel bei 100%)
+                  const r = Math.round(255 - (percentage / 100) * 25); // 255 -> 230
+                  const g = Math.round(243 - (percentage / 100) * 162); // 243 -> 81
+                  const b = Math.round(224 - (percentage / 100) * 224); // 224 -> 0
                   const bgColor = `rgb(${r}, ${g}, ${b})`;
 
                   return (

@@ -61,7 +61,7 @@ export async function exportTimelineToPDF(
   const weekInDays = 7;
   for (let day = 0; day <= totalDays; day += weekInDays) {
     const x = margin + (day / totalDays) * chartWidth;
-    pdf.line(x, headerY + 2, x, headerY + chartHeight - 10);
+    pdf.line(x, headerY + 2, x, headerY + chartHeight);
   }
 
   // Quartalslinien (dunkler und dicker)
@@ -76,7 +76,7 @@ export async function exportTimelineToPDF(
       const x = margin + (daysFromStart / totalDays) * chartWidth;
 
       pdf.text(`Q${q + 1} ${today.getFullYear() + y}`, x, headerY);
-      pdf.line(x, headerY + 2, x, headerY + chartHeight - 10);
+      pdf.line(x, headerY + 2, x, headerY + chartHeight);
     }
   }
 
@@ -302,7 +302,7 @@ export async function exportTimelineToPDF(
       const weekInDays = 7;
       for (let day = 0; day <= totalDays; day += weekInDays) {
         const x = margin + (day / totalDays) * chartWidth;
-        pdf.line(x, headerY + 2, x, maxYPerPage - 10);
+        pdf.line(x, headerY + 2, x, maxYPerPage);
       }
       
       // Quartalslinien
@@ -318,7 +318,7 @@ export async function exportTimelineToPDF(
           pdf.setFontSize(8);
           pdf.setFont("helvetica", "bold");
           pdf.text(`Q${q + 1} ${today.getFullYear() + y}`, x, headerY);
-          pdf.line(x, headerY + 2, x, maxYPerPage - 10);
+          pdf.line(x, headerY + 2, x, maxYPerPage);
         }
       }
       
@@ -423,11 +423,11 @@ export async function exportTimelineToPDF(
         const capacity = capacityData.quarters.find(c => c.quarter === quarterLabel);
         const percentage = capacity?.percentage || 0;
         
-        // Berechne Farbintensität (Ocker-Skala: hell bei 0%, dunkel bei 100%)
+        // Berechne Farbintensität (Orange-Skala: hell bei 0%, dunkel bei 100%)
         if (percentage > 0) {
-          const r = Math.round(248 - (percentage / 100) * 109); // 248 -> 139
-          const g = Math.round(244 - (percentage / 100) * 133); // 244 -> 111
-          const b = Math.round(232 - (percentage / 100) * 161); // 232 -> 71
+          const r = Math.round(255 - (percentage / 100) * 25);  // 255 -> 230
+          const g = Math.round(243 - (percentage / 100) * 162); // 243 -> 81
+          const b = Math.round(224 - (percentage / 100) * 224); // 224 -> 0
           pdf.setFillColor(r, g, b);
           pdf.rect(x, capacityY, width, barHeight, "F");
           
