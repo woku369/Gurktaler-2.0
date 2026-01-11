@@ -7,6 +7,91 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.6.0] - 2026-01-11
+
+### ✨ Neue Features
+
+#### 🗂️ Project Workspaces / Projekt-Ebenen (Phase 13)
+- **Strategische Projekt-Organisation:** Multi-Level Workspace System für klare Trennung
+  - 3 Standard-Workspaces: Standortentwicklung, Produktentwicklung, Sonstige
+  - Frei definierbar: Name, Icon (10 Emojis), Farbe (10 Farben), Beschreibung
+  - Tab-basierte Navigation auf Projects + Timeline Seiten
+  - Separate Gantt-Charts pro Workspace möglich
+
+- **Workspace-Verwaltung in Settings:**
+  - WorkspaceManager mit vollständiger CRUD-Funktionalität
+  - ➕ Neue Ebene erstellen mit Farbpalette und Icon-Auswahl
+  - ✏️ Bestehende Ebenen bearbeiten (alle Felder änderbar)
+  - 🗑️ Ebenen löschen mit Sicherheitsabfrage
+  - ⚠️ **Sichere Löschung:** Projekte werden NIE gelöscht, nur Zuordnung entfernt
+  - Detaillierte Warnung zeigt Anzahl betroffener Projekte
+
+- **Projekt-Integration:**
+  - Workspace-Auswahl beim Erstellen/Bearbeiten von Projekten
+  - Workspace-Badge auf Projektkarten (Icon + Name, farbig umrahmt)
+  - Filter: "Alle Ebenen" oder spezifischer Workspace
+  - Rückwärtskompatibel: Projekte ohne Workspace weiterhin sichtbar
+
+- **Timeline/Gantt-Chart Integration:**
+  - WorkspaceTabs auf ProjectTimeline-Seite
+  - Separate Zeitplanung pro Workspace
+  - PDF-Export zeigt aktiven Workspace im Header
+  - Filter funktioniert mit Timeline-Projekten
+
+- **TODO-Liste Integration:**
+  - Workspace-Badge bei projekt-verknüpften Tasks
+  - Zeigt Projekt + zugehörigen Workspace
+  - PDF-Export mit Workspace-Info
+
+- **Globale Suche:**
+  - Workspace-Filter-Dropdown ("Alle Ebenen" oder spezifisch)
+  - Workspace-Badge in Projekt-Suchergebnissen
+  - Filtert nur Projekte, andere Entitäten durchlassen
+
+- **Vollständiges Datenmodell:**
+  ```typescript
+  interface ProjectWorkspace extends BaseEntity {
+    name: string;              // Frei definierbarer Name
+    description?: string;      
+    color: string;             // Hex-Color (#3b82f6)
+    icon?: string;             // Emoji (📍)
+    order: number;             // Sortierung (0, 1, 2, ...)
+  }
+
+  interface Project extends BaseEntity {
+    // ... existing fields
+    workspace_id?: string;     // Optional für Rückwärtskompatibilität
+  }
+  ```
+
+### 🔒 Sicherheit & Stabilität
+- **Workspace-Löschung:** Sichere Implementierung verhindert versehentliches Löschen von Projekten
+  - Nur `workspace_id` Referenz wird entfernt
+  - Projekte bleiben vollständig erhalten
+  - Erscheinen automatisch im "Alle Ebenen" Filter
+  - Console-Logs zur Nachverfolgung
+
+### 📄 Dokumentation
+- **WORKSPACE_IMPLEMENTATION.md:** Vollständige 5-Phasen Implementierungs-Checkliste
+- **ROADMAP.md:** Phase 13 als abgeschlossen markiert
+- Alle Features dokumentiert mit Code-Beispielen
+
+### 🎨 UI/UX Verbesserungen
+- **WorkspaceTabs Component:** Elegante Tab-Navigation mit:
+  - Workspace-Farbe als 3px Top-Border
+  - Icon + Name in jedem Tab
+  - Hover-Effekte und Transitions
+  - Responsive Design (overflow-x-auto)
+  - Optional "Alle Ebenen" Tab (📊)
+
+- **Workspace-Badges:** Konsistentes Design überall:
+  - Halbtransparenter Hintergrund (color + 20% opacity)
+  - 1px farbiger Border
+  - Icon + Name
+  - Hover-Tooltip mit Workspace-Beschreibung
+
+---
+
 ## [1.5.0] - 2026-01-10
 
 ### ✨ Neue Features

@@ -1,16 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, Search } from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import ProjectForm from "@/renderer/components/ProjectForm";
 import ProjectCard from "@/renderer/components/ProjectCard";
 import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
+import { WorkspaceTabs } from "@/renderer/components/WorkspaceTabs";
 import {
   projects as projectsService,
   images as imagesService,
   tags as tagsService,
   favorites as favoritesService,
+  workspaces as workspacesService,
+  initializeDefaultWorkspaces,
 } from "@/renderer/services/storage";
-import type { Project, Image, Tag, Document } from "@/shared/types";
+import type {
+  Project,
+  Image,
+  Tag,
+  Document,
+  ProjectWorkspace,
+} from "@/shared/types";
 
 function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -18,6 +27,8 @@ function Projects() {
     {}
   );
   const [tags, setTags] = useState<Tag[]>([]);
+  const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
+  const [activeWorkspace, setActiveWorkspace] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,8 +39,18 @@ function Projects() {
 
   // Load projects on mount
   useEffect(() => {
-    loadProjects();
+    const init = async () => {
+      await initializeDefaultWorkspaces();
+      await loadWorkspaces();
+      await loadProjects();
+    };
+    init();
   }, []);
+
+  const loadWorkspaces = async () => {
+    const ws = await workspacesService.getAll();
+    setWorkspaces(ws);
+  };
 
   const loadProjects = async () => {
     const allProjects = await projectsService.getAll();
@@ -122,19 +143,32 @@ function Projects() {
     setTimeout(() => setCopiedProjectId(null), 2000);
   };
 
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch = project.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    let matchesTag = true;
-    if (selectedTagId) {
-      // TODO: Tag filtering temporarily disabled (needs async refactor)
-      matchesTag = true;
+  const filteredProjects = useMemo(() => {
+    // Erst nach Workspace filtern
+    let filtered = projects;
+    if (activeWorkspace !== "all") {
+      filtered = projects.filter(
+        (project) => project.workspace_id === activeWorkspace
+      );
     }
 
-    return matchesSearch && matchesTag;
-  });
+    // Dann nach Suchbegriff filtern
+    filtered = filtered.filter((project) => {
+      const matchesSearch = project.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      let matchesTag = true;
+      if (selectedTagId) {
+        // TODO: Tag filtering temporarily disabled (needs async refactor)
+        matchesTag = true;
+      }
+
+      return matchesSearch && matchesTag;
+    });
+
+    return filtered;
+  }, [projects, activeWorkspace, searchQuery, selectedTagId]);
 
   return (
     <div className="p-8">
@@ -156,6 +190,14 @@ function Projects() {
           Neues Projekt
         </button>
       </div>
+
+      {/* Workspace Tabs */}
+      <WorkspaceTabs
+        workspaces={workspaces}
+        activeWorkspaceId={activeWorkspace}
+        onWorkspaceChange={setActiveWorkspace}
+        showAllTab={true}
+      />
 
       {/* Search & Tag Filter */}
       <div className="flex gap-4 mb-6">
@@ -191,6 +233,7 @@ function Projects() {
               key={project.id}
               project={project}
               image={projectImages[project.id]?.[0]}
+              workspaces={workspaces}
               isFavorite={false}
               onToggleFavorite={async () => {
                 const existing = await favoritesService.getByEntity(

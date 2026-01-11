@@ -13,6 +13,15 @@ export type DocumentCategory = 'recipe' | 'analysis' | 'marketing' | 'label' | '
 export type TaskStatus = 'open' | 'in-progress' | 'completed';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
+// Project Workspace - Strategische Projekt-Ebenen
+export interface ProjectWorkspace extends BaseEntity {
+    name: string;              // Frei definierbarer Name (z.B. "Standortentwicklung")
+    description?: string;      // Optionale Beschreibung
+    color: string;             // Hex-Color für visuelle Trennung (z.B. "#3b82f6")
+    icon?: string;             // Optional: Emoji oder Icon (z.B. "📍")
+    order: number;             // Sortierung der Tabs (0, 1, 2, ...)
+}
+
 // Document - Pfad-basierte Dokumentenverwaltung
 export interface Document extends BaseEntity {
     type: DocumentType;
@@ -78,6 +87,7 @@ export interface Project extends BaseEntity {
     name: string;
     description?: string;
     status: ProjectStatus;
+    workspace_id?: string;     // Zuordnung zu Workspace (optional für Rückwärtskompatibilität)
     documents?: Document[]; // Pfad-basierte Dokumente
     timeline?: ProjectTimeline; // Gantt-Chart Zeitplanung
     color?: string; // Hex-Farbe für Timeline-Visualisierung (z.B. "#3b82f6")
@@ -276,5 +286,6 @@ export interface DataExport {
         images: Image[];
         favorites: Favorite[];
         tasks: Task[];
+        workspaces: ProjectWorkspace[];
     };
 }

@@ -1,12 +1,14 @@
 import jsPDF from "jspdf";
-import { Project, CapacityUtilization } from "../../shared/types";
+import { Project, CapacityUtilization, ProjectWorkspace } from "../../shared/types";
 
 export async function exportTimelineToPDF(
   projects: Project[],
   contacts: any[],
   years: number,
   saveToNAS: boolean = false,
-  capacityData?: CapacityUtilization
+  capacityData?: CapacityUtilization,
+  activeWorkspace?: string,
+  workspaces?: ProjectWorkspace[]
 ): Promise<{ success: boolean; message: string; filename?: string; url?: string }> {
   try {
   // PDF im Querformat A4
@@ -44,10 +46,25 @@ export async function exportTimelineToPDF(
     margin,
     margin + 17
   );
+  
+  // Workspace-Info anzeigen
+  let nextY = margin + 23;
+  if (activeWorkspace && activeWorkspace !== 'all' && workspaces) {
+    const workspace = workspaces.find(ws => ws.id === activeWorkspace);
+    if (workspace) {
+      pdf.text(
+        `Projekt-Ebene: ${workspace.icon || ''} ${workspace.name}`,
+        margin,
+        nextY
+      );
+      nextY += 6;
+    }
+  }
+  
   pdf.text(
     `Zeitraum: ${years === 0.5 ? '6 Monate' : years === 1 ? '1 Jahr' : `${years} Jahre`} (${startDate.toLocaleDateString("de-DE", {month: 'short', year: 'numeric'})} - ${endDate.toLocaleDateString("de-DE", {month: 'short', year: 'numeric'})})`,
     margin,
-    margin + 23
+    nextY
   );
 
   // Timeline Header (Quartale)

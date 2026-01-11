@@ -22,6 +22,7 @@ import {
   recipes as recipesService,
   ingredients as ingredientsService,
   containers as containersService,
+  workspaces as workspacesService,
 } from "@/renderer/services/storage";
 import type {
   Project,
@@ -32,6 +33,7 @@ import type {
   Recipe,
   Ingredient,
   Container,
+  ProjectWorkspace,
 } from "@/shared/types";
 
 type SearchResult = {
@@ -49,6 +51,7 @@ type SearchResult = {
   subtitle?: string;
   description?: string;
   metadata?: string;
+  workspace_id?: string; // Für Projekte
 };
 
 export default function GlobalSearch() {
@@ -56,7 +59,17 @@ export default function GlobalSearch() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
+  const [filterWorkspace, setFilterWorkspace] = useState<string>("all");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      const ws = await workspacesService.getAll();
+      setWorkspaces(ws);
+    };
+    loadWorkspaces();
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -71,7 +84,7 @@ export default function GlobalSearch() {
     }, 300); // Debounce
 
     return () => clearTimeout(timeoutId);
-  }, [query]);
+  }, [query, filterWorkspace]); // filterWorkspace als Dependency
 
   const performSearch = async (searchQuery: string) => {
     const lowerQuery = searchQuery.toLowerCase();
@@ -90,6 +103,7 @@ export default function GlobalSearch() {
           title: project.name,
           description: project.description,
           metadata: `Status: ${project.status}`,
+          workspace_id: project.workspace_id,
         });
       }
     });
@@ -242,7 +256,17 @@ export default function GlobalSearch() {
     });
 
     // Filter by favorites if enabled (temporarily disabled - needs async refactor)
-    const filteredResults = allResults;
+    let filteredResults = allResults;
+
+    // Filter by workspace (nur für Projekte)
+    if (filterWorkspace !== "all") {
+      filteredResults = filteredResults.filter((result) => {
+        if (result.type === "project") {
+          return result.workspace_id === filterWorkspace;
+        }
+        return true; // Alle anderen Typen durchlassen
+      });
+    }
 
     setResults(filteredResults);
   };
@@ -398,6 +422,27 @@ export default function GlobalSearch() {
               Nur Favoriten anzeigen
             </span>
           </label>
+
+          {/* Workspace Filter */}
+          {workspaces.length > 0 && (
+            <div className="flex items-center gap-2 ml-4">
+              <label className="text-sm text-distillery-700 font-body">
+                Projekt-Ebene:
+              </label>
+              <select
+                value={filterWorkspace}
+                onChange={(e) => setFilterWorkspace(e.target.value)}
+                className="px-3 py-1.5 text-sm border border-distillery-200 rounded-lg focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+              >
+                <option value="all">Alle Ebenen</option>
+                {workspaces.map((ws) => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.icon} {ws.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Results */}
@@ -464,6 +509,30 @@ export default function GlobalSearch() {
                               {getTypeLabel(result.type)}
                             </span>
                             {result.metadata && <span>{result.metadata}</span>}
+                            {result.type === "project" &&
+                              result.workspace_id &&
+                              (() => {
+                                const workspace = workspaces.find(
+                                  (w) => w.id === result.workspace_id
+                                );
+                                if (workspace) {
+                                  return (
+                                    <span
+                                      className="px-2 py-0.5 rounded-vintage font-medium"
+                                      style={{
+                                        backgroundColor: `${workspace.color}20`,
+                                        color: workspace.color,
+                                        borderWidth: "1px",
+                                        borderStyle: "solid",
+                                        borderColor: workspace.color,
+                                      }}
+                                    >
+                                      {workspace.icon} {workspace.name}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
                           </div>
                         </div>
                       </div>

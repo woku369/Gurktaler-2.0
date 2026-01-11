@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -6,16 +6,27 @@ import {
   Settings as SettingsIcon,
   BarChart3,
 } from "lucide-react";
-import { Project, CapacityUtilization } from "../../shared/types";
+import {
+  Project,
+  CapacityUtilization,
+  ProjectWorkspace,
+} from "../../shared/types";
 import * as storage from "../services/storage.ts";
+import {
+  workspaces as workspacesService,
+  initializeDefaultWorkspaces,
+} from "../services/storage.ts";
 import GanttChart from "../components/GanttChart.tsx";
 import CapacitySettingsModal from "../components/CapacitySettingsModal.tsx";
+import { WorkspaceTabs } from "../components/WorkspaceTabs.tsx";
 import { exportTimelineToPDF } from "../services/timelineExport.ts";
 
 export default function ProjectTimeline() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
+  const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
+  const [activeWorkspace, setActiveWorkspace] = useState<string>("all");
   const [timelineYears, setTimelineYears] = useState(2);
   const [loading, setLoading] = useState(true);
   const [showCapacity, setShowCapacity] = useState(false);
@@ -26,8 +37,18 @@ export default function ProjectTimeline() {
   });
 
   useEffect(() => {
-    loadData();
+    const init = async () => {
+      await initializeDefaultWorkspaces();
+      await loadWorkspaces();
+      loadData();
+    };
+    init();
   }, []);
+
+  const loadWorkspaces = async () => {
+    const ws = await workspacesService.getAll();
+    setWorkspaces(ws);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -43,8 +64,17 @@ export default function ProjectTimeline() {
     setLoading(false);
   };
 
-  // Filter: Nur Projekte mit aktivierter Timeline
-  const timelineProjects = projects.filter((p) => p.timeline?.enabled);
+  // Filter: Nur Projekte mit aktivierter Timeline + Workspace-Filter
+  const timelineProjects = useMemo(() => {
+    let filtered = projects.filter((p) => p.timeline?.enabled);
+
+    // Workspace-Filter
+    if (activeWorkspace !== "all") {
+      filtered = filtered.filter((p) => p.workspace_id === activeWorkspace);
+    }
+
+    return filtered;
+  }, [projects, activeWorkspace]);
 
   const handleExportPDF = async () => {
     // Prüfe ob PWA (hat window.storageProvider mit baseUrl) oder Desktop (Electron)
@@ -67,7 +97,9 @@ export default function ProjectTimeline() {
       contacts,
       timelineYears,
       saveToNAS,
-      showCapacity ? capacityData : undefined
+      showCapacity ? capacityData : undefined,
+      activeWorkspace,
+      workspaces
     );
 
     if (result.success) {
@@ -155,6 +187,16 @@ export default function ProjectTimeline() {
           Gantt-Chart mit {timelineProjects.length}{" "}
           {timelineProjects.length === 1 ? "Projekt" : "Projekten"}
         </p>
+      </div>
+
+      {/* Workspace Tabs */}
+      <div className="mb-6">
+        <WorkspaceTabs
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspace}
+          onWorkspaceChange={setActiveWorkspace}
+          showAllTab={true}
+        />
       </div>
 
       {/* Controls */}

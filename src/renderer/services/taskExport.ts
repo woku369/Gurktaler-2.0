@@ -1,6 +1,6 @@
 // Task PDF Export Service
 import jsPDF from 'jspdf';
-import type { Task, Project } from '@/shared/types';
+import type { Task, Project, ProjectWorkspace } from '@/shared/types';
 
 export const exportTasksToPDF = (
   tasks: Task[],
@@ -9,13 +9,17 @@ export const exportTasksToPDF = (
     title?: string;
     groupBy?: 'priority' | 'project' | 'status' | 'none';
     showCompleted?: boolean;
+    workspaces?: ProjectWorkspace[];  // Workspace-Support
+    filterProject?: string;  // Wenn gesetzt, nur Tasks dieses Projekts
   } = {}
 ) => {
   const pdf = new jsPDF();
   const {
     title = 'Aufgabenliste',
     groupBy = 'none',
-    showCompleted = true
+    showCompleted = true,
+    workspaces = [],
+    filterProject
   } = options;
 
   let filteredTasks = showCompleted ? tasks : tasks.filter(t => t.status !== 'completed');
@@ -36,7 +40,20 @@ export const exportTasksToPDF = (
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   pdf.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 15, 27);
-  pdf.text(`Anzahl Aufgaben: ${filteredTasks.length}`, 120, 27);
+  
+  let infoX = 120;
+  pdf.text(`Anzahl Aufgaben: ${filteredTasks.length}`, infoX, 27);
+  
+  // Workspace-Info wenn Task zu Projekt mit Workspace gehört
+  if (filterProject && workspaces.length > 0) {
+    const project = projects.find(p => p.id === filterProject);
+    if (project?.workspace_id) {
+      const workspace = workspaces.find(w => w.id === project.workspace_id);
+      if (workspace) {
+        pdf.text(`${workspace.icon || ''} ${workspace.name}`, infoX, 31);
+      }
+    }
+  }
   
   let currentY = 45;
   

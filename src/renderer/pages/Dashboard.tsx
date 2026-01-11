@@ -37,6 +37,7 @@ import {
   ingredients,
   containers,
   tasks,
+  workspaces as workspacesService,
 } from "@/renderer/services/storage";
 import type {
   Favorite,
@@ -44,6 +45,7 @@ import type {
   TaskStatus,
   TaskPriority,
   Project,
+  ProjectWorkspace,
 } from "@/shared/types";
 
 type RecentItem = {
@@ -91,6 +93,7 @@ function Dashboard() {
     "due_date" | "priority" | "title" | "created"
   >("created");
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
+  const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
 
   // Google Calendar
   const [googleCalendarReady, setGoogleCalendarReady] = useState(false);
@@ -261,6 +264,9 @@ function Dashboard() {
 
     const loadedProjects = await projectsStorage.getAll();
     setAvailableProjects(loadedProjects);
+
+    const loadedWorkspaces = await workspacesService.getAll();
+    setWorkspaces(loadedWorkspaces);
   };
 
   // Filter & Sort Logik
@@ -473,6 +479,8 @@ function Dashboard() {
       title: "Gurktaler 2.0 — Aufgabenliste",
       groupBy: "priority",
       showCompleted: true,
+      workspaces: workspaces,
+      filterProject: filterProject !== "all" ? filterProject : undefined,
     });
   };
 
@@ -817,14 +825,42 @@ function Dashboard() {
                             )}
                           </span>
                         )}
-                        {task.project_id && (
-                          <span className="text-xs bg-gurktaler-100 text-gurktaler-700 px-2 py-0.5 rounded-vintage font-body">
-                            📁{" "}
-                            {availableProjects.find(
+                        {task.project_id &&
+                          (() => {
+                            const project = availableProjects.find(
                               (p) => p.id === task.project_id
-                            )?.name || "Projekt"}
-                          </span>
-                        )}
+                            );
+                            if (!project) return null;
+
+                            const workspace = project.workspace_id
+                              ? workspaces.find(
+                                  (w) => w.id === project.workspace_id
+                                )
+                              : null;
+
+                            return (
+                              <>
+                                <span className="text-xs bg-gurktaler-100 text-gurktaler-700 px-2 py-0.5 rounded-vintage font-body">
+                                  📁 {project.name}
+                                </span>
+                                {workspace && (
+                                  <span
+                                    className="text-xs px-2 py-0.5 rounded-vintage font-body font-medium"
+                                    style={{
+                                      backgroundColor: `${workspace.color}20`,
+                                      color: workspace.color,
+                                      borderWidth: "1px",
+                                      borderStyle: "solid",
+                                      borderColor: workspace.color,
+                                    }}
+                                    title={`Projekt-Ebene: ${workspace.name}`}
+                                  >
+                                    {workspace.icon} {workspace.name}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          })()}
                       </div>
                     </div>
                     <div

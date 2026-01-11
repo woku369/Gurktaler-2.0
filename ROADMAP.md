@@ -284,7 +284,55 @@
 
 ---
 
-## Phase 13: Native Mobile (v1.6.x)
+## Phase 13: Project Workspaces (v1.6.0) ✅
+
+**Ziel:** Projekt-Ebenen für strategische Trennung (z.B. Standortentwicklung, Produktentwicklung, Sonstige)
+
+**Status:** 🎉 **ABGESCHLOSSEN** (11. Januar 2026)
+
+| Status | Aufgabe                    | Beschreibung                                    |
+| ------ | -------------------------- | ----------------------------------------------- |
+| ✅     | Workspace-Datenmodell      | ProjectWorkspace Entity mit Name, Farbe, Icon   |
+| ✅     | Project.workspace_id       | Zuordnung Projekt → Workspace                   |
+| ✅     | Storage API                | workspaces.getAll/create/update/delete          |
+| ✅     | WorkspaceTabs Component    | Tab-Navigation mit Farb-Codierung               |
+| ✅     | Projects-Seite Integration | Filter nach aktivem Workspace                   |
+| ✅     | Gantt-Chart Workspace-Filter| Separate Zeitplanung pro Workspace             |
+| ✅     | Settings Workspace-Manager | CRUD für Workspaces (Name, Farbe, Reihenfolge)  |
+| ✅     | Export-Integration         | Workspace-Name auf PDF/iCal                     |
+| ✅     | Sichere Löschung           | Projekte bleiben bei Workspace-Löschung erhalten|
+| ✅     | Dashboard TODOs            | Workspace-Badge bei projekt-verknüpften Tasks   |
+| ✅     | Suche & Filter             | Workspace-Filter in GlobalSearch                |
+
+**Implementierte Features:**
+- Tab-basierte Navigation zwischen Workspaces
+- Farbcodierung zur visuellen Unterscheidung
+- Separate Gantt-Charts pro Workspace
+- Workspace-Info auf allen Exports (PDF Task-Listen, PDF Timeline)
+- Vollständige Rückwärtskompatibilität (Projekte ohne workspace_id = "Alle Ebenen")
+- Sichere Löschung: workspace_id wird entfernt, Projekte bleiben bestehen
+- Workspace-Badges auf TODO-Liste (Dashboard) für projekt-verknüpfte Tasks
+- Globale Suche mit Workspace-Filter-Dropdown
+- Workspace-Badges in Projekt-Suchergebnissen
+
+**Vorteile:**
+- Klare Trennung strategischer Projekt-Ebenen
+- Keine Vermischung in Gantt-Charts
+- Flexible Anzahl von Workspaces
+- Alle bestehenden Features bleiben in allen Workspaces erhalten
+- Konsistente Workspace-Sichtbarkeit überall im System
+
+**Detaillierte Aufgabenliste:** Siehe `docs/WORKSPACE_IMPLEMENTATION.md`
+
+**Nächste Schritte (v1.7.0):**
+- Workspace-Badges bei Notizen (wenn mit Projekt verknüpft)
+- Workspace-Filter bei Containern/Gebinden
+- Workspace-Badges bei Produkten
+- Workspace-Filter bei Rezepten
+
+---
+
+## Phase 14: Native Mobile (v1.7.x)
 
 | Status | Aufgabe         | Beschreibung             |
 | ------ | --------------- | ------------------------ |

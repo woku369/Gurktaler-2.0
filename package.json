@@ -1,6 +1,6 @@
 {
     "name": "gurktaler-2.0",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Projektverwaltungstool und Think-Tank für Gurktaler Kräuterlikör-Entwicklung",
     "main": "dist-electron/main.js",
     "author": "Gurktaler Team",

@@ -9,11 +9,18 @@ import {
   ImagePlus,
 } from "lucide-react";
 import TagBadgeList from "@/renderer/components/TagBadgeList";
-import type { Project, Image, Document, ProjectStatus } from "@/shared/types";
+import type {
+  Project,
+  Image,
+  Document,
+  ProjectStatus,
+  ProjectWorkspace,
+} from "@/shared/types";
 
 interface ProjectCardProps {
   project: Project;
   image?: Image;
+  workspaces?: ProjectWorkspace[];
   isFavorite: boolean;
   onToggleFavorite: () => void;
   onEdit: () => void;
@@ -42,6 +49,7 @@ const statusLabels: Record<ProjectStatus, string> = {
 export default function ProjectCard({
   project,
   image,
+  workspaces,
   isFavorite,
   onToggleFavorite,
   onEdit,
@@ -76,13 +84,39 @@ export default function ProjectCard({
 
       {/* Action Buttons Row */}
       <div className="px-4 pb-2 flex items-center justify-between">
-        <span
-          className={`inline-block px-2 py-0.5 text-xs rounded-full font-body font-semibold ${
-            statusColors[project.status]
-          }`}
-        >
-          {statusLabels[project.status]}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-block px-2 py-0.5 text-xs rounded-full font-body font-semibold ${
+              statusColors[project.status]
+            }`}
+          >
+            {statusLabels[project.status]}
+          </span>
+          {project.workspace_id &&
+            workspaces &&
+            (() => {
+              const workspace = workspaces.find(
+                (ws) => ws.id === project.workspace_id
+              );
+              if (workspace) {
+                return (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-body font-medium text-slate-700"
+                    style={{
+                      backgroundColor: `${workspace.color}20`,
+                      borderColor: workspace.color,
+                      borderWidth: "1px",
+                    }}
+                    title={`Projekt-Ebene: ${workspace.name}`}
+                  >
+                    {workspace.icon && <span>{workspace.icon}</span>}
+                    <span>{workspace.name}</span>
+                  </span>
+                );
+              }
+              return null;
+            })()}
+        </div>
         <div className="flex items-center gap-1">
           <button
             onClick={handleCopyName}

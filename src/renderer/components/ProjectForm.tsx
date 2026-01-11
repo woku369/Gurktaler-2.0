@@ -1,12 +1,14 @@
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import TagSelector from "./TagSelector";
 import DocumentManager from "./DocumentManager";
 import ProjectTimelineForm from "./ProjectTimelineForm";
+import { workspaces as workspacesService } from "../services/storage";
 import type {
   Project,
   ProjectStatus,
   Document,
   ProjectTimeline,
+  ProjectWorkspace,
 } from "@/shared/types";
 
 interface ProjectFormProps {
@@ -33,12 +35,24 @@ export default function ProjectForm({
     project?.status || "active"
   );
   const [color, setColor] = useState(project?.color || "#3b82f6");
+  const [workspaceId, setWorkspaceId] = useState<string | undefined>(
+    project?.workspace_id
+  );
+  const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
   const [documents, setDocuments] = useState<Document[]>(
     project?.documents || []
   );
   const [timeline, setTimeline] = useState<ProjectTimeline | undefined>(
     project?.timeline
   );
+
+  useEffect(() => {
+    const loadWorkspaces = async () => {
+      const ws = await workspacesService.getAll();
+      setWorkspaces(ws);
+    };
+    loadWorkspaces();
+  }, []);
 
   const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
     const newDoc: Document = {
@@ -75,6 +89,7 @@ export default function ProjectForm({
       color,
       description: description.trim() || undefined,
       status,
+      workspace_id: workspaceId,
       documents: documents.length > 0 ? documents : undefined,
     });
   };
@@ -135,6 +150,29 @@ export default function ProjectForm({
           {statusOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Workspace */}
+      <div>
+        <label
+          htmlFor="workspace"
+          className="block text-sm font-medium text-slate-700 mb-1"
+        >
+          Projekt-Ebene
+        </label>
+        <select
+          id="workspace"
+          value={workspaceId || ""}
+          onChange={(e) => setWorkspaceId(e.target.value || undefined)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 focus:border-transparent"
+        >
+          <option value="">Keine Ebene zugewiesen</option>
+          {workspaces.map((ws) => (
+            <option key={ws.id} value={ws.id}>
+              {ws.icon} {ws.name}
             </option>
           ))}
         </select>

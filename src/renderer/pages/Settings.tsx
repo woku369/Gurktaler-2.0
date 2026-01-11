@@ -33,6 +33,7 @@ import {
 } from "@/renderer/services/storage";
 import { parseVCard } from "@/renderer/services/vcardParser";
 import ContactImportDialog from "@/renderer/components/ContactImportDialog";
+import { WorkspaceManager } from "@/renderer/components/WorkspaceManager";
 import type { ParsedContact } from "@/renderer/services/vcardParser";
 import {
   getGitStatus,
@@ -512,6 +513,9 @@ function Settings() {
       </div>
 
       <div className="space-y-6">
+        {/* Workspace Management */}
+        <WorkspaceManager />
+
         {/* Data Management */}
         <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
           <div className="flex items-center gap-3 mb-4">

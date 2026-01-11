@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type {
     Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
     Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite, CapacityUtilization,
-    Task, TaskStatus
+    Task, TaskStatus, ProjectWorkspace
 } from '@/shared/types'
 import { nasStorage } from './nasStorage'
 
@@ -418,4 +418,90 @@ export const tasks = {
     create: (task: Omit<Task, 'id' | 'created_at'>) => createEntity<Task>('tasks', task),
     update: (id: string, updates: Partial<Task>) => updateEntity<Task>('tasks', id, updates),
     delete: (id: string) => deleteEntity<Task>('tasks', id),
+}
+
+// Project Workspaces - Strategische Projekt-Ebenen
+export const workspaces = {
+    getAll: async (): Promise<ProjectWorkspace[]> => {
+        const ws = await nasStorage.readJson<ProjectWorkspace>(nasStorage.getJsonFilePath('workspaces'))
+        return ws.sort((a, b) => a.order - b.order) // Sortiert nach order
+    },
+    getById: async (id: string): Promise<ProjectWorkspace | undefined> => {
+        const all = await nasStorage.readJson<ProjectWorkspace>(nasStorage.getJsonFilePath('workspaces'))
+        return all.find(w => w.id === id)
+    },
+    create: (workspace: Omit<ProjectWorkspace, 'id' | 'created_at'>) => 
+        createEntity<ProjectWorkspace>('workspaces', workspace),
+    update: (id: string, updates: Partial<ProjectWorkspace>) => 
+        updateEntity<ProjectWorkspace>('workspaces', id, updates),
+    delete: async (id: string): Promise<boolean> => {
+        // WICHTIG: Zuerst alle Projekt-Referenzen entfernen (Projekte bleiben erhalten!)
+        const allProjects = await projects.getAll()
+        const affectedProjects = allProjects.filter(p => p.workspace_id === id)
+        
+        console.log(`⚠️ Workspace-Löschung: ${affectedProjects.length} Projekte verlieren ihre Zuordnung`)
+        
+        // Entferne workspace_id aus allen betroffenen Projekten
+        for (const project of affectedProjects) {
+            await projects.update(project.id, { workspace_id: undefined })
+        }
+        
+        // Erst dann den Workspace selbst löschen
+        const result = await deleteEntity<ProjectWorkspace>('workspaces', id)
+        
+        if (result) {
+            console.log(`✅ Workspace gelöscht. ${affectedProjects.length} Projekte behalten, Zuordnung entfernt.`)
+        }
+        
+        return result
+    },
+}
+
+// Initialize Default Workspaces (wird beim ersten Start aufgerufen)
+export async function initializeDefaultWorkspaces(): Promise<void> {
+    try {
+        const existing = await workspaces.getAll()
+        
+        // Wenn schon Workspaces existieren, nichts tun
+        if (existing.length > 0) {
+            console.log('✅ Workspaces bereits initialisiert:', existing.length)
+            return
+        }
+        
+        console.log('🛠️ Erstelle Default-Workspaces...')
+        
+        // Default-Workspaces erstellen
+        const defaultWorkspaces = [
+            {
+                name: 'Standortentwicklung',
+                description: 'Strategische Projekte zur Standortentwicklung',
+                color: '#3b82f6', // Blau
+                icon: '📍',
+                order: 0,
+            },
+            {
+                name: 'Produktentwicklung',
+                description: 'Projekte zur Entwicklung neuer Produkte',
+                color: '#10b981', // Grün
+                icon: '🧪',
+                order: 1,
+            },
+            {
+                name: 'Sonstige',
+                description: 'Alle weiteren Projekte',
+                color: '#6b7280', // Grau
+                icon: '📁',
+                order: 2,
+            },
+        ]
+        
+        for (const ws of defaultWorkspaces) {
+            await workspaces.create(ws)
+            console.log(`  ✅ ${ws.icon} ${ws.name}`)
+        }
+        
+        console.log('✅ Default-Workspaces erfolgreich erstellt')
+    } catch (error) {
+        console.error('❌ Fehler beim Initialisieren der Workspaces:', error)
+    }
 }
