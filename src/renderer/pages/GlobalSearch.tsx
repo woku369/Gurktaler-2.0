@@ -95,7 +95,10 @@ export default function GlobalSearch() {
     projects.forEach((project: Project) => {
       if (
         project.name.toLowerCase().includes(lowerQuery) ||
-        project.description?.toLowerCase().includes(lowerQuery)
+        project.description?.toLowerCase().includes(lowerQuery) ||
+        project.documents?.some((doc) =>
+          doc.name?.toLowerCase().includes(lowerQuery)
+        )
       ) {
         allResults.push({
           type: "project",
@@ -114,7 +117,10 @@ export default function GlobalSearch() {
       if (
         product.name.toLowerCase().includes(lowerQuery) ||
         product.description?.toLowerCase().includes(lowerQuery) ||
-        product.version.toLowerCase().includes(lowerQuery)
+        product.version.toLowerCase().includes(lowerQuery) ||
+        product.documents?.some((doc) =>
+          doc.name?.toLowerCase().includes(lowerQuery)
+        )
       ) {
         allResults.push({
           type: "product",
@@ -132,7 +138,10 @@ export default function GlobalSearch() {
     notes.forEach((note: Note) => {
       if (
         note.title.toLowerCase().includes(lowerQuery) ||
-        note.content?.toLowerCase().includes(lowerQuery)
+        note.content?.toLowerCase().includes(lowerQuery) ||
+        note.documents?.some((doc) =>
+          doc.name?.toLowerCase().includes(lowerQuery)
+        )
       ) {
         allResults.push({
           type: "note",

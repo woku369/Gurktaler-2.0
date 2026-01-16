@@ -22,6 +22,7 @@ import {
   Wifi,
   WifiOff,
   Image,
+  FileText,
 } from "lucide-react";
 import { SetupService } from "../services/setup";
 
@@ -36,6 +37,7 @@ const navItems = [
   { to: "/notes", icon: StickyNote, label: "Notizen" },
   { to: "/contacts", icon: Users, label: "Kontakte" },
   { to: "/research", icon: Globe, label: "Recherche" },
+  { to: "/documents", icon: FileText, label: "Dokumente" },
   { to: "/gallery", icon: Image, label: "Bildergalerie" },
   { to: "/ai-assistant", icon: Bot, label: "KI-Assistent" },
   { to: "/tags", icon: Tag, label: "Tags" },

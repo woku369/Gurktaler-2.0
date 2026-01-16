@@ -1,9 +1,10 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import ContactProjectSelector from "./ContactProjectSelector";
 import DocumentManager from "./DocumentManager";
 import ImageUpload from "./ImageUpload";
 import TagSelector from "./TagSelector";
-import type { Contact, Document } from "@/shared/types";
+import type { Contact, Document, ContactCategoryEntity } from "@/shared/types";
+import { contactCategories as categoriesService } from "@/renderer/services/storage";
 
 interface ContactFormProps {
   contact?: Contact;
@@ -11,19 +12,13 @@ interface ContactFormProps {
   onCancel: () => void;
 }
 
-const typeOptions = [
-  { value: "supplier", label: "Lieferant" },
-  { value: "partner", label: "Partner" },
-  { value: "customer", label: "Kunde" },
-  { value: "other", label: "Sonstiges" },
-];
-
 export default function ContactForm({
   contact,
   onSubmit,
   onCancel,
 }: ContactFormProps) {
   const [name, setName] = useState(contact?.name || "");
+  const [lastName, setLastName] = useState(contact?.last_name || "");
   const [type, setType] = useState(contact?.type || "supplier");
   const [company, setCompany] = useState(contact?.company || "");
   const [email, setEmail] = useState(contact?.email || "");
@@ -33,6 +28,20 @@ export default function ContactForm({
   const [documents, setDocuments] = useState<Document[]>(
     contact?.documents || []
   );
+  const [categories, setCategories] = useState<ContactCategoryEntity[]>([]);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const cats = await categoriesService.getAll();
+      setCategories(cats);
+    } catch (error) {
+      console.error("Error loading contact categories:", error);
+    }
+  };
 
   const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
     const newDoc: Document = {
@@ -69,6 +78,7 @@ export default function ContactForm({
 
     onSubmit({
       name: name.trim(),
+      last_name: lastName.trim() || undefined,
       type,
       company: company.trim() || undefined,
       email: email.trim() || undefined,
@@ -84,15 +94,29 @@ export default function ContactForm({
       {/* Name */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">
-          Name <span className="text-red-500">*</span>
+          Vorname <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-          placeholder="Max Mustermann"
+          placeholder="Max"
           required
+        />
+      </div>
+
+      {/* Last Name */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Nachname
+        </label>
+        <input
+          type="text"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+          placeholder="Mustermann"
         />
       </div>
 
@@ -106,11 +130,14 @@ export default function ContactForm({
           onChange={(e) => setType(e.target.value as any)}
           className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
         >
-          {typeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
+          {categories
+            .sort((a, b) => a.order - b.order)
+            .map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.icon && `${cat.icon} `}
+                {cat.name}
+              </option>
+            ))}
         </select>
       </div>
 
@@ -224,7 +251,7 @@ export default function ContactForm({
           <ImageUpload
             entityType="contact"
             entityId={contact.id}
-            maxImages={3}
+            maxImages={20}
           />
         </div>
       )}

@@ -25,6 +25,8 @@ import {
   X,
   Clock,
   AlertCircle,
+  Globe,
+  FileText,
 } from "lucide-react";
 import {
   projects as projectsStorage,
@@ -48,13 +50,6 @@ import type {
   ProjectWorkspace,
 } from "@/shared/types";
 
-type RecentItem = {
-  type: "project" | "product" | "recipe" | "note";
-  title: string;
-  date: string;
-  id: string;
-};
-
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState([
@@ -73,7 +68,6 @@ function Dashboard() {
     },
     { label: "Notizen", value: 0, icon: StickyNote, color: "bg-purple-500" },
   ]);
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
   const [favoriteItems, setFavoriteItems] = useState<
     Array<{ favorite: Favorite; name: string; icon: any; route: string }>
   >([]);
@@ -149,45 +143,6 @@ function Dashboard() {
         color: "bg-purple-500",
       },
     ]);
-
-    // Collect recent items
-    const items: RecentItem[] = [
-      ...allProjects.map((p) => ({
-        type: "project" as const,
-        title: p.name,
-        date: new Date(p.created_at).toLocaleDateString("de-DE"),
-        id: p.id,
-      })),
-      ...allProducts.map((p) => ({
-        type: "product" as const,
-        title: p.name,
-        date: new Date(p.created_at).toLocaleDateString("de-DE"),
-        id: p.id,
-      })),
-      ...allRecipes.map((r) => ({
-        type: "recipe" as const,
-        title: r.name,
-        date: new Date(r.created_at).toLocaleDateString("de-DE"),
-        id: r.id,
-      })),
-      ...allNotes.map((n) => ({
-        type: "note" as const,
-        title: n.title,
-        date: new Date(n.created_at).toLocaleDateString("de-DE"),
-        id: n.id,
-      })),
-    ];
-
-    // Sort by date and take latest 10
-    const sortedItems = items
-      .sort((a, b) => {
-        const dateA = new Date(a.date.split(".").reverse().join("-")).getTime();
-        const dateB = new Date(b.date.split(".").reverse().join("-")).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 10);
-
-    setRecentItems(sortedItems);
 
     // Load favorites
     const allFavorites = await favorites.getAll();
@@ -1059,43 +1014,252 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Letzte Aktivitäten (nach unten verschoben) */}
-      <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200">
-        <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
-          <h2 className="font-heading font-semibold text-distillery-900">
-            Letzte Aktivitäten
-          </h2>
-        </div>
-        <div className="divide-y divide-distillery-100">
-          {recentItems.length > 0 ? (
-            recentItems.map((item, index) => (
-              <div
-                key={index}
-                className="p-4 hover:bg-gurktaler-50 cursor-pointer transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-body font-semibold text-distillery-800">
-                      {item.title}
-                    </p>
-                    <p className="text-sm text-distillery-600 capitalize font-body">
-                      {item.type}
-                    </p>
-                  </div>
-                  <span className="text-sm text-distillery-500 font-body">
-                    {item.date}
-                  </span>
-                </div>
+      {/* Kategorien-Cards - 2 pro Reihe */}
+      <div className="mb-8">
+        <h2 className="text-xl font-heading font-bold text-distillery-900 mb-4">
+          Kategorien
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Projekte */}
+          <button
+            onClick={() => navigate("/projects")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-blue-500 rounded-vintage flex items-center justify-center shadow-md">
+                <FolderKanban className="w-6 h-6 text-white" />
               </div>
-            ))
-          ) : (
-            <div className="p-8 text-center text-distillery-600">
-              <p className="font-body">Noch keine Aktivitäten</p>
-              <p className="text-sm text-distillery-500 mt-1 font-body">
-                Erstelle dein erstes Projekt, um loszulegen.
-              </p>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Projekte
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  {stats.find((s) => s.label === "Aktive Projekte")?.value || 0}{" "}
+                  Aktiv
+                </p>
+              </div>
             </div>
-          )}
+            <p className="text-sm text-distillery-600 font-body">
+              Verwalte deine Projekte mit Gantt-Charts und Dokumentation
+            </p>
+          </button>
+
+          {/* Produkte */}
+          <button
+            onClick={() => navigate("/products")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-gurktaler-500 rounded-vintage flex items-center justify-center shadow-md">
+                <Package className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Produkte
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  {stats.find((s) => s.label === "Produkte")?.value || 0}{" "}
+                  Produkte
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Produktkatalog mit Versionen und Preiskalkulationen
+            </p>
+          </button>
+
+          {/* Rezepturen */}
+          <button
+            onClick={() => navigate("/recipes")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-amber-500 rounded-vintage flex items-center justify-center shadow-md">
+                <FlaskConical className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Rezepturen
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  {stats.find((s) => s.label === "Rezepturen")?.value || 0}{" "}
+                  Rezepte
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Mazerate, Destillate und Ausmischungen verwalten
+            </p>
+          </button>
+
+          {/* Notizen */}
+          <button
+            onClick={() => navigate("/notes")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-purple-500 rounded-vintage flex items-center justify-center shadow-md">
+                <StickyNote className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Notizen
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  {stats.find((s) => s.label === "Notizen")?.value || 0} Notizen
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Ideen, Aufgaben und Recherchen dokumentieren
+            </p>
+          </button>
+
+          {/* Kontakte */}
+          <button
+            onClick={() => navigate("/contacts")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-slate-500 rounded-vintage flex items-center justify-center shadow-md">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Kontakte
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  Adressbuch
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Kunden, Lieferanten und Partner verwalten
+            </p>
+          </button>
+
+          {/* Recherche/Weblinks */}
+          <button
+            onClick={() => navigate("/research")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-teal-500 rounded-vintage flex items-center justify-center shadow-md">
+                <Globe className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Recherche
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  Weblinks
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Wichtige Links, Konkurrenz und Lieferanten
+            </p>
+          </button>
+
+          {/* Zutaten */}
+          <button
+            onClick={() => navigate("/ingredients")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-green-500 rounded-vintage flex items-center justify-center shadow-md">
+                <Beaker className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Zutaten
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  Inventar
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Kräuter, Früchte, Destillate und Spirituosen
+            </p>
+          </button>
+
+          {/* Gebinde */}
+          <button
+            onClick={() => navigate("/containers")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-indigo-500 rounded-vintage flex items-center justify-center shadow-md">
+                <Archive className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Gebinde
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">
+                  Verpackungen
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Flaschen, Etiketten, Verschlüsse und Verpackungen
+            </p>
+          </button>
+
+          {/* Dokumente */}
+          <button
+            onClick={() => navigate("/documents")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-red-500 rounded-vintage flex items-center justify-center shadow-md">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Dokumente
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">Dateien</p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              PDFs, Analysen, Marketing und Dokumentation
+            </p>
+          </button>
+
+          {/* Galerie */}
+          <button
+            onClick={() => navigate("/gallery")}
+            className="bg-white rounded-vintage p-6 shadow-vintage border-vintage border-distillery-200 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all text-left group"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-12 h-12 bg-pink-500 rounded-vintage flex items-center justify-center shadow-md">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-heading font-bold text-distillery-900 group-hover:text-gurktaler-600 transition-colors">
+                  Galerie
+                </h3>
+                <p className="text-sm text-distillery-600 font-body">Bilder</p>
+              </div>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Zentrale Bildverwaltung mit Tagging
+            </p>
+          </button>
         </div>
       </div>
 

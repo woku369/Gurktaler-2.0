@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import TagSelector from "./TagSelector";
 import DocumentManager from "./DocumentManager";
+import ImageUpload from "./ImageUpload";
 import ProjectTimelineForm from "./ProjectTimelineForm";
 import { workspaces as workspacesService } from "../services/storage";
 import type {
@@ -274,6 +275,17 @@ export default function ProjectForm({
         </div>
       )}
 
+      {/* Images */}
+      {project && (
+        <div>
+          <ImageUpload
+            entityType="project"
+            entityId={project.id}
+            maxImages={20}
+          />
+        </div>
+      )}
+
       {/* Documents */}
       {project && (
         <div>
@@ -299,8 +311,8 @@ export default function ProjectForm({
         />
       </div>
 
-      {/* Buttons */}
-      <div className="flex gap-3 pt-4">
+      {/* Buttons - Sticky am unteren Rand für Mobile */}
+      <div className="sticky bottom-0 bg-white pt-4 pb-2 -mx-6 px-6 mt-4 border-t border-slate-200 flex gap-3">
         <button
           type="button"
           onClick={onCancel}
@@ -310,7 +322,7 @@ export default function ProjectForm({
         </button>
         <button
           type="submit"
-          className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors font-semibold"
         >
           {project ? "Speichern" : "Erstellen"}
         </button>

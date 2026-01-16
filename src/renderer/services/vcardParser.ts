@@ -3,6 +3,7 @@
 
 export interface ParsedContact {
   name: string;
+  last_name?: string;
   company?: string;
   email?: string;
   phone?: string;
@@ -58,20 +59,24 @@ function parseVCardBlock(block: string): ParsedContact | null {
     const property = propertyPart.split(';')[0].toUpperCase();
     
     switch (property) {
-      case 'FN': // Formatted Name (preferred)
-        if (!contact.name) {
-          contact.name = decodeVCardValue(value);
-        }
+      case 'FN': // Formatted Name (preferred for display, but we'll parse N for structure)
+        // We'll use FN only as fallback if N is not available
         break;
         
-      case 'N': // Structured Name (fallback)
+      case 'N': // Structured Name (Family;Given;Additional;Prefix;Suffix)
         if (!contact.name) {
           // Format: Family;Given;Additional;Prefix;Suffix
-          const nameParts = value.split(';').filter(Boolean);
-          if (nameParts.length >= 2) {
-            contact.name = `${nameParts[1]} ${nameParts[0]}`.trim();
-          } else if (nameParts.length === 1) {
-            contact.name = nameParts[0];
+          const nameParts = value.split(';');
+          const familyName = nameParts[0] ? decodeVCardValue(nameParts[0].trim()) : '';
+          const givenName = nameParts[1] ? decodeVCardValue(nameParts[1].trim()) : '';
+          
+          if (givenName && familyName) {
+            contact.name = givenName;
+            contact.last_name = familyName;
+          } else if (givenName) {
+            contact.name = givenName;
+          } else if (familyName) {
+            contact.name = familyName;
           }
         }
         break;

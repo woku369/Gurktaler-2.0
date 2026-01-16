@@ -316,7 +316,7 @@ export default function ProjectTimeline() {
                 <div className="w-4 h-[2px] bg-slate-400"></div>
                 <div className="w-0 h-0 border-l-[4px] border-l-slate-400 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent"></div>
               </div>
-              <span>→ Start nach Ende</span>
+              <span>Ende-Start: Start nach Ende</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center">
@@ -326,14 +326,14 @@ export default function ProjectTimeline() {
                 ></div>
                 <div className="w-0 h-0 border-l-[4px] border-l-blue-500 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent"></div>
               </div>
-              <span>⇉ Start parallel</span>
+              <span>Start-Start: Start parallel</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 <div className="w-4 h-[2px] bg-blue-500"></div>
                 <div className="w-0 h-0 border-l-[4px] border-l-blue-500 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent"></div>
               </div>
-              <span>⇇ Ende gleichzeitig</span>
+              <span>Ende-Ende: Ende gleichzeitig</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center">
@@ -343,7 +343,7 @@ export default function ProjectTimeline() {
                 ></div>
                 <div className="w-0 h-0 border-l-[4px] border-l-blue-500 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent"></div>
               </div>
-              <span>↔ Start mit Ende</span>
+              <span>Start-Ende: Start mit Ende</span>
             </div>
           </div>
         </div>

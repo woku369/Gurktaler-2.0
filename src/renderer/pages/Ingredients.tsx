@@ -115,7 +115,8 @@ function Ingredients() {
     if (editingIngredient) {
       await ingredientsService.update(editingIngredient.id, formData);
       setToast({ message: "Zutat erfolgreich aktualisiert", type: "success" });
-      resetForm();
+      await loadData();
+      resetForm(); // This closes the form
     } else {
       const newIngredient = await ingredientsService.create(
         formData as Omit<Ingredient, "id" | "created_at">
@@ -135,8 +136,6 @@ function Ingredients() {
       await loadData();
       return; // Keep form open for images/tags
     }
-
-    await loadData();
   };
 
   const handleEdit = (ingredient: Ingredient) => {
@@ -449,7 +448,7 @@ function Ingredients() {
                 <ImageUpload
                   entityType="ingredient"
                   entityId={editingIngredient.id}
-                  maxImages={3}
+                  maxImages={20}
                 />
               </div>
             )}

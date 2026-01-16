@@ -16,36 +16,28 @@ import ContactForm from "@/renderer/components/ContactForm";
 import {
   contacts as contactsService,
   favorites as favoritesService,
+  contactCategories as categoriesService,
 } from "@/renderer/services/storage";
-import type { Contact } from "@/shared/types";
+import type { Contact, ContactCategoryEntity } from "@/shared/types";
 
-const typeLabels = {
-  supplier: "Lieferant",
-  partner: "Partner",
-  customer: "Kunde",
-  other: "Sonstiges",
-};
-
-const typeColors = {
-  supplier: "bg-distillery-50 text-distillery-800 border-distillery-200",
-  partner: "bg-green-50 text-green-800 border-green-200",
-  customer: "bg-gurktaler-50 text-gurktaler-800 border-gurktaler-200",
-  other: "bg-bronze-50 text-bronze-800 border-bronze-200",
-};
+type SortBy = "name" | "last_name" | "company" | "created_at";
 
 function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [categories, setCategories] = useState<ContactCategoryEntity[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<SortBy>("last_name");
 
   useEffect(() => {
-    loadContacts();
+    loadData();
   }, []);
 
-  const loadContacts = async () => {
+  const loadData = async () => {
     setContacts(await contactsService.getAll());
+    setCategories(await categoriesService.getAll());
   };
 
   const handleSubmit = async (
@@ -56,7 +48,12 @@ function Contacts() {
     } else {
       await contactsService.create(data);
     }
-    await loadContacts();
+    await loadData();
+    setIsModalOpen(false);
+    setEditingContact(null);
+  };
+
+  const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingContact(null);
   };
@@ -69,20 +66,40 @@ function Contacts() {
   const handleDelete = async (id: string) => {
     if (confirm("Kontakt wirklich löschen?")) {
       await contactsService.delete(id);
-      await loadContacts();
+      await loadData();
     }
   };
 
-  const filteredContacts = contacts.filter((contact) => {
-    const matchesSearch =
-      contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.email?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredContacts = contacts
+    .filter((contact) => {
+      const matchesSearch =
+        contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesType = filterType === "all" || contact.type === filterType;
+      const matchesType = filterType === "all" || contact.type === filterType;
 
-    return matchesSearch && matchesType;
-  });
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "last_name":
+          const aLastName = a.last_name || a.name;
+          const bLastName = b.last_name || b.name;
+          return aLastName.localeCompare(bLastName);
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "company":
+          return (a.company || "").localeCompare(b.company || "");
+        case "created_at":
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        default:
+          return 0;
+      }
+    });
 
   return (
     <div className="p-8">
@@ -104,31 +121,54 @@ function Contacts() {
         </button>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setFilterType("all")}
-          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
-            filterType === "all"
-              ? "bg-gurktaler-500 text-white shadow-md"
-              : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
-          }`}
-        >
-          Alle ({contacts.length})
-        </button>
-        {Object.entries(typeLabels).map(([key, label]) => (
+      {/* Filter Tabs & Sort */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex gap-2 flex-wrap">
           <button
-            key={key}
-            onClick={() => setFilterType(key)}
+            onClick={() => setFilterType("all")}
             className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
-              filterType === key
+              filterType === "all"
                 ? "bg-gurktaler-500 text-white shadow-md"
                 : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
             }`}
           >
-            {label} ({contacts.filter((c) => c.type === key).length})
+            Alle ({contacts.length})
           </button>
-        ))}
+          {categories
+            .sort((a, b) => a.order - b.order)
+            .map((category) => (
+              <button
+                key={category.value}
+                onClick={() => setFilterType(category.value)}
+                className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
+                  filterType === category.value
+                    ? "bg-gurktaler-500 text-white shadow-md"
+                    : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
+                }`}
+              >
+                {category.icon && <span className="mr-1">{category.icon}</span>}
+                {category.name} (
+                {contacts.filter((c) => c.type === category.value).length})
+              </button>
+            ))}
+        </div>
+
+        {/* Sort Dropdown */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-slate-700">
+            Sortieren:
+          </label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            className="px-3 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body text-sm"
+          >
+            <option value="last_name">Nachname</option>
+            <option value="name">Vorname</option>
+            <option value="company">Firma</option>
+            <option value="created_at">Erstellungsdatum</option>
+          </select>
+        </div>
       </div>
 
       {/* Search */}
@@ -170,118 +210,126 @@ function Contacts() {
 
       {/* Contacts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredContacts.map((contact) => (
-          <div
-            key={contact.id}
-            className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-colors group"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  typeColors[contact.type]
-                }`}
-              >
-                {typeLabels[contact.type]}
-              </span>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => {
-                    favoritesService.toggle("contact", contact.id);
-                    loadContacts();
-                  }}
-                  className="p-1 hover:bg-slate-100 rounded"
-                  title="Favorit umschalten"
+        {filteredContacts.map((contact) => {
+          const category = categories.find((c) => c.value === contact.type);
+
+          return (
+            <div
+              key={contact.id}
+              className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-colors group"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span
+                  className="px-2 py-1 rounded-full text-xs font-medium border bg-slate-50 text-slate-700 border-slate-200"
+                  style={
+                    category?.color
+                      ? {
+                          backgroundColor: `${category.color}15`,
+                          color: category.color,
+                          borderColor: `${category.color}40`,
+                        }
+                      : undefined
+                  }
                 >
-                  <Star className="w-4 h-4 text-slate-400" />
-                </button>
-                <button
-                  onClick={() => handleEdit(contact)}
-                  className="p-1 hover:bg-slate-100 rounded"
-                  title="Bearbeiten"
-                >
-                  <Edit2 className="w-4 h-4 text-slate-500" />
-                </button>
-                <button
-                  onClick={() => handleDelete(contact.id)}
-                  className="p-1 hover:bg-red-50 rounded"
-                  title="Löschen"
-                >
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </button>
+                  {category?.icon && (
+                    <span className="mr-1">{category.icon}</span>
+                  )}
+                  {category?.name || contact.type}
+                </span>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={async () => {
+                      await favoritesService.toggle("contact", contact.id);
+                      await loadData();
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded"
+                    title="Favorit umschalten"
+                  >
+                    <Star className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <button
+                    onClick={() => handleEdit(contact)}
+                    className="p-1 hover:bg-slate-100 rounded"
+                    title="Bearbeiten"
+                  >
+                    <Edit2 className="w-4 h-4 text-slate-500" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(contact.id)}
+                    className="p-1 hover:bg-red-50 rounded"
+                    title="Löschen"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
               </div>
+
+              <h3 className="font-semibold text-slate-800 mb-1">
+                {contact.name}
+              </h3>
+
+              {contact.company && (
+                <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
+                  <Building2 className="w-4 h-4" />
+                  <span>{contact.company}</span>
+                </div>
+              )}
+
+              {contact.email && (
+                <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+                  <Mail className="w-4 h-4" />
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="hover:text-gurktaler-600 transition-colors"
+                  >
+                    {contact.email}
+                  </a>
+                </div>
+              )}
+
+              {contact.phone && (
+                <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+                  <Phone className="w-4 h-4" />
+                  <a
+                    href={`tel:${contact.phone}`}
+                    className="hover:text-gurktaler-600 transition-colors"
+                  >
+                    {contact.phone}
+                  </a>
+                </div>
+              )}
+
+              {contact.address && (
+                <div className="flex items-start gap-2 text-sm text-slate-600 mt-2">
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span className="text-xs">{contact.address}</span>
+                </div>
+              )}
+
+              {contact.notes && (
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <p className="text-xs text-slate-500 line-clamp-2">
+                    {contact.notes}
+                  </p>
+                </div>
+              )}
             </div>
-
-            <h3 className="font-semibold text-slate-800 mb-1">
-              {contact.name}
-            </h3>
-
-            {contact.company && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-                <Building2 className="w-4 h-4" />
-                <span>{contact.company}</span>
-              </div>
-            )}
-
-            {contact.email && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
-                <Mail className="w-4 h-4" />
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="hover:text-gurktaler-600 transition-colors"
-                >
-                  {contact.email}
-                </a>
-              </div>
-            )}
-
-            {contact.phone && (
-              <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
-                <Phone className="w-4 h-4" />
-                <a
-                  href={`tel:${contact.phone}`}
-                  className="hover:text-gurktaler-600 transition-colors"
-                >
-                  {contact.phone}
-                </a>
-              </div>
-            )}
-
-            {contact.address && (
-              <div className="flex items-start gap-2 text-sm text-slate-600 mt-2">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span className="text-xs">{contact.address}</span>
-              </div>
-            )}
-
-            {contact.notes && (
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <p className="text-xs text-slate-500 line-clamp-2">
-                  {contact.notes}
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Modal */}
       {isModalOpen && (
         <Modal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setEditingContact(null);
-          }}
+          onClose={handleCloseModal}
           title={editingContact ? "Kontakt bearbeiten" : "Neuer Kontakt"}
           size="md"
         >
           <ContactForm
             contact={editingContact || undefined}
             onSubmit={handleSubmit}
-            onCancel={() => {
-              setIsModalOpen(false);
-              setEditingContact(null);
-            }}
+            onCancel={handleCloseModal}
           />
         </Modal>
       )}

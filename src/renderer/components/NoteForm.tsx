@@ -10,7 +10,8 @@ import {
 import ReactMarkdown from "react-markdown";
 import TagSelector from "./TagSelector";
 import ImageUpload from "./ImageUpload";
-import type { Note, Project } from "@/shared/types";
+import DocumentManager from "./DocumentManager";
+import type { Note, Project, Document } from "@/shared/types";
 
 type NoteType = "idea" | "note" | "todo" | "research";
 
@@ -40,6 +41,32 @@ export default function NoteForm({
   const [projectId, setProjectId] = useState(note?.project_id || "");
   const [url, setUrl] = useState(note?.url || "");
   const [showPreview, setShowPreview] = useState(false);
+  const [documents, setDocuments] = useState<Document[]>(note?.documents || []);
+
+  const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
+    const newDoc: Document = {
+      ...doc,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    };
+    setDocuments([...documents, newDoc]);
+  };
+
+  const handleDeleteDocument = (id: string) => {
+    setDocuments(documents.filter((d) => d.id !== id));
+  };
+
+  const handleOpenDocument = async (doc: Document) => {
+    if (doc.type === "file") {
+      await window.electron.invoke("file:open", doc.path);
+    } else {
+      window.open(doc.path, "_blank");
+    }
+  };
+
+  const handleShowInFolder = async (doc: Document) => {
+    await window.electron.invoke("file:show", doc.path);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -55,6 +82,7 @@ export default function NoteForm({
       type,
       project_id: projectId || undefined,
       url: url.trim() || undefined,
+      documents: documents.length > 0 ? documents : undefined,
     });
   };
 
@@ -208,15 +236,28 @@ export default function NoteForm({
       {/* Images */}
       {note && (
         <div>
-          <ImageUpload entityType="note" entityId={note.id} maxImages={3} />
+          <ImageUpload entityType="note" entityId={note.id} maxImages={20} />
         </div>
       )}
 
-      {/* Buttons */}
-      <div className="flex gap-3 pt-4">
+      {/* Documents */}
+      {note && (
+        <div>
+          <DocumentManager
+            documents={documents}
+            onAdd={handleAddDocument}
+            onDelete={handleDeleteDocument}
+            onOpen={handleOpenDocument}
+            onShowInFolder={handleShowInFolder}
+          />
+        </div>
+      )}
+
+      {/* Buttons - Sticky am unteren Rand für Mobile */}
+      <div className="sticky bottom-0 bg-white pt-4 pb-2 -mx-6 px-6 mt-4 border-t border-slate-200 flex gap-3">
         <button
           type="submit"
-          className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
+          className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors font-semibold"
         >
           {note ? "Speichern" : "Erstellen"}
         </button>

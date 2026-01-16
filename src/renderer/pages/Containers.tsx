@@ -127,6 +127,8 @@ function Containers() {
 
     if (editingContainer) {
       await containersService.update(editingContainer.id, formData);
+      await loadData();
+      resetForm(); // This closes the form
     } else {
       const newContainer = await containersService.create(
         formData as Omit<Container, "id" | "created_at">
@@ -143,9 +145,6 @@ function Containers() {
       await loadData();
       return; // Keep form open for images/tags
     }
-
-    resetForm();
-    await loadData();
   };
 
   const handleEdit = (container: Container) => {
@@ -454,7 +453,7 @@ function Containers() {
                 <ImageUpload
                   entityType="container"
                   entityId={editingContainer.id}
-                  maxImages={3}
+                  maxImages={20}
                 />
               </div>
             )}

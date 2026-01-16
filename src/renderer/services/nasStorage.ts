@@ -72,15 +72,18 @@ export class NasStorageProvider implements StorageProvider {
    * @returns Leeres Array falls Datei nicht existiert
    */
   async readJson<T>(filePath: string): Promise<T[]> {
+    console.log('[NasStorage] 📖 readJson:', filePath);
     try {
       const result = await window.electronAPI.fileReadJson(filePath);
       if (!result.success) {
-        console.warn(`Fehler beim Lesen von ${filePath}:`, result.error);
+        console.warn(`[NasStorage] ⚠️ Fehler beim Lesen von ${filePath}:`, result.error);
         return [];
       }
-      return (result.data || []) as T[];
+      const data = (result.data || []) as T[];
+      console.log(`[NasStorage] ✅ JSON gelesen: ${data.length} Einträge aus ${filePath}`);
+      return data;
     } catch (error) {
-      console.error(`Fehler beim Lesen von ${filePath}:`, error);
+      console.error(`[NasStorage] ❌ Fehler beim Lesen von ${filePath}:`, error);
       return [];
     }
   }
@@ -265,8 +268,8 @@ export class CustomApiStorageProvider implements StorageProvider {
   private baseUrl: string;
 
   constructor(config?: Partial<StorageConfig>) {
-    // Verwende absolute URL mit Port 8080
-    this.baseUrl = `${window.location.protocol}//${window.location.hostname}:8080`;
+    // Verwende absolute URL mit Port 3002 (Custom API Server)
+    this.baseUrl = `${window.location.protocol}//${window.location.hostname}:3002`;
     
     const basePath = config?.basePath || "/database";
     this.config = {
@@ -757,7 +760,7 @@ export const nasStorage = new Proxy({} as StorageProvider, {
         console.log("🖥️ Using Electron IPC Storage");
         _storageInstance = new NasStorageProvider();
       } else {
-        console.log("🌐 Using Custom API Storage (Port 8080)");
+        console.log("🌐 Using Custom API Storage (Port 3002)");
         _storageInstance = new CustomApiStorageProvider();
       }
     }

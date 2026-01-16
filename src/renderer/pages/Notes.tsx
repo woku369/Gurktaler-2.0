@@ -10,10 +10,12 @@ import {
   Edit2,
   Star,
   ExternalLink,
+  Share2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Modal from "@/renderer/components/Modal";
 import NoteForm from "@/renderer/components/NoteForm";
+import { share } from "@/renderer/services/shareService";
 import {
   notes as notesService,
   projects as projectsService,
@@ -112,6 +114,11 @@ function Notes() {
       await notesService.create(data);
     }
     await loadData();
+    setIsModalOpen(false);
+    setEditingNote(null);
+  };
+
+  const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingNote(null);
   };
@@ -348,6 +355,13 @@ function Notes() {
                     <Star className="w-4 h-4 text-slate-400" />
                   </button>
                   <button
+                    onClick={async () => await share(note, "note")}
+                    className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Teilen"
+                  >
+                    <Share2 className="w-4 h-4 text-slate-500" />
+                  </button>
+                  <button
                     onClick={() => handleEdit(note)}
                     className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Bearbeiten"
@@ -421,10 +435,7 @@ function Notes() {
       {isModalOpen && (
         <Modal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setEditingNote(null);
-          }}
+          onClose={handleCloseModal}
           title={editingNote ? "Notiz bearbeiten" : "Neue Notiz"}
           size="lg"
         >
@@ -432,10 +443,7 @@ function Notes() {
             note={editingNote || undefined}
             projects={projects}
             onSubmit={handleUpdate}
-            onCancel={() => {
-              setIsModalOpen(false);
-              setEditingNote(null);
-            }}
+            onCancel={handleCloseModal}
           />
         </Modal>
       )}

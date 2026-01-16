@@ -11,6 +11,7 @@ import Containers from "./pages/Containers";
 import Notes from "./pages/Notes";
 import Contacts from "./pages/Contacts";
 import Research from "./pages/Research";
+import Documents from "./pages/Documents";
 import Gallery from "./pages/Gallery";
 import Tags from "./pages/Tags";
 import GlobalSearch from "./pages/GlobalSearch";
@@ -115,6 +116,7 @@ function App() {
           <Route path="notes" element={<Notes />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="research" element={<Research />} />
+          <Route path="documents" element={<Documents />} />
           <Route path="gallery" element={<Gallery />} />
           <Route path="tags" element={<Tags />} />
           <Route path="search" element={<GlobalSearch />} />

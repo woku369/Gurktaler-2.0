@@ -83,7 +83,17 @@ export default function DocumentManager({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Prüfe ob wir in Electron sind
+  const isElectron = typeof window !== "undefined" && window.electron;
+
   const handleAddLocalFile = async () => {
+    if (!isElectron) {
+      setError(
+        "Lokale Dateien können nur in der Desktop-App hinzugefügt werden. Verwenden Sie stattdessen URLs."
+      );
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -176,6 +186,10 @@ export default function DocumentManager({
 
   const handleOpenDocument = async (doc: Document) => {
     if (doc.type === "file") {
+      if (!isElectron) {
+        alert("Lokale Dateien können nur in der Desktop-App geöffnet werden.");
+        return;
+      }
       // Prüfe erst ob Datei existiert
       const existsResult = (await window.electron.invoke(
         "file:exists",
@@ -212,14 +226,21 @@ export default function DocumentManager({
 
           {showAddMenu && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-vintage shadow-vintage border-vintage border-slate-200 py-2 z-10">
-              <button
-                type="button"
-                onClick={() => openAddModal("file")}
-                className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
-              >
-                <Folder className="w-4 h-4" />
-                Lokale Datei durchsuchen
-              </button>
+              {isElectron && (
+                <button
+                  type="button"
+                  onClick={() => openAddModal("file")}
+                  className="w-full px-4 py-2 text-left hover:bg-slate-50 flex items-center gap-3 text-sm text-slate-700"
+                >
+                  <Folder className="w-4 h-4" />
+                  Lokale Datei durchsuchen
+                </button>
+              )}
+              {!isElectron && (
+                <div className="px-4 py-2 text-xs text-slate-500 italic">
+                  💡 Lokale Dateien nur in Desktop-App
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => openAddModal("url")}

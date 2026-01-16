@@ -183,13 +183,13 @@ export default function GanttChart({
             .map((d) => {
               const depProject = projects.find((p) => p.id === d.projectId);
               const typeLabels = {
-                "finish-to-start": "→",
-                "start-to-start": "⇉",
-                "finish-to-finish": "⇇",
-                "start-to-finish": "↔",
+                "finish-to-start": "Ende-Start",
+                "start-to-start": "Start-Start",
+                "finish-to-finish": "Ende-Ende",
+                "start-to-finish": "Start-Ende",
               };
               return depProject
-                ? `${typeLabels[d.type]} ${depProject.name}`
+                ? `${typeLabels[d.type]}: ${depProject.name}`
                 : null;
             })
             .filter(Boolean);
@@ -295,11 +295,13 @@ export default function GanttChart({
                       </div>
                     )}
                     {deps.length > 0 && (
-                      <div className="mt-2 text-slate-300">
-                        <div className="font-semibold">Abhängigkeiten:</div>
+                      <div className="mt-2 text-slate-200">
+                        <div className="font-normal text-sm mb-1">
+                          Abhaengigkeiten:
+                        </div>
                         {deps.map((d, i) => (
-                          <div key={i} className="ml-2">
-                            • {d}
+                          <div key={i} className="ml-2 text-sm">
+                            - {d}
                           </div>
                         ))}
                       </div>
@@ -311,7 +313,7 @@ export default function GanttChart({
                         </div>
                         {timeline.milestones.slice(0, 3).map((m, i) => (
                           <div key={i} className="ml-2">
-                            {m.completed ? "✓" : "○"} {m.name}
+                            {m.completed ? "[x]" : "[ ]"} {m.name}
                           </div>
                         ))}
                         {timeline.milestones.length > 3 && (
@@ -361,8 +363,9 @@ export default function GanttChart({
                 })}
               </div>
 
-              {/* Dependencies (Arrows) */}
-              {bar.dependencies.map((dep) => {
+              {/* Dependencies (Arrows) - TEMPORARILY DISABLED for cleaner PDF export */}
+              {/* TODO: Implement better dependency visualization that doesn't overlap content */}
+              {/* {bar.dependencies.map((dep) => {
                 const depBar = bars.find((b) => b.project.id === dep.projectId);
                 if (!depBar) return null;
 
@@ -436,7 +439,7 @@ export default function GanttChart({
                     />
                   </svg>
                 );
-              })}
+              })} */}
             </div>
           );
         })}

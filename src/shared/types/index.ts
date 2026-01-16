@@ -9,7 +9,8 @@ export type WeblinkType = 'competitor' | 'research' | 'supplier' | 'other';
 export type ByproductType = 'marketing' | 'packaging' | 'label' | 'other';
 export type ContainerType = 'bottle' | 'label' | 'cap' | 'box' | 'other';
 export type DocumentType = 'file' | 'url' | 'google-photos';
-export type DocumentCategory = 'recipe' | 'analysis' | 'marketing' | 'label' | 'documentation' | 'other';
+// Document Categories are now managed as entities, see DocumentCategoryEntity below
+export type DocumentCategory = string;
 export type TaskStatus = 'open' | 'in-progress' | 'completed';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
@@ -22,6 +23,15 @@ export interface ProjectWorkspace extends BaseEntity {
     order: number;             // Sortierung der Tabs (0, 1, 2, ...)
 }
 
+// Document Category - Verwaltbare Kategorien für Dokumente
+export interface DocumentCategoryEntity extends BaseEntity {
+    name: string;           // Angezeigter Name (z.B. "Rezept")
+    value: string;          // Technischer Wert (z.B. "recipe")
+    color?: string;         // Optional: Hex-Color für Badge
+    icon?: string;          // Optional: Icon-Name
+    order: number;          // Sortierung
+}
+
 // Document - Pfad-basierte Dokumentenverwaltung
 export interface Document extends BaseEntity {
     type: DocumentType;
@@ -32,6 +42,7 @@ export interface Document extends BaseEntity {
     mime_type?: string;
     file_size?: number; // in bytes
     thumbnail?: string; // Optional: Base64 Mini-Preview
+    project_id?: string; // Optional: Zuordnung zu Projekt
 }
 
 // Base Entity
@@ -172,6 +183,7 @@ export interface Note extends BaseEntity {
     content?: string;
     type: NoteType;
     url?: string; // Optional URL reference
+    documents?: Document[]; // Pfad-basierte Dokumente
 }
 
 // Tag
@@ -188,11 +200,20 @@ export interface TagAssignment extends BaseEntity {
     entity_id: string;
 }
 
-// Contact
-export type ContactType = 'supplier' | 'partner' | 'customer' | 'other';
+// Contact Categories are now managed as entities, see ContactCategoryEntity below
+export type ContactType = string;
+
+export interface ContactCategoryEntity extends BaseEntity {
+    name: string;           // Angezeigter Name (z.B. "Lieferant")
+    value: string;          // Technischer Wert (z.B. "supplier")
+    color?: string;         // Optional: Hex-Color für Badge
+    icon?: string;          // Optional: Icon-Name
+    order: number;          // Sortierung
+}
 
 export interface Contact extends BaseEntity {
     name: string;
+    last_name?: string;     // Nachname für Sortierung
     type: ContactType;
     company?: string;
     email?: string;

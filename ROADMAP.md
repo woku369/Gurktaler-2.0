@@ -187,9 +187,88 @@
 
 ---
 
-## Phase 9: NAS-Integration & Multi-Device (v1.1.x)
+## Phase 9: NAS-Integration & Multi-Device (v1.7.x) 🔄
 
-### Infrastruktur
+**Status:** 🚀 **NÄCHSTE PRIORITÄT** - Infrastruktur steht, Application-Layer folgt
+
+**Ziel:** Vollständige Nutzung des zentralen NAS-Speichers durch alle App-Services
+
+### Phase 9a: Entity Services Refactoring (v1.7.0) 📋 NÄCHSTER SCHRITT
+
+**Aufwand:** 3-4 Tage | **Risiko:** Mittel (Async/Await-Kaskade)
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| 📋     | projects.ts Refactor              | localStorage → nasStorage.readJSON('projects.json') |
+| 📋     | products.ts Refactor              | localStorage → nasStorage.readJSON('products.json') |
+| 📋     | recipes.ts Refactor               | localStorage → nasStorage.readJSON('recipes.json') |
+| 📋     | notes.ts Refactor                 | localStorage → nasStorage.readJSON('notes.json') |
+| 📋     | ingredients.ts Refactor           | localStorage → nasStorage.readJSON('ingredients.json') |
+| 📋     | containers.ts Refactor            | localStorage → nasStorage.readJSON('containers.json') |
+| 📋     | contacts.ts Refactor              | localStorage → nasStorage.readJSON('contacts.json') |
+| 📋     | research.ts Refactor              | localStorage → nasStorage.readJSON('research.json') |
+| 📋     | tasks.ts Refactor                 | localStorage → nasStorage.readJSON('tasks.json') |
+| 📋     | workspaces.ts Refactor            | localStorage → nasStorage.readJSON('workspaces.json') |
+| 📋     | Async/Await UI Updates            | Alle Komponenten auf async Service-Calls anpassen |
+| 📋     | Error Handling                    | NAS offline → Fallback auf LocalStorage Cache |
+| 📋     | Caching-Strategie                 | In-Memory Cache für häufige Reads (Performance) |
+| 📋     | Race-Condition-Prevention         | Write-Locks oder Queue-Mechanismus             |
+
+**Erwartete Probleme:**
+- ⚠️ Async/Await Kaskade durch alle UI-Komponenten
+- ⚠️ Race Conditions bei gleichzeitigen Writes
+- ⚠️ NAS offline-Handling (Netzwerk-Fehler)
+- ⚠️ Performance-Einbußen ohne Caching
+
+### Phase 9b: Binäre Bildspeicherung (v1.7.0) 📋
+
+**Aufwand:** 2-3 Tage | **Risiko:** Mittel (Migration)
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| 📋     | ImageUpload Component Refactor    | saveImage() → Binary File statt Base64         |
+| 📋     | gallery.ts Refactor               | loadImage() → Binary File Reference            |
+| 📋     | Migration Script                  | Bestehende Base64 → Binary Files konvertieren  |
+| 📋     | Thumbnail-Generierung             | Große Bilder automatisch verkleinern           |
+| 📋     | Referenz-Update                   | entity.images[] = ['abc123.jpg'] statt Base64  |
+| 📋     | Cleanup Service                   | Alte Base64-Daten aus JSON entfernen           |
+| 📋     | Image-Vorschau Component          | Lazy-Loading für große Bilder                  |
+
+**Erwartete Probleme:**
+- ⚠️ Migration komplexer Daten (Bilder aus JSON extrahieren)
+- ⚠️ Thumbnail-Generierung bei großen Dateien
+- ⚠️ Speicher-Cleanup ohne Datenverlust
+
+### Phase 9c: Document Service (v1.7.0) 📋
+
+**Aufwand:** 1-2 Tage | **Risiko:** Niedrig
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| 📋     | DocumentManager Component         | Upload, Liste, Download, Löschen               |
+| 📋     | documents.ts Service              | CRUD für Dokumente (PDF, Excel, Word)          |
+| 📋     | File-Browser UI                   | Grid/List-View mit Icons                       |
+| 📋     | Upload-Progress-Bar               | Für große Dateien (10-50 MB)                   |
+| 📋     | MIME-Type-Detection               | Automatische Icon-Auswahl                      |
+| 📋     | Projekt-Verknüpfung               | Dokumente zu Projekten/Produkten zuordnen      |
+| 📋     | Vorschau-Integration              | PDF-Vorschau in Modal (optional)               |
+
+**Erwartete Probleme:**
+- ⚠️ Große Dateien (Upload-Progress nötig)
+- ⚠️ MIME-Type-Handling für verschiedene Formate
+
+### Phase 9d: Deployment-Automatisierung (v1.7.0) 📋
+
+**Aufwand:** 1 Tag | **Risiko:** Niedrig
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| 📋     | package.json Script Update        | Post-Build Hook für PWA-Deploy                 |
+| 📋     | Cross-Platform Deploy Script      | PowerShell + Bash für Windows/Linux            |
+| 📋     | Build-Validierung                 | Check ob Deploy erfolgreich                    |
+
+### Infrastruktur (ABGESCHLOSSEN ✅)
+
 | Status | Aufgabe                  | Beschreibung                                   |
 | ------ | ------------------------ | ---------------------------------------------- |
 | ✅     | Tailscale VPN Setup      | CGNAT-Lösung, Synology NAS Zugriff            |
@@ -198,11 +277,30 @@
 | ✅     | NAS Storage Provider     | Abstraktionsschicht für zentrale Speicherung   |
 | ✅     | Migration Service        | LocalStorage → NAS (einmalig, automatisch)     |
 | ✅     | Setup Service            | Verbindungstest, Verzeichnisinit, Console-Tools|
-| 📋     | Deployment-Skript ins Buildscript integrieren | Das PowerShell-Deployment-Skript (deploy-pwa.ps1) muss in den Buildprozess integriert werden, sodass nach jedem Build alle Dateien automatisch auf dem NAS aktuell gehalten werden. |
-| 📋     | Entity Services Refactor | notes.ts, products.ts, etc. → NAS statt LocalStorage |
-| 📋     | Binäre Bildspeicherung   | Base64 → Binary Files (90% Speichereinsparung)|
-| 📋     | Document Service         | PDF/Excel/Word Upload & Management            |
-| 📋     | Multi-User Konfliktlösung| Version-Tracking, Optimistic Locking          |
+
+### Phase 9e: Multi-User Konfliktlösung ⏸️ VERSCHOBEN AUF v1.8.0
+
+**Begründung:** Zu komplex für v1.7.0, braucht separates Design-Dokument
+
+**Aufwand:** 5-7 Tage | **Risiko:** ⚠️ HOCH (Komplexe Merge-Logik)
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| ⏸️     | Version-Tracking System           | updatedAt Timestamp in allen Entities          |
+| ⏸️     | Optimistic Locking                | Write-Konflikte erkennen                       |
+| ⏸️     | Konflikt-Dialog UI                | User entscheidet: Local/Remote/Merge           |
+| ⏸️     | Merge-Strategie Design            | Wie 2 JSON-Dateien mergen?                     |
+| ⏸️     | File-Locking Mechanismus          | Windows SMB-Lock-Handling                      |
+| ⏸️     | Network-Interruption Handling     | Korrupte Dateien verhindern                    |
+| ⏸️     | Multi-Device Testing              | 2+ Geräte simultan testen                      |
+
+**Kritische Probleme:**
+- 🔥 Last-Write-Wins Problem
+- 🔥 JSON-Merge-Konflikte (Git kann das nicht)
+- 🔥 Hängende File-Locks
+- 🔥 Korrupte Dateien bei Netzwerk-Abbruch
+
+**Nächster Schritt:** Separates Design-Dokument für v1.8.0 erstellen
 
 ---
 
@@ -329,6 +427,7 @@
 - Workspace-Filter bei Containern/Gebinden
 - Workspace-Badges bei Produkten
 - Workspace-Filter bei Rezepten
+- **Optimierung Datenbackup:** Stündliche Backups, In-App-Wiederherstellung testen und optimieren
 
 ---
 

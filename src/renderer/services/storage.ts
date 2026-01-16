@@ -3,8 +3,8 @@
 
 import { v4 as uuidv4 } from 'uuid'
 import type {
-    Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactProjectAssignment,
-    Weblink, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite, CapacityUtilization,
+    Project, Product, Recipe, Note, Tag, TagAssignment, Contact, ContactCategoryEntity, ContactProjectAssignment,
+    Weblink, Document, DocumentCategoryEntity, Ingredient, Byproduct, Container, Image, RecipeIngredient, Favorite, CapacityUtilization,
     Task, TaskStatus, ProjectWorkspace
 } from '@/shared/types'
 import { nasStorage } from './nasStorage'
@@ -148,6 +148,39 @@ export const contacts = {
     delete: (id: string) => deleteEntity<Contact>('contacts', id),
 }
 
+// Contact Categories
+export const contactCategories = {
+    getAll: async (): Promise<ContactCategoryEntity[]> => {
+        try {
+            return await nasStorage.readJson<ContactCategoryEntity>(nasStorage.getJsonFilePath('contact_categories'));
+        } catch {
+            // Fallback zu Standard-Kategorien, wenn noch keine existieren
+            return await contactCategories.initializeDefaults();
+        }
+    },
+    getById: async (id: string): Promise<ContactCategoryEntity | undefined> => {
+        const all = await contactCategories.getAll();
+        return all.find(c => c.id === id);
+    },
+    create: (category: Omit<ContactCategoryEntity, 'id' | 'created_at'>) => createEntity<ContactCategoryEntity>('contact_categories', category),
+    update: (id: string, updates: Partial<ContactCategoryEntity>) => updateEntity<ContactCategoryEntity>('contact_categories', id, updates),
+    delete: (id: string) => deleteEntity<ContactCategoryEntity>('contact_categories', id),
+    initializeDefaults: async (): Promise<ContactCategoryEntity[]> => {
+        const defaults: Omit<ContactCategoryEntity, 'id' | 'created_at'>[] = [
+            { name: 'Lieferant', value: 'supplier', color: '#10b981', icon: '🏭', order: 0 },
+            { name: 'Partner', value: 'partner', color: '#3b82f6', icon: '🤝', order: 1 },
+            { name: 'Kunde', value: 'customer', color: '#8b5cf6', icon: '👥', order: 2 },
+            { name: 'Sonstiges', value: 'other', color: '#6b7280', icon: '📎', order: 3 },
+        ];
+        
+        for (const category of defaults) {
+            await contactCategories.create(category);
+        }
+        
+        return await contactCategories.getAll();
+    }
+}
+
 // Weblinks
 export const weblinks = {
     getAll: async (): Promise<Weblink[]> => await nasStorage.readJson<Weblink>(nasStorage.getJsonFilePath('weblinks')),
@@ -158,6 +191,57 @@ export const weblinks = {
     create: (weblink: Omit<Weblink, 'id' | 'created_at'>) => createEntity<Weblink>('weblinks', weblink),
     update: (id: string, updates: Partial<Weblink>) => updateEntity<Weblink>('weblinks', id, updates),
     delete: (id: string) => deleteEntity<Weblink>('weblinks', id),
+}
+
+// Documents
+export const documents = {
+    getAll: async (): Promise<Document[]> => await nasStorage.readJson<Document>(nasStorage.getJsonFilePath('documents')),
+    getById: async (id: string): Promise<Document | undefined> => {
+        const all = await nasStorage.readJson<Document>(nasStorage.getJsonFilePath('documents'))
+        return all.find(d => d.id === id)
+    },
+    getByProject: async (projectId: string): Promise<Document[]> => {
+        const all = await nasStorage.readJson<Document>(nasStorage.getJsonFilePath('documents'))
+        return all.filter(d => d.project_id === projectId)
+    },
+    create: (document: Omit<Document, 'id' | 'created_at'>) => createEntity<Document>('documents', document),
+    update: (id: string, updates: Partial<Document>) => updateEntity<Document>('documents', id, updates),
+    delete: (id: string) => deleteEntity<Document>('documents', id),
+}
+
+// Document Categories
+export const documentCategories = {
+    getAll: async (): Promise<DocumentCategoryEntity[]> => {
+        try {
+            return await nasStorage.readJson<DocumentCategoryEntity>(nasStorage.getJsonFilePath('document_categories'));
+        } catch {
+            // Fallback zu Standard-Kategorien, wenn noch keine existieren
+            return await documentCategories.initializeDefaults();
+        }
+    },
+    getById: async (id: string): Promise<DocumentCategoryEntity | undefined> => {
+        const all = await documentCategories.getAll();
+        return all.find(c => c.id === id);
+    },
+    create: (category: Omit<DocumentCategoryEntity, 'id' | 'created_at'>) => createEntity<DocumentCategoryEntity>('document_categories', category),
+    update: (id: string, updates: Partial<DocumentCategoryEntity>) => updateEntity<DocumentCategoryEntity>('document_categories', id, updates),
+    delete: (id: string) => deleteEntity<DocumentCategoryEntity>('document_categories', id),
+    initializeDefaults: async (): Promise<DocumentCategoryEntity[]> => {
+        const defaults: Omit<DocumentCategoryEntity, 'id' | 'created_at'>[] = [
+            { name: 'Rezept', value: 'recipe', color: '#10b981', icon: '📋', order: 0 },
+            { name: 'Analyse', value: 'analysis', color: '#3b82f6', icon: '🔬', order: 1 },
+            { name: 'Marketing', value: 'marketing', color: '#8b5cf6', icon: '📢', order: 2 },
+            { name: 'Etikett', value: 'label', color: '#f59e0b', icon: '🏷️', order: 3 },
+            { name: 'Dokumentation', value: 'documentation', color: '#6366f1', icon: '📄', order: 4 },
+            { name: 'Sonstiges', value: 'other', color: '#6b7280', icon: '📎', order: 5 },
+        ];
+        
+        for (const category of defaults) {
+            await documentCategories.create(category);
+        }
+        
+        return await documentCategories.getAll();
+    }
 }
 
 // Tags
@@ -342,10 +426,10 @@ export async function exportData(): Promise<string> {
     const allData: Record<string, unknown[]> = {}
     
     const entityTypes = [
-        'projects', 'products', 'recipes', 'notes', 'contacts', 'weblinks',
+        'projects', 'products', 'recipes', 'notes', 'contacts', 'contact_categories', 'weblinks', 'documents', 'document_categories',
         'tags', 'tag_assignments', 'contact_project_assignments',
         'ingredients', 'byproducts', 'containers', 'recipe_ingredients',
-        'images', 'favorites'
+        'images', 'favorites', 'tasks', 'workspaces'
     ]
     
     for (const entityType of entityTypes) {

@@ -38,20 +38,47 @@ function Gallery() {
   }, [images, filter, searchTerm]);
 
   const loadData = async () => {
-    const [allImages, allTags] = await Promise.all([
-      getAllGalleryImages(),
-      tagsService.getAll(),
-    ]);
-    setImages(allImages);
-    setTags(allTags);
+    console.log("[Gallery] 🔄 loadData gestartet...");
+    try {
+      const [allImages, allTags] = await Promise.all([
+        getAllGalleryImages(),
+        tagsService.getAll(),
+      ]);
+      console.log("[Gallery] ✅ Daten geladen:", {
+        imageCount: allImages.length,
+        tagCount: allTags.length,
+        firstImage: allImages[0]
+          ? {
+              id: allImages[0].id,
+              fileName: allImages[0].file_name,
+              hasDataUrl: !!allImages[0].data_url,
+              dataUrlLength: allImages[0].data_url?.length || 0,
+            }
+          : "keine Bilder",
+      });
+      setImages(allImages);
+      setTags(allTags);
+    } catch (error) {
+      console.error("[Gallery] ❌ Fehler beim Laden:", error);
+    }
   };
 
   const applyFilters = async () => {
-    const filtered = await getFilteredImages({
-      ...filter,
-      searchTerm: searchTerm || undefined,
+    console.log("[Gallery] 🔍 Filter anwenden:", {
+      filter,
+      searchTerm,
+      totalImages: images.length,
     });
-    setFilteredImages(filtered);
+    try {
+      const filtered = await getFilteredImages({
+        ...filter,
+        searchTerm: searchTerm || undefined,
+      });
+      console.log("[Gallery] ✅ Gefilterte Bilder:", filtered.length);
+      setFilteredImages(filtered);
+    } catch (error) {
+      console.error("[Gallery] ❌ Fehler beim Filtern:", error);
+    }
   };
 
   const handleFileSelect = async (files: FileList | null) => {

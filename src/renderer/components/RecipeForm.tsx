@@ -282,7 +282,11 @@ export default function RecipeForm({
       {/* Images (only when editing) */}
       {recipe && (
         <div className="border-t border-slate-200 pt-6">
-          <ImageUpload entityType="recipe" entityId={recipe.id} maxImages={5} />
+          <ImageUpload
+            entityType="recipe"
+            entityId={recipe.id}
+            maxImages={20}
+          />
         </div>
       )}
 

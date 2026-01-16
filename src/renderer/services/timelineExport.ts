@@ -52,8 +52,9 @@ export async function exportTimelineToPDF(
   if (activeWorkspace && activeWorkspace !== 'all' && workspaces) {
     const workspace = workspaces.find(ws => ws.id === activeWorkspace);
     if (workspace) {
+      // Emoji/Icon entfernt für PDF-Kompatibilität
       pdf.text(
-        `Projekt-Ebene: ${workspace.icon || ''} ${workspace.name}`,
+        `Projekt-Ebene: ${workspace.name}`,
         margin,
         nextY
       );
@@ -215,8 +216,9 @@ export async function exportTimelineToPDF(
       );
     });
 
-    // Abhängigkeiten als gestrichelte Linien
-    timeline.dependencies.forEach((dep) => {
+    // Abhängigkeitslinien DEAKTIVIERT für sauberen PDF-Export
+    // TODO: Bessere Visualisierung implementieren, die nicht überlappt
+    /* timeline.dependencies.forEach((dep) => {
       const depProject = sortedProjects.find((p) => p.id === dep.projectId);
       if (!depProject || !depProject.timeline) return;
 
@@ -289,7 +291,7 @@ export async function exportTimelineToPDF(
         x2 - arrowSize * arrowDir, thisY + arrowSize / 2,
         "F"
       );
-    });
+    }); */
 
     currentY += rowHeight;
     
@@ -537,7 +539,7 @@ export async function exportTimelineToPDF(
       detailY += 4;
       timeline.milestones.forEach((m) => {
         const mDate = new Date(m.date).toLocaleDateString("de-DE");
-        const status = m.completed ? "✓" : "○";
+        const status = m.completed ? "[x]" : "[ ]";
         pdf.text(`  ${status} ${m.name} (${mDate})`, margin + 8, detailY);
         detailY += 3.5;
       });
@@ -551,12 +553,12 @@ export async function exportTimelineToPDF(
         const depProject = sortedProjects.find((p) => p.id === dep.projectId);
         if (depProject) {
           const typeLabels = {
-            "finish-to-start": "→ Start nach Ende von",
-            "start-to-start": "⇉ Start parallel mit",
-            "finish-to-finish": "⇇ Ende gleichzeitig mit",
-            "start-to-finish": "↔ Start mit Ende von"
+            "finish-to-start": "Ende-Start:",
+            "start-to-start": "Start-Start:",
+            "finish-to-finish": "Ende-Ende:",
+            "start-to-finish": "Start-Ende:"
           };
-          pdf.text(`  ${typeLabels[dep.type]} "${depProject.name}"`, margin + 8, detailY);
+          pdf.text(`  ${typeLabels[dep.type]} ${depProject.name}`, margin + 8, detailY);
           detailY += 3.5;
         }
       });

@@ -74,6 +74,12 @@ function Products() {
     setVersioningProduct(null);
   };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+    setVersioningProduct(null);
+  };
+
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     setIsModalOpen(true);
@@ -258,11 +264,7 @@ function Products() {
       {isModalOpen && (
         <Modal
           isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setEditingProduct(null);
-            setVersioningProduct(null);
-          }}
+          onClose={handleCloseModal}
           title={
             editingProduct
               ? "Produkt bearbeiten"

@@ -8,7 +8,9 @@ import {
   Package,
   GitBranch,
   ImagePlus,
+  Share2,
 } from "lucide-react";
+import { share } from "@/renderer/services/shareService";
 import TagBadgeList from "@/renderer/components/TagBadgeList";
 import type { Product, Image, Document, ProductStatus } from "@/shared/types";
 
@@ -58,6 +60,10 @@ export default function ProductCard({
   const handleCopyName = () => {
     navigator.clipboard.writeText(product.name);
     onCopy();
+  };
+
+  const handleShare = async () => {
+    await share(product, "product");
   };
 
   const openDocument = async (doc: Document) => {
@@ -206,6 +212,14 @@ export default function ProductCard({
 
       {/* Quick Actions Footer */}
       <div className="border-t border-distillery-100 px-4 py-2 bg-distillery-25 flex items-center gap-2">
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-distillery-200 text-distillery-700 rounded hover:bg-distillery-50 transition-colors font-body font-semibold"
+          title="Per E-Mail teilen"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          Teilen
+        </button>
         <button
           onClick={onAddImage}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-distillery-200 text-distillery-700 rounded hover:bg-distillery-50 transition-colors font-body font-semibold"

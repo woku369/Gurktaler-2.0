@@ -21,34 +21,51 @@ export interface GalleryFilter {
  * Get all images with resolved metadata
  */
 export async function getAllGalleryImages(): Promise<GalleryImage[]> {
-  const allImages = await imagesService.getAll();
-  const allTags = await tags.getAll();
-  
-  const galleryImages: GalleryImage[] = [];
-  
-  for (const image of allImages) {
-    // Get tags for this image
-    const imageTagAssignments = await tagAssignments.getByEntity('image', image.id);
-    const imageTags = imageTagAssignments
-      .map(ta => allTags.find(t => t.id === ta.tag_id))
-      .filter((t): t is Tag => t !== undefined);
-    
-    galleryImages.push({
-      ...image,
-      tags: imageTags,
+  console.log('[GalleryService] 🔄 getAllGalleryImages gestartet...');
+  try {
+    const allImages = await imagesService.getAll();
+    console.log('[GalleryService] 📦 Rohdaten geladen:', {
+      imageCount: allImages.length,
+      firstImage: allImages[0]
     });
+    
+    const allTags = await tags.getAll();
+    console.log('[GalleryService] 🏷️ Tags geladen:', allTags.length);
+    
+    const galleryImages: GalleryImage[] = [];
+    
+    for (const image of allImages) {
+      // Get tags for this image
+      const imageTagAssignments = await tagAssignments.getByEntity('image', image.id);
+      const imageTags = imageTagAssignments
+        .map(ta => allTags.find(t => t.id === ta.tag_id))
+        .filter((t): t is Tag => t !== undefined);
+      
+      galleryImages.push({
+        ...image,
+        tags: imageTags,
+      });
+    }
+    
+    const sorted = galleryImages.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    
+    console.log('[GalleryService] ✅ Galerie-Bilder verarbeitet:', sorted.length);
+    return sorted;
+  } catch (error) {
+    console.error('[GalleryService] ❌ Fehler in getAllGalleryImages:', error);
+    throw error;
   }
-  
-  return galleryImages.sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
 }
 
 /**
  * Get filtered images
  */
 export async function getFilteredImages(filter: GalleryFilter): Promise<GalleryImage[]> {
+  console.log('[GalleryService] 🔍 getFilteredImages mit Filter:', filter);
   let images = await getAllGalleryImages();
+  console.log('[GalleryService] 📊 Bilder vor Filter:', images.length);
   
   // Filter by entity type
   if (filter.entityType) {

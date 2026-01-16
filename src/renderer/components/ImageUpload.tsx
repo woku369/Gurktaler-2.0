@@ -29,6 +29,7 @@ export default function ImageUpload({
   const [imageUrl, setImageUrl] = useState("");
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing images on mount
   useEffect(() => {
@@ -154,15 +155,25 @@ export default function ImageUpload({
       {/* Upload Area */}
       {images.length < maxImages && (
         <>
-          {/* Mobile Upload Button - Large Touch-Friendly Button */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="md:hidden w-full flex items-center justify-center gap-3 py-4 px-6 bg-gurktaler-500 hover:bg-gurktaler-600 text-white rounded-lg transition-colors text-base font-medium shadow-sm"
-          >
-            <Camera className="w-6 h-6" />
-            Foto hinzufügen
-          </button>
+          {/* Mobile Upload Buttons - Separate für Galerie und Kamera */}
+          <div className="md:hidden flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-gurktaler-500 hover:bg-gurktaler-600 text-white rounded-lg transition-colors text-base font-medium shadow-sm"
+            >
+              <ImageIcon className="w-6 h-6" />
+              Aus Galerie wählen
+            </button>
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              className="w-full flex items-center justify-center gap-3 py-3 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-base font-medium border border-slate-300"
+            >
+              <Camera className="w-5 h-5" />
+              Foto aufnehmen
+            </button>
+          </div>
 
           {/* Desktop Drag & Drop Zone - Hidden on Mobile */}
           <div
@@ -185,12 +196,22 @@ export default function ImageUpload({
             </p>
           </div>
 
-          {/* Hidden File Input for Both Mobile and Desktop */}
+          {/* Hidden File Input für Galerie (ohne capture) */}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
             multiple
+            onChange={(e) => handleFileSelect(e.target.files)}
+            className="hidden"
+          />
+
+          {/* Hidden File Input für Kamera (mit capture) */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
           />

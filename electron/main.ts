@@ -646,6 +646,71 @@ function registerFileHandlers() {
             return { success: false, error: String(error.message || error) }
         }
     })
+
+    // NAS-Handler für Backup Service
+    // Datei lesen (raw text)
+    ipcMain.handle('nas-read', async (_event, filePath: string) => {
+        try {
+            if (!fs.existsSync(filePath)) {
+                return { success: false, error: 'Datei nicht gefunden' }
+            }
+            const content = fs.readFileSync(filePath, 'utf-8')
+            return { success: true, content }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Datei schreiben (raw text)
+    ipcMain.handle('nas-write', async (_event, { path: filePath, content }: { path: string, content: string }) => {
+        try {
+            const dir = path.dirname(filePath)
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true })
+            }
+            fs.writeFileSync(filePath, content, 'utf-8')
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Verzeichnis auflisten mit Metadaten
+    ipcMain.handle('nas-readdir', async (_event, dirPath: string) => {
+        try {
+            if (!fs.existsSync(dirPath)) {
+                return { success: false, error: 'Verzeichnis nicht gefunden' }
+            }
+            
+            const entries = fs.readdirSync(dirPath)
+            const files = entries.map(name => {
+                const fullPath = path.join(dirPath, name)
+                const stats = fs.statSync(fullPath)
+                return {
+                    name,
+                    isDirectory: stats.isDirectory(),
+                    size: stats.size,
+                    modified: stats.mtime
+                }
+            })
+            
+            return { success: true, files }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+
+    // Verzeichnis erstellen
+    ipcMain.handle('nas-mkdir', async (_event, dirPath: string) => {
+        try {
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true })
+            }
+            return { success: true }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
 }
 
 let localServer: http.Server | null = null
