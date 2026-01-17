@@ -188,7 +188,9 @@ export default function ContactImportDialog({
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-slate-800">
-                            {selection.contact.name}
+                            {selection.contact.last_name
+                              ? `${selection.contact.last_name}, ${selection.contact.name}`
+                              : selection.contact.name}
                           </h3>
                           {selection.contact.company && (
                             <p className="text-sm text-slate-600">
@@ -237,7 +239,11 @@ export default function ContactImportDialog({
                           <p className="text-xs text-amber-800 flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" />
                             Ähnlicher Kontakt bereits vorhanden:{" "}
-                            <strong>{selection.duplicateMatch.name}</strong>
+                            <strong>
+                              {selection.duplicateMatch.last_name
+                                ? `${selection.duplicateMatch.last_name}, ${selection.duplicateMatch.name}`
+                                : selection.duplicateMatch.name}
+                            </strong>
                             {selection.duplicateMatch.email &&
                               ` (${selection.duplicateMatch.email})`}
                           </p>
