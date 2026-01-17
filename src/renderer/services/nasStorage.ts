@@ -89,17 +89,78 @@ export class NasStorageProvider implements StorageProvider {
   }
 
   /**
-   * JSON-Datei schreiben
+   * JSON-Datei schreiben - MIT AUTOMATISCHEM BACKUP & VALIDIERUNG
    */
   async writeJson<T>(filePath: string, data: T[]): Promise<void> {
     try {
+      // 🔒 SICHERHEIT 1: Validiere dass Daten nicht leer sind
+      if (!Array.isArray(data)) {
+        throw new Error('❌ SICHERHEIT: Daten sind kein Array!');
+      }
+
+      // 🔒 SICHERHEIT 2: Warne bei leerem Array (außer für neue Dateien)
+      if (data.length === 0) {
+        console.warn(`⚠️ WARNUNG: Versuche leeres Array zu schreiben: ${filePath}`);
+        
+        // Prüfe ob Datei existiert und Daten hat
+        try {
+          const existingData = await this.readJson<T>(filePath);
+          if (existingData.length > 0) {
+            throw new Error(
+              `🚨 KRITISCHER FEHLER VERHINDERT:\n` +
+              `Versuch ${existingData.length} Einträge mit leerem Array zu überschreiben!\n` +
+              `Datei: ${filePath}\n` +
+              `Dies würde zum Datenverlust führen!`
+            );
+          }
+        } catch (readError) {
+          // Datei existiert nicht oder ist nicht lesbar - OK für neuen Write
+          console.log(`[NasStorage] Neue Datei oder Lesefehler, erlaube leeres Array: ${filePath}`);
+        }
+      }
+
+      // 🔒 SICHERHEIT 3: Erstelle Backup VOR dem Schreiben
+      await this.createIncrementalBackup(filePath, data.length);
+
+      // Schreibe Daten
       const result = await window.electronAPI.fileWriteJson(filePath, data);
       if (!result.success) {
         throw new Error(result.error || "Fehler beim Schreiben");
       }
+
+      console.log(`[NasStorage] ✅ Geschrieben: ${data.length} Einträge → ${filePath}`);
     } catch (error) {
-      console.error(`Fehler beim Schreiben von ${filePath}:`, error);
+      console.error(`[NasStorage] ❌ Fehler beim Schreiben von ${filePath}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Erstelle inkrementelles Backup vor Schreibvorgang
+   */
+  private async createIncrementalBackup(filePath: string, newDataCount: number): Promise<void> {
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T').join('_').substring(0, 19);
+      const fileName = filePath.split('\\').pop()?.replace('.json', '');
+      const backupDir = `${this.config.basePath}\\backups\\incremental_${timestamp}`;
+      
+      // Lese aktuelle Daten
+      const currentData = await this.readJson(filePath);
+      
+      if (currentData.length > 0 || newDataCount > 0) {
+        console.log(
+          `[NasStorage] 💾 Backup: ${fileName} (${currentData.length} → ${newDataCount} Einträge)`
+        );
+        
+        // Erstelle Backup-Verzeichnis
+        await window.electronAPI.fileWriteJson(
+          `${backupDir}\\${fileName}.json`,
+          currentData
+        );
+      }
+    } catch (error) {
+      console.warn('[NasStorage] ⚠️ Backup-Erstellung fehlgeschlagen:', error);
+      // Fehler beim Backup sollte Hauptoperation nicht blockieren
     }
   }
 

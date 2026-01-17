@@ -30,6 +30,31 @@ const server = http.createServer(async (req, res) => {
       req.on('data', chunk => body += chunk);
       req.on('end', async () => {
         const filePath = path.join(BASE_PATH, url.searchParams.get('path') || '');
+        
+        // 🛡️ BACKUP VOR SCHREIBVORGANG (nur bei database/*.json)
+        if (filePath.includes('/database/') && filePath.endsWith('.json')) {
+          try {
+            // Prüfe ob Datei existiert und hat Inhalt
+            const existingData = await fs.readFile(filePath, 'utf8').catch(() => '[]');
+            const existingArray = JSON.parse(existingData);
+            const newArray = JSON.parse(body);
+            
+            // Backup nur wenn existierende Daten vorhanden
+            if (existingArray.length > 0) {
+              const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+              const backupDir = path.join(BASE_PATH, 'backups', `incremental_${timestamp}`);
+              await fs.mkdir(backupDir, { recursive: true });
+              
+              const filename = path.basename(filePath);
+              await fs.writeFile(path.join(backupDir, filename), existingData, 'utf8');
+              console.log(`💾 PWA Backup: ${filename} (${existingArray.length} → ${newArray.length} Einträge)`);
+            }
+          } catch (backupError) {
+            console.warn('⚠️ Backup fehlgeschlagen:', backupError.message);
+            // Fortfahren trotz Backup-Fehler
+          }
+        }
+        
         await fs.mkdir(path.dirname(filePath), { recursive: true });
         await fs.writeFile(filePath, body, 'utf8');
         res.writeHead(200, { 'Content-Type': 'application/json' });

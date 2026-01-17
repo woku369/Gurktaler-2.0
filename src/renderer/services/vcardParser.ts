@@ -59,24 +59,42 @@ function parseVCardBlock(block: string): ParsedContact | null {
     const property = propertyPart.split(';')[0].toUpperCase();
     
     switch (property) {
-      case 'FN': // Formatted Name (preferred for display, but we'll parse N for structure)
-        // We'll use FN only as fallback if N is not available
+      case 'FN': // Formatted Name (fallback if N is not available)
+        if (!contact.name) {
+          // Use FN as fallback and try to split into first/last name
+          const fullName = decodeVCardValue(value).trim();
+          const nameParts = fullName.split(/\s+/);
+          
+          if (nameParts.length >= 2) {
+            // Assume first word is first name, rest is last name
+            contact.name = nameParts[0];
+            contact.last_name = nameParts.slice(1).join(' ');
+          } else {
+            // Only one word - use as first name
+            contact.name = fullName;
+          }
+        }
         break;
         
       case 'N': // Structured Name (Family;Given;Additional;Prefix;Suffix)
-        if (!contact.name) {
-          // Format: Family;Given;Additional;Prefix;Suffix
-          const nameParts = value.split(';');
-          const familyName = nameParts[0] ? decodeVCardValue(nameParts[0].trim()) : '';
-          const givenName = nameParts[1] ? decodeVCardValue(nameParts[1].trim()) : '';
-          
-          if (givenName && familyName) {
-            contact.name = givenName;
-            contact.last_name = familyName;
-          } else if (givenName) {
-            contact.name = givenName;
-          } else if (familyName) {
+        // N has priority over FN, so we overwrite
+        // Format: Family;Given;Additional;Prefix;Suffix
+        const nameParts = value.split(';');
+        const familyName = nameParts[0] ? decodeVCardValue(nameParts[0].trim()) : '';
+        const givenName = nameParts[1] ? decodeVCardValue(nameParts[1].trim()) : '';
+        
+        if (givenName && familyName) {
+          contact.name = givenName;
+          contact.last_name = familyName;
+        } else if (givenName) {
+          contact.name = givenName;
+          // Keep last_name from FN if it exists
+        } else if (familyName) {
+          // If only family name exists, use it as last name and keep first name from FN
+          if (!contact.name) {
             contact.name = familyName;
+          } else {
+            contact.last_name = familyName;
           }
         }
         break;

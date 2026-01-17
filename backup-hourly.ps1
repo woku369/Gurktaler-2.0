@@ -2,7 +2,8 @@
 # Erstellt timestamped Backup der Datenbank alle 60 Minuten
 
 param(
-    [string]$BasePath = "Y:\zweipunktnull"
+    [string]$BasePath = "Y:\zweipunktnull",
+    [switch]$Once  # Neuer Parameter: Nur ein Backup, dann beenden
 )
 
 $ErrorActionPreference = "Stop"
@@ -67,23 +68,40 @@ function Create-Backup {
 }
 
 # Hauptlogik
-Write-Host "🕐 Stündliches Backup-System gestartet" -ForegroundColor Cyan
-Write-Host "   Backup-Pfad: $BasePath\backups" -ForegroundColor White
-Write-Host "   Intervall: 60 Minuten" -ForegroundColor White
-Write-Host "   Aufbewahrung: 7 Tage" -ForegroundColor White
-Write-Host ""
-
-# Endlosschleife für stündliche Backups
-while ($true) {
+if ($Once) {
+    # Einmaliges Backup (für App-Schließen)
+    Write-Host "💾 Einmaliges Backup beim App-Schließen" -ForegroundColor Cyan
+    Write-Host "   Backup-Pfad: $BasePath\backups" -ForegroundColor White
+    Write-Host ""
+    
     try {
         Create-Backup
-        Write-Host ""
-        Write-Host "⏰ Nächstes Backup in 60 Minuten..." -ForegroundColor Cyan
-        Start-Sleep -Seconds 3600  # 60 Minuten
+        exit 0
     }
     catch {
         Write-Host "❌ Backup-Fehler: $_" -ForegroundColor Red
-        Write-Host "⏰ Erneuter Versuch in 5 Minuten..." -ForegroundColor Yellow
-        Start-Sleep -Seconds 300  # 5 Minuten Wartezeit bei Fehler
+        exit 1
+    }
+}
+else {
+    # Stündliche Backups (Endlosschleife)
+    Write-Host "🕐 Stündliches Backup-System gestartet" -ForegroundColor Cyan
+    Write-Host "   Backup-Pfad: $BasePath\backups" -ForegroundColor White
+    Write-Host "   Intervall: 60 Minuten" -ForegroundColor White
+    Write-Host "   Aufbewahrung: 7 Tage" -ForegroundColor White
+    Write-Host ""
+
+    while ($true) {
+        try {
+            Create-Backup
+            Write-Host ""
+            Write-Host "⏰ Nächstes Backup in 60 Minuten..." -ForegroundColor Cyan
+            Start-Sleep -Seconds 3600  # 60 Minuten
+        }
+        catch {
+            Write-Host "❌ Backup-Fehler: $_" -ForegroundColor Red
+            Write-Host "⏰ Erneuter Versuch in 5 Minuten..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 300  # 5 Minuten Wartezeit bei Fehler
+        }
     }
 }

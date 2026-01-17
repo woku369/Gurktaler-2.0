@@ -862,6 +862,27 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+    // 💾 Backup beim Beenden der App
+    try {
+        console.log('🔄 Erstelle Abschluss-Backup...')
+        const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0]
+        const backupScript = path.join('Y:', 'zweipunktnull', 'backup-hourly.ps1')
+        
+        // Nur wenn NAS verfügbar ist
+        if (fs.existsSync(backupScript)) {
+            execSync(`powershell.exe -ExecutionPolicy Bypass -File "${backupScript}" -Once`, {
+                encoding: 'utf-8',
+                timeout: 30000
+            })
+            console.log('✅ Abschluss-Backup erfolgreich!')
+        } else {
+            console.warn('⚠️ Backup-Script nicht gefunden, überspringe Backup')
+        }
+    } catch (error) {
+        console.error('❌ Abschluss-Backup fehlgeschlagen:', error)
+        // Fortfahren trotz Fehler
+    }
+    
     if (localServer) {
         localServer.close()
     }

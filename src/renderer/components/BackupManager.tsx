@@ -8,6 +8,8 @@ import {
   AlertCircle,
   CheckCircle2,
   RefreshCw,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   backupService,
@@ -25,6 +27,7 @@ export function BackupManager() {
   const [restoring, setRestoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showBackupList, setShowBackupList] = useState(false);
 
   useEffect(() => {
     loadBackups();
@@ -235,10 +238,20 @@ export function BackupManager() {
 
       {/* Backup Liste */}
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
-          <h3 className="font-semibold text-slate-800">
-            Verfügbare Backups ({backups.length})
-          </h3>
+        <div className="flex items-center justify-between p-4 bg-slate-50">
+          <button
+            onClick={() => setShowBackupList(!showBackupList)}
+            className="flex items-center gap-2 hover:text-slate-900 transition-colors flex-1 text-left"
+          >
+            {showBackupList ? (
+              <ChevronUp className="w-5 h-5 text-slate-600" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-slate-600" />
+            )}
+            <h3 className="font-semibold text-slate-800">
+              Verfügbare Backups ({backups.length})
+            </h3>
+          </button>
           <button
             onClick={loadBackups}
             disabled={loading}
@@ -253,42 +266,48 @@ export function BackupManager() {
           </button>
         </div>
 
-        {loading ? (
-          <div className="p-8 text-center text-slate-500">
-            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
-            <p>Lade Backups...</p>
-          </div>
-        ) : backups.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            <Database className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>Keine Backups gefunden</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-200">
-            {backups.map((backup) => (
-              <div
-                key={backup.name}
-                className={`p-4 cursor-pointer transition-colors ${
-                  selectedBackup?.name === backup.name
-                    ? "bg-blue-50 border-l-4 border-blue-500"
-                    : "hover:bg-slate-50"
-                }`}
-                onClick={() => handleSelectBackup(backup)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Clock className="w-4 h-4 text-slate-400" />
-                      <span className="font-mono text-sm font-semibold text-slate-800">
-                        {formatDate(backup.timestamp)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500">{backup.name}</div>
-                  </div>
-                </div>
+        {showBackupList && (
+          <>
+            {loading ? (
+              <div className="p-8 text-center text-slate-500">
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+                <p>Lade Backups...</p>
               </div>
-            ))}
-          </div>
+            ) : backups.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                <Database className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>Keine Backups gefunden</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-200">
+                {backups.map((backup) => (
+                  <div
+                    key={backup.name}
+                    className={`p-4 cursor-pointer transition-colors ${
+                      selectedBackup?.name === backup.name
+                        ? "bg-blue-50 border-l-4 border-blue-500"
+                        : "hover:bg-slate-50"
+                    }`}
+                    onClick={() => handleSelectBackup(backup)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Clock className="w-4 h-4 text-slate-400" />
+                          <span className="font-mono text-sm font-semibold text-slate-800">
+                            {formatDate(backup.timestamp)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {backup.name}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 

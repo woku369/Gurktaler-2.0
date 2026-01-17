@@ -16,6 +16,8 @@ import {
   ChevronDown,
   ChevronRight,
   Smartphone,
+  ShieldAlert,
+  Clock,
 } from "lucide-react";
 
 type Section = {
@@ -882,6 +884,155 @@ const sections: Section[] = [
         "Build-Zeit: Desktop ~2 Min, PWA ~15 Sek",
         "Asset-Pfade sind der einzige Unterschied zwischen Builds",
         "Beide Builds greifen auf dieselben NAS-Daten zu",
+      ],
+    },
+  },
+  {
+    id: "backup",
+    title: "🚨 Notfall-Wiederherstellung",
+    icon: ShieldAlert,
+    content: {
+      subtitle: "Datenrettung bei Datenverlust - Schritt für Schritt",
+      description:
+        "Falls alle Daten in der App verschwunden sind: KEINE PANIK! Alle Daten werden stündlich auf dem NAS gesichert. Diese Anleitung hilft dir, Daten in wenigen Minuten wiederherzustellen - auch ohne VS Code im Büro.",
+      howTo: [
+        {
+          title: "1. Sofort-Maßnahmen",
+          steps: [
+            "App SOFORT schließen (keine weiteren Speichervorgänge!)",
+            "Windows PowerShell öffnen (Win+X → Windows PowerShell)",
+            "Zum Projekt navigieren: cd C:\\Users\\wolfg\\Desktop\\zweipunktnullVS",
+            "Backups prüfen: Get-ChildItem 'Y:\\zweipunktnull\\backups' -Directory | Sort-Object Name -Descending | Select-Object -First 5",
+          ],
+        },
+        {
+          title: "2. Neuestes Backup prüfen",
+          steps: [
+            "Ersetze YYYY-MM-DD_HH-mm-ss mit neuestem Backup-Namen!",
+            "$backup = 'Y:\\zweipunktnull\\backups\\backup_YYYY-MM-DD_HH-mm-ss'",
+            'Inhalt prüfen: Get-ChildItem "$backup\\*.json" | ForEach-Object { $data = Get-Content $_.FullName -Raw | ConvertFrom-Json; Write-Host "$($_.Name): $($data.Count) Einträge" }',
+            "Sollte zeigen: projects.json: XX Einträge, products.json: XX Einträge, etc.",
+          ],
+        },
+        {
+          title: "3. Daten wiederherstellen (KOPIEREN!)",
+          steps: [
+            "$backup = 'Y:\\zweipunktnull\\backups\\backup_YYYY-MM-DD_HH-mm-ss'  # ANPASSEN!",
+            "$db = 'Y:\\zweipunktnull\\database'",
+            'Copy-Item "$backup\\projects.json" "$db\\projects.json" -Force',
+            'Copy-Item "$backup\\products.json" "$db\\products.json" -Force',
+            'Copy-Item "$backup\\recipes.json" "$db\\recipes.json" -Force',
+            'Copy-Item "$backup\\notes.json" "$db\\notes.json" -Force',
+            'Copy-Item "$backup\\contacts.json" "$db\\contacts.json" -Force',
+            'Copy-Item "$backup\\tasks.json" "$db\\tasks.json" -Force',
+            "Write-Host '✅ Daten wiederhergestellt!'",
+          ],
+        },
+        {
+          title: "4. Prüfen & App neu starten",
+          steps: [
+            "@('projects', 'products', 'recipes', 'notes') | ForEach-Object { $count = (Get-Content \"Y:\\zweipunktnull\\database\\$_.json\" -Raw | ConvertFrom-Json).Count; Write-Host \"$_ : $count Einträge\" }",
+            "Sollte wieder Einträge zeigen!",
+            "App neu starten oder F5 drücken",
+            "Daten sollten jetzt wieder sichtbar sein",
+          ],
+        },
+      ],
+      tips: [
+        "🏢 Im Büro ohne VS Code: Öffne einfach PowerShell und führe die Befehle aus!",
+        "🔌 NAS nicht verbunden? net use Y: \\\\100.121.103.107\\Gurktaler\\zweipunktnull",
+        "📱 Per Remote Desktop: Verbinde zu Home-Rechner und stelle dort wieder her",
+        "⏱️ Backups: Stündlich für 7 Tage = bis zu 168 Wiederherstellungspunkte",
+        "💾 Manuelles Backup jederzeit: Einstellungen → Backup & Wiederherstellung → Manuelles Backup",
+        "🔒 Neu in v1.6.1: Automatisches Backup VOR jedem Speichern + Leer-Schutz!",
+      ],
+    },
+  },
+  {
+    id: "backup-automation",
+    title: "⏰ Stündliche Backups einrichten",
+    icon: Clock,
+    content: {
+      subtitle: "Task Scheduler für automatische Backups konfigurieren",
+      description:
+        "Das stündliche Backup-Script muss über Windows Task Scheduler automatisiert werden. Ohne diese Einrichtung laufen nur manuelle Backups beim Speichern!",
+      howTo: [
+        {
+          title: "Einmalige Einrichtung - Task Scheduler",
+          steps: [
+            "Windows-Taste drücken, tippe: Aufgabenplanung",
+            "Rechtsklick 'Aufgabenplanungsbibliothek' → Aufgabe erstellen",
+            "Tab 'Allgemein': Name: Gurktaler Stündliches Backup",
+            "Häkchen: 'Unabhängig von der Benutzeranmeldung ausführen'",
+            "Häkchen: 'Mit höchsten Privilegien ausführen'",
+          ],
+        },
+        {
+          title: "Trigger konfigurieren",
+          steps: [
+            "Tab 'Trigger' → Neu",
+            "Aufgabe starten: Bei Anmeldung",
+            "Häkchen: 'Wiederholen alle: 1 Stunde'",
+            "Dauer: Unbegrenzt",
+            "Häkchen: 'Aktiviert'",
+            "OK klicken",
+          ],
+        },
+        {
+          title: "Aktion konfigurieren",
+          steps: [
+            "Tab 'Aktionen' → Neu",
+            "Aktion: Programm starten",
+            "Programm/Skript: powershell.exe",
+            'Argumente: -NoProfile -ExecutionPolicy Bypass -File "C:\\Users\\wolfg\\Desktop\\zweipunktnullVS\\backup-hourly.ps1"',
+            "Starten in: C:\\Users\\wolfg\\Desktop\\zweipunktnullVS",
+            "OK klicken",
+          ],
+        },
+        {
+          title: "Bedingungen anpassen",
+          steps: [
+            "Tab 'Bedingungen'",
+            "DEAKTIVIERE: 'Aufgabe nur starten, falls Computer im Netzbetrieb läuft'",
+            "DEAKTIVIERE: 'Anhalten, falls Akkubetrieb einsetzt'",
+            "So läuft Backup auch auf Laptop!",
+          ],
+        },
+        {
+          title: "Einstellungen finalisieren",
+          steps: [
+            "Tab 'Einstellungen'",
+            "Häkchen: 'Aufgabe bei Bedarf ausführen'",
+            "Häkchen: 'Aufgabe so schnell wie möglich ausführen, falls Start verpasst'",
+            "Falls Aufgabe fehlschlägt, Neustart alle: 1 Minute",
+            "Versuche max: 3",
+            "OK klicken → ggf. Passwort eingeben",
+          ],
+        },
+        {
+          title: "Test & Verifikation",
+          steps: [
+            "In Aufgabenplanung: Rechtsklick auf 'Gurktaler Stündliches Backup' → Ausführen",
+            "PowerShell öffnen: Get-ChildItem 'Y:\\zweipunktnull\\backups' -Directory | Sort-Object Name -Descending | Select-Object -First 1",
+            "Sollte ein neues Backup mit aktuellem Zeitstempel zeigen!",
+            "Task läuft jetzt automatisch jede Stunde",
+          ],
+        },
+      ],
+      features: [
+        "✅ Automatische Backups jede Stunde (7 Tage = 168 Backups)",
+        "✅ Läuft auch bei Laptop im Akkubetrieb",
+        "✅ Automatischer Neustart bei Fehlschlag",
+        "✅ Läuft auch wenn du nicht angemeldet bist",
+        "✅ Alte Backups werden automatisch nach 7 Tagen gelöscht",
+      ],
+      tips: [
+        "⚡ Sofort-Test: Rechtsklick auf Task → Ausführen",
+        "📊 Status prüfen: Task Scheduler → 'Letzte Ausführung' und 'Letztes Ergebnis' ansehen",
+        "🔍 Fehlersuche: Ereignisanzeige → Windows-Protokolle → Anwendung",
+        "⏰ Erste Ausführung: Bei nächster Anmeldung + jede Stunde danach",
+        "🔒 Wichtig: Pfade müssen exakt stimmen (Anführungszeichen bei Leerzeichen!)",
+        "💡 Alternative: Script manuell starten: .\\backup-hourly.ps1 in PowerShell",
       ],
     },
   },

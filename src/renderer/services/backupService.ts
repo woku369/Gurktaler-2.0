@@ -42,6 +42,12 @@ class BackupService {
    */
   async listBackups(): Promise<BackupInfo[]> {
     try {
+      // Prüfe ob Electron verfügbar ist
+      if (!window.electron || typeof window.electron.invoke !== 'function') {
+        console.warn('[BackupService] ⚠️ Electron API nicht verfügbar (PWA/Dev Mode)');
+        return [];
+      }
+
       const backupPath = `${this.basePath}\\backups`;
       const result = await window.electron.invoke('nas-readdir', backupPath) as NasResult;
       
@@ -50,9 +56,20 @@ class BackupService {
         return [];
       }
       
+      console.log(`[BackupService] 📋 Gefunden: ${result.files.length} Einträge in backups/`);
+      
       // Filtere nur Backup-Verzeichnisse
       const backups: BackupInfo[] = [];
+      let skipped = 0;
       for (const file of result.files) {
+        if (!file.isDirectory) {
+          skipped++;
+          continue;
+        }
+        if (!file.name.startsWith('backup_')) {
+          skipped++;
+          continue;
+        }
         if (file.isDirectory && file.name.startsWith('backup_')) {
           // Parse Timestamp aus Namen: backup_2026-01-15_07-54-49
           const match = file.name.match(/backup_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})/);
@@ -82,6 +99,10 @@ class BackupService {
       
       // Sortiere nach Timestamp (neueste zuerst)
       backups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      
+      console.log(
+        `[BackupService] ✅ ${backups.length} Backups geladen, ${skipped} Einträge übersprungen`
+      );
       
       return backups;
     } catch (error) {

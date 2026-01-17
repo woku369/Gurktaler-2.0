@@ -427,7 +427,10 @@
 - Workspace-Filter bei Containern/Gebinden
 - Workspace-Badges bei Produkten
 - Workspace-Filter bei Rezepten
-- **Optimierung Datenbackup:** Stündliche Backups, In-App-Wiederherstellung testen und optimieren
+- **Optimierung Datenbackup:** 
+  - ✅ Backup-Liste standardmäßig eingeklappt (verhindert langes Scrollen bei 168 Backups)
+  - Stündliche Backups testen und optimieren
+  - Backup-Verifizierung nach Erstellung
 
 ---
 
