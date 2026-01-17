@@ -79,23 +79,24 @@ function parseVCardBlock(block: string): ParsedContact | null {
       case 'N': // Structured Name (Family;Given;Additional;Prefix;Suffix)
         // N has priority over FN, so we overwrite
         // Format: Family;Given;Additional;Prefix;Suffix
+        // WICHTIG: VCF-Format ist Family;Given (Nachname;Vorname)
         const nameParts = value.split(';');
         const familyName = nameParts[0] ? decodeVCardValue(nameParts[0].trim()) : '';
         const givenName = nameParts[1] ? decodeVCardValue(nameParts[1].trim()) : '';
         
-        if (givenName && familyName) {
+        // Vorname (givenName) → contact.name
+        // Nachname (familyName) → contact.last_name
+        if (givenName) {
           contact.name = givenName;
+        }
+        if (familyName) {
           contact.last_name = familyName;
-        } else if (givenName) {
-          contact.name = givenName;
-          // Keep last_name from FN if it exists
-        } else if (familyName) {
-          // If only family name exists, use it as last name and keep first name from FN
-          if (!contact.name) {
-            contact.name = familyName;
-          } else {
-            contact.last_name = familyName;
-          }
+        }
+        
+        // Fallback: Wenn nur Nachname existiert, nutze als Vorname
+        if (!givenName && familyName) {
+          contact.name = familyName;
+          contact.last_name = undefined;
         }
         break;
         

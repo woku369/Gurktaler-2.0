@@ -265,7 +265,7 @@ function Contacts() {
               </div>
 
               <h3 className="font-semibold text-slate-800 mb-1">
-                {contact.name}
+                {contact.name} {contact.last_name}
               </h3>
 
               {contact.company && (
