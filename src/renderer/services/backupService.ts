@@ -58,7 +58,7 @@ class BackupService {
       
       console.log(`[BackupService] 📋 Gefunden: ${result.files.length} Einträge in backups/`);
       
-      // Filtere nur Backup-Verzeichnisse
+      // Filtere nur Backup-Verzeichnisse (backup_ UND incremental_)
       const backups: BackupInfo[] = [];
       let skipped = 0;
       for (const file of result.files) {
@@ -66,34 +66,39 @@ class BackupService {
           skipped++;
           continue;
         }
-        if (!file.name.startsWith('backup_')) {
+        
+        // Akzeptiere sowohl "backup_" als auch "incremental_" Ordner
+        const isManualBackup = file.name.startsWith('backup_');
+        const isIncrementalBackup = file.name.startsWith('incremental_');
+        
+        if (!isManualBackup && !isIncrementalBackup) {
           skipped++;
           continue;
         }
-        if (file.isDirectory && file.name.startsWith('backup_')) {
-          // Parse Timestamp aus Namen: backup_2026-01-15_07-54-49
-          const match = file.name.match(/backup_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})/);
-          if (match) {
-            const timestampStr = match[1].replace('_', ' ').replace(/-/g, ':');
-            const [datePart, timePart] = timestampStr.split(' ');
-            const [year, month, day] = datePart.split(':');
-            const [hour, minute, second] = timePart.split(':');
-            
-            backups.push({
-              path: `${backupPath}\\${file.name}`,
-              name: file.name,
-              timestamp: new Date(
-                parseInt(year), 
-                parseInt(month) - 1, 
-                parseInt(day),
-                parseInt(hour),
-                parseInt(minute),
-                parseInt(second)
-              ),
-              size: file.size || 0,
-              fileCount: 0 // Wird später gezählt
-            });
-          }
+        
+        // Parse Timestamp aus Namen: 
+        // backup_2026-01-15_07-54-49 ODER incremental_2026-01-15_07-54-49
+        const match = file.name.match(/(backup|incremental)_(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})/);
+        if (match) {
+          const timestampStr = match[2].replace('_', ' ').replace(/-/g, ':');
+          const [datePart, timePart] = timestampStr.split(' ');
+          const [year, month, day] = datePart.split(':');
+          const [hour, minute, second] = timePart.split(':');
+          
+          backups.push({
+            path: `${backupPath}\\${file.name}`,
+            name: file.name,
+            timestamp: new Date(
+              parseInt(year), 
+              parseInt(month) - 1, 
+              parseInt(day),
+              parseInt(hour),
+              parseInt(minute),
+              parseInt(second)
+            ),
+            size: file.size || 0,
+            fileCount: 0 // Wird später gezählt
+          });
         }
       }
       

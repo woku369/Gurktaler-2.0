@@ -57,6 +57,7 @@
         "appId": "com.gurktaler.zweipunktnull",
         "productName": "Gurktaler 2.0",
         "asar": false,
+        "icon": "build/icon.png",
         "files": [
             "dist/**/*",
             "dist-electron/**/*"

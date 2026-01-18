@@ -464,6 +464,21 @@
 - [ ] Kostenkalkulation
 - [ ] Produktionsplanung
 - [ ] Mehrsprachigkeit (DE/EN)
+- [ ] **Kontakte: Mehrere Telefonnummern & E-Mails**
+  - Aktuell: Nur 1 Telefonnummer und 1 E-Mail pro Kontakt
+  - Gewünscht: Mehrere Nummern (Mobil, Büro, Privat) und E-Mails
+  - Array-basiertes Datenmodell statt einzelne Felder
+  - UI: Dynamisches Hinzufügen/Entfernen von Feldern
+- [ ] **Kontakte: Kategorienverwaltung reparieren**
+  - Bug: Kategorienzuordnung funktioniert nicht
+  - Keine eigenen Kategorien erstellbar
+  - Überarbeitung: Freie Kategorie-Tags wie bei Projekten
+  - Settings: Kategorie-Manager für Kontakte
+- [ ] **Bildergalerie & Dokumente: Zuordnung in Klartext**
+  - Statt nur ID anzeigen: Projekt-/Produkt-/Entitätsname
+  - Klickbare Zuordnung öffnet die verknüpfte Entität
+  - Gilt für Galerie-Ansicht und Dokumenten-Ansicht
+  - Verbessertes User-Experience: Man sieht sofort WAS das Bild/Dokument zeigt
 - [ ] **Google Contacts OAuth Integration** - Live-Sync statt manueller vCard-Import
   - OAuth 2.0 Authentifizierung
   - Google People API Integration
