@@ -39,6 +39,30 @@ const server = http.createServer(async (req, res) => {
             const existingArray = JSON.parse(existingData);
             const newArray = JSON.parse(body);
             
+            // 🚨 DATENVERLUST-SCHUTZ: Lehre Arrays NIEMALS über volle Arrays schreiben!
+            if (existingArray.length > 0 && newArray.length === 0) {
+              console.error(`🚨 KRITISCH: Versuch erkannt, ${existingArray.length} Einträge mit leerem Array zu überschreiben!`);
+              console.error(`📁 Datei: ${path.basename(filePath)}`);
+              console.error(`❌ SCHREIBVORGANG BLOCKIERT - Daten bleiben erhalten!`);
+              
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ 
+                success: false, 
+                error: 'DATENVERLUST-SCHUTZ: Leeres Array kann nicht über vorhandene Daten schreiben.',
+                prevented: true,
+                existingCount: existingArray.length
+              }));
+              return;
+            }
+            
+            // 🚨 WARNUNG: Drastischer Datenverlust (>50% Verlust)
+            if (existingArray.length > 10 && newArray.length < existingArray.length * 0.5) {
+              console.warn(`⚠️ WARNUNG: Drastischer Datenverlust erkannt!`);
+              console.warn(`📁 Datei: ${path.basename(filePath)}`);
+              console.warn(`📊 ${existingArray.length} → ${newArray.length} Einträge (${Math.round((1 - newArray.length/existingArray.length) * 100)}% Verlust)`);
+              console.warn(`💾 Backup wird angelegt, aber Schreibvorgang erlaubt (könnte beabsichtigt sein)`);
+            }
+            
             // Backup nur wenn existierende Daten vorhanden
             if (existingArray.length > 0) {
               const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];

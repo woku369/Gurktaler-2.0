@@ -713,6 +713,146 @@ function registerFileHandlers() {
     })
 }
 
+// NAS-Mount-Handler registrieren
+function registerNasMountHandlers() {
+    // Prüfe ob Laufwerk Y: verfügbar ist
+    ipcMain.handle('nas:check-drive', async () => {
+        try {
+            const drivePath = 'Y:\\'
+            const exists = fs.existsSync(drivePath)
+            
+            if (!exists) {
+                return { success: true, available: false }
+            }
+            
+            // Prüfe ob zweipunktnull Ordner existiert
+            const basePath = 'Y:\\zweipunktnull'
+            const baseExists = fs.existsSync(basePath)
+            
+            return { 
+                success: true, 
+                available: true,
+                configured: baseExists 
+            }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+    
+    // Mount NAS-Laufwerk über Tailscale
+    ipcMain.handle('nas:mount', async (_event, { ip, share, username, password }: { 
+        ip: string, 
+        share: string, 
+        username?: string, 
+        password?: string 
+    }) => {
+        try {
+            // Baue UNC-Pfad
+            const uncPath = `\\\\${ip}\\${share}`
+            
+            // net use Befehl
+            let command = `net use Y: "${uncPath}" /persistent:yes`
+            
+            // Mit Credentials
+            if (username && password) {
+                command = `net use Y: "${uncPath}" /user:${username} "${password}" /persistent:yes`
+            }
+            
+            console.log('🔧 Mounting NAS:', uncPath)
+            
+            try {
+                execSync(command, { 
+                    encoding: 'utf-8',
+                    stdio: 'pipe'
+                })
+                
+                // Warte kurz und prüfe
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                
+                if (fs.existsSync('Y:\\')) {
+                    console.log('✅ NAS-Laufwerk Y: erfolgreich verbunden')
+                    return { success: true }
+                } else {
+                    return { success: false, error: 'Laufwerk nach Mount nicht verfügbar' }
+                }
+            } catch (mountError: any) {
+                const errorMsg = String(mountError.stderr || mountError.message || mountError)
+                
+                // Parse bekannte Fehler
+                if (errorMsg.includes('Systemfehler 53')) {
+                    return { 
+                        success: false, 
+                        error: 'NAS nicht erreichbar.\n\nPrüfe:\n• Ist Tailscale aktiv?\n• Ist die IP korrekt?\n• Läuft das NAS?'
+                    }
+                } else if (errorMsg.includes('Systemfehler 86')) {
+                    return {
+                        success: false,
+                        error: 'Falsches Passwort oder unzureichende Berechtigungen'
+                    }
+                } else if (errorMsg.includes('Systemfehler 85')) {
+                    // Laufwerk bereits verbunden - das ist OK!
+                    return { success: true, alreadyMounted: true }
+                }
+                
+                return { 
+                    success: false, 
+                    error: `Mount fehlgeschlagen:\n${errorMsg}`
+                }
+            }
+        } catch (error: any) {
+            return { success: false, error: String(error.message || error) }
+        }
+    })
+    
+    // Unmount NAS-Laufwerk
+    ipcMain.handle('nas:unmount', async () => {
+        try {
+            execSync('net use Y: /delete /yes', { 
+                encoding: 'utf-8',
+                stdio: 'pipe'
+            })
+            return { success: true }
+        } catch (error: any) {
+            // Fehler ignorieren wenn Laufwerk nicht verbunden
+            return { success: true }
+        }
+    })
+    
+    // Hole Tailscale-Status und IPs
+    ipcMain.handle('nas:tailscale-status', async () => {
+        try {
+            // Versuche Tailscale Status abzufragen
+            const status = execSync('tailscale status --json', { 
+                encoding: 'utf-8',
+                stdio: 'pipe'
+            })
+            
+            const data = JSON.parse(status)
+            
+            // Extrahiere alle Peers (andere Geräte im Tailnet)
+            const peers = Object.values(data.Peer || {}).map((peer: any) => ({
+                hostname: peer.HostName,
+                ip: peer.TailscaleIPs?.[0] || '',
+                online: peer.Online,
+                os: peer.OS
+            }))
+            
+            return { 
+                success: true, 
+                running: true,
+                peers 
+            }
+        } catch (error: any) {
+            // Tailscale nicht installiert oder nicht laufend
+            return { 
+                success: true, 
+                running: false,
+                error: 'Tailscale nicht verfügbar'
+            }
+        }
+    })
+}
+
 let localServer: http.Server | null = null
 
 function startLocalServer(): Promise<number> {
@@ -852,6 +992,7 @@ app.whenReady().then(() => {
     
     registerGitHandlers()
     registerFileHandlers()
+    registerNasMountHandlers()
     createWindow()
 
     app.on('activate', () => {

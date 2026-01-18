@@ -20,6 +20,7 @@ import Documentation from "./pages/Documentation";
 import Settings from "./pages/Settings";
 import DesignPreview from "./pages/DesignPreview";
 import QuickNoteButton from "./components/QuickNoteButton";
+import { NasMountDialog } from "./components/NasMountDialog";
 import { setupService } from "./services/setup";
 import { AlertCircle, Download, RefreshCw } from "lucide-react";
 
@@ -29,12 +30,27 @@ function App() {
     type: "loading" | "error" | "success";
     message: string;
   }>({ show: false, type: "loading", message: "" });
+  
+  const [showNasMountDialog, setShowNasMountDialog] = useState(false);
 
   useEffect(() => {
     const performNasSetup = async () => {
       // NAS-Setup beim App-Start (nur wenn noch nicht migriert)
       try {
         console.log("🚀 Prüfe NAS-Setup...");
+        
+        // Prüfe ob Y: Laufwerk verfügbar ist (nur in Electron)
+        if (window.electron) {
+          const driveCheck = await window.electron.invoke('nas:check-drive') as { success: boolean; available?: boolean; configured?: boolean };
+          
+          if (driveCheck.success && !driveCheck.available) {
+            // Y: ist NICHT verfügbar → Mount-Dialog anzeigen
+            console.warn("⚠️ Laufwerk Y: nicht verfügbar - zeige Mount-Dialog");
+            setShowNasMountDialog(true);
+            return;
+          }
+        }
+        
         const connected = await setupService.testConnection();
 
         if (connected) {
@@ -55,6 +71,12 @@ function App() {
 
     performNasSetup();
   }, []);
+  
+  const handleNasMountSuccess = () => {
+    setShowNasMountDialog(false);
+    // Reload um NAS-Verbindung zu nutzen
+    window.location.reload();
+  };
 
   return (
     <>
@@ -104,6 +126,15 @@ function App() {
           </div>
         </div>
       )}
+      
+      {/* NAS Mount Dialog */}
+      {showNasMountDialog && (
+        <NasMountDialog
+          onClose={() => setShowNasMountDialog(false)}
+          onSuccess={handleNasMountSuccess}
+        />
+      )}
+      
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
