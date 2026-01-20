@@ -1,52 +1,75 @@
-# Gurktaler 2.0 - Stündliches Windows Backup Script
-# Erstellt timestamped Backup der Datenbank alle 60 Minuten
+# Gurktaler 2.0 - Stuendliches Windows Backup Script
+# Erstellt timestamped Backup aller Daten alle 60 Minuten
 
 param(
     [string]$BasePath = "Y:\zweipunktnull",
-    [switch]$Once  # Neuer Parameter: Nur ein Backup, dann beenden
+    [switch]$Once
 )
 
 $ErrorActionPreference = "Stop"
 
 function Create-Backup {
     $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
-    $sourcePath = "$BasePath\database"
     $backupBase = "$BasePath\backups"
     $backupPath = "$backupBase\backup_$timestamp"
     
-    Write-Host "📦 Gurktaler Backup - $timestamp" -ForegroundColor Cyan
-    Write-Host "═══════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "Gurktaler Backup - $timestamp" -ForegroundColor Cyan
+    Write-Host "=======================================" -ForegroundColor Cyan
     
-    # Prüfe ob Quelle existiert
-    if (-not (Test-Path $sourcePath)) {
-        Write-Host "❌ Fehler: Quellpfad nicht gefunden: $sourcePath" -ForegroundColor Red
+    if (-not (Test-Path $BasePath)) {
+        Write-Host "Fehler: Basis-Pfad nicht gefunden: $BasePath" -ForegroundColor Red
         return $false
     }
     
-    # Erstelle Backup-Verzeichnis
     New-Item -Path $backupPath -ItemType Directory -Force | Out-Null
     
-    # Kopiere alle JSON-Dateien
-    Write-Host "📋 Kopiere Datenbank-Dateien..." -ForegroundColor Yellow
-    $files = Get-ChildItem -Path $sourcePath -Filter "*.json"
+    $foldersToBackup = @("database", "images", "documents", "attachments")
+    $totalFiles = 0
+    $totalSize = 0
     
-    foreach ($file in $files) {
-        Copy-Item -Path $file.FullName -Destination $backupPath -Force
+    foreach ($folder in $foldersToBackup) {
+        $sourcePath = "$BasePath\$folder"
+        
+        if (Test-Path $sourcePath) {
+            Write-Host "Kopiere $folder..." -ForegroundColor Yellow
+            
+            $targetPath = "$backupPath\$folder"
+            New-Item -Path $targetPath -ItemType Directory -Force | Out-Null
+            
+            $files = Get-ChildItem -Path $sourcePath -File -Recurse
+            
+            foreach ($file in $files) {
+                $relativePath = $file.FullName.Substring($sourcePath.Length + 1)
+                $targetFile = Join-Path $targetPath $relativePath
+                $targetDir = Split-Path $targetFile -Parent
+                
+                if (-not (Test-Path $targetDir)) {
+                    New-Item -Path $targetDir -ItemType Directory -Force | Out-Null
+                }
+                
+                Copy-Item -Path $file.FullName -Destination $targetFile -Force
+                $totalFiles++
+                $totalSize += $file.Length
+            }
+            
+            $fileCount = (Get-ChildItem -Path $targetPath -File -Recurse).Count
+            Write-Host "   OK: $fileCount Dateien kopiert" -ForegroundColor Green
+        }
+        else {
+            Write-Host "   Warnung: $folder nicht gefunden" -ForegroundColor Yellow
+        }
     }
     
-    # Zähle Dateien und Größe
-    $fileCount = (Get-ChildItem -Path $backupPath -File).Count
-    $totalSize = (Get-ChildItem -Path $backupPath -Recurse | Measure-Object -Property Length -Sum).Sum
     $sizeInMB = [math]::Round($totalSize / 1MB, 2)
     
-    Write-Host "✅ Backup erfolgreich!" -ForegroundColor Green
-    Write-Host "   Dateien: $fileCount" -ForegroundColor White
-    Write-Host "   Größe: $sizeInMB MB" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Backup erfolgreich!" -ForegroundColor Green
+    Write-Host "   Dateien: $totalFiles" -ForegroundColor White
+    Write-Host "   Groesse: $sizeInMB MB" -ForegroundColor White
     Write-Host "   Pfad: $backupPath" -ForegroundColor White
     
-    # Lösche Backups älter als 7 Tage (bei stündlichen Backups)
     Write-Host ""
-    Write-Host "🧹 Lösche alte Backups (älter als 7 Tage)..." -ForegroundColor Yellow
+    Write-Host "Loesche alte Backups (aelter als 7 Tage)..." -ForegroundColor Yellow
     $cutoffDate = (Get-Date).AddDays(-7)
     $oldBackups = Get-ChildItem -Path $backupBase -Directory -Filter "backup_*" | Where-Object { $_.LastWriteTime -lt $cutoffDate }
     
@@ -54,23 +77,21 @@ function Create-Backup {
         foreach ($backup in $oldBackups) {
             Remove-Item -Path $backup.FullName -Recurse -Force
         }
-        Write-Host "✅ $($oldBackups.Count) alte Backups gelöscht" -ForegroundColor Green
+        Write-Host "OK: $($oldBackups.Count) alte Backups geloescht" -ForegroundColor Green
     }
     else {
         Write-Host "   Keine alten Backups gefunden" -ForegroundColor Gray
     }
     
     Write-Host ""
-    Write-Host "✅ Backup-Vorgang abgeschlossen!" -ForegroundColor Green
-    Write-Host "═══════════════════════════════════════" -ForegroundColor Cyan
+    Write-Host "Backup-Vorgang abgeschlossen!" -ForegroundColor Green
+    Write-Host "=======================================" -ForegroundColor Cyan
     
     return $true
 }
 
-# Hauptlogik
 if ($Once) {
-    # Einmaliges Backup (für App-Schließen)
-    Write-Host "💾 Einmaliges Backup beim App-Schließen" -ForegroundColor Cyan
+    Write-Host "Einmaliges Backup" -ForegroundColor Cyan
     Write-Host "   Backup-Pfad: $BasePath\backups" -ForegroundColor White
     Write-Host ""
     
@@ -79,13 +100,12 @@ if ($Once) {
         exit 0
     }
     catch {
-        Write-Host "❌ Backup-Fehler: $_" -ForegroundColor Red
+        Write-Host "Backup-Fehler: $_" -ForegroundColor Red
         exit 1
     }
 }
 else {
-    # Stündliche Backups (Endlosschleife)
-    Write-Host "🕐 Stündliches Backup-System gestartet" -ForegroundColor Cyan
+    Write-Host "Stuendliches Backup-System gestartet" -ForegroundColor Cyan
     Write-Host "   Backup-Pfad: $BasePath\backups" -ForegroundColor White
     Write-Host "   Intervall: 60 Minuten" -ForegroundColor White
     Write-Host "   Aufbewahrung: 7 Tage" -ForegroundColor White
@@ -95,13 +115,13 @@ else {
         try {
             Create-Backup
             Write-Host ""
-            Write-Host "⏰ Nächstes Backup in 60 Minuten..." -ForegroundColor Cyan
-            Start-Sleep -Seconds 3600  # 60 Minuten
+            Write-Host "Naechstes Backup in 60 Minuten..." -ForegroundColor Cyan
+            Start-Sleep -Seconds 3600
         }
         catch {
-            Write-Host "❌ Backup-Fehler: $_" -ForegroundColor Red
-            Write-Host "⏰ Erneuter Versuch in 5 Minuten..." -ForegroundColor Yellow
-            Start-Sleep -Seconds 300  # 5 Minuten Wartezeit bei Fehler
+            Write-Host "Backup-Fehler: $_" -ForegroundColor Red
+            Write-Host "Erneuter Versuch in 5 Minuten..." -ForegroundColor Yellow
+            Start-Sleep -Seconds 300
         }
     }
 }

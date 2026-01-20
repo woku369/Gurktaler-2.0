@@ -7,8 +7,11 @@ param(
 )
 
 $backupBasePath = "Y:\zweipunktnull\backups"
-$targetPath = "Y:\zweipunktnull\database"
+$basePath = "Y:\zweipunktnull"
 $tempRestorePath = "$env:TEMP\gurktaler_restore_temp"
+
+# Liste der wiederherzustellenden Ordner
+$foldersToRestore = @("database", "images", "documents", "attachments")
 
 Write-Host "========================================================" -ForegroundColor Cyan
 Write-Host "  Gurktaler 2.0 - VOLLSTAENDIGE Datenwiederherstellung  " -ForegroundColor Cyan
@@ -52,7 +55,7 @@ $allBackups = Get-ChildItem $backupBasePath -Directory | Where-Object {
             if ($backupDate -le $targetDate) {
                 $isFullBackup = $_.Name -like "backup_*" -or $_.Name -like "full_*"
                 $backupType = if ($isFullBackup) { "Full" } else { "Incremental" }
-                $fileCount = (Get-ChildItem $_.FullName -File).Count
+                $fileCount = (Get-ChildItem $_.FullName -File -Recurse).Count
                 
                 [PSCustomObject]@{
                     Name  = $_.Name
@@ -172,22 +175,41 @@ Write-Host ""
 Write-Host "SICHERUNG: Erstelle Sicherheits-Backup..." -ForegroundColor Cyan
 $timestamp = Get-Date -Format 'yyyy-MM-dd_HH-mm-ss'
 $safetyBackup = "$backupBasePath\safety_backup_$timestamp"
-if (Test-Path $targetPath) {
-    Copy-Item -Path "$targetPath\*" -Destination $safetyBackup -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Host "   OK: Sicherung erstellt: $safetyBackup" -ForegroundColor Green
-}
+New-Item -Path $safetyBackup -ItemType Directory -Force | Out-Null
 
-# Loesche aktuelle Datenbank
+foreach ($folder in $foldersToRestore) {
+    $sourcePath = "$basePath\$folder"
+    if (Test-Path $sourcePath) {
+        $targetBackup = "$safetyBackup\$folder"
+        Copy-Item -Path $sourcePath -Destination $targetBackup -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+Write-Host "   OK: Sicherung erstellt: $safetyBackup" -ForegroundColor Green
+
+# Loesche aktuelle Daten
 Write-Host ""
-Write-Host "LOESCHE: Loesche aktuelle Datenbank..." -ForegroundColor Yellow
-if (Test-Path $targetPath) {
-    Remove-Item "$targetPath\*" -Force -ErrorAction SilentlyContinue
+Write-Host "LOESCHE: Loesche aktuelle Daten..." -ForegroundColor Yellow
+foreach ($folder in $foldersToRestore) {
+    $targetPath = "$basePath\$folder"
+    if (Test-Path $targetPath) {
+        Remove-Item "$targetPath\*" -Force -Recurse -ErrorAction SilentlyContinue
+    }
 }
 
 # Stelle wieder her
 Write-Host ""
 Write-Host "RESTORE: Stelle Daten wieder her..." -ForegroundColor Cyan
-Copy-Item -Path "$tempRestorePath\*" -Destination $targetPath -Force
+foreach ($folder in $foldersToRestore) {
+    $sourcePath = "baseestorePath\$folder"
+    $targetPath = "$basePath\$folder"
+    
+    if (Test-Path $sourcePath) {
+        Write-Host "   Kopiere $folder..." -ForegroundColor Yellow
+        Copy-Item -Path "$sourcePath\*" -Destination $targetPath -Recurse -Force
+        $fileCount = (Get-ChildItem $targetPath -File -Recurse).Count
+        Write-Host "   ✅ $fileCount Dateien wiederhergestellt" -ForegroundColor Green
+    }
+}
 
 # Aufraeumen
 Remove-Item $tempRestorePath -Recurse -Force
