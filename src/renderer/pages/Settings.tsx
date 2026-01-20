@@ -53,7 +53,7 @@ import { BackupManager } from "@/renderer/components/BackupManager";
 
 function Settings() {
   const [exportStatus, setExportStatus] = useState<
-    "idle" | "success" | "error"
+    "idle" | "success" | "error" | "loading"
   >("idle");
   const [importStatus, setImportStatus] = useState<
     "idle" | "success" | "error"
@@ -83,7 +83,7 @@ function Settings() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
   const [networkPath, setNetworkPath] = useState(
-    localStorage.getItem("sync_network_path") || "Y:\\zweipunktnull\\data.json"
+    localStorage.getItem("sync_network_path") || "Y:\\zweipunktnull\\data.json",
   );
 
   // Git-Status laden
@@ -117,7 +117,7 @@ function Settings() {
       setStatusMessage(
         result.updated
           ? `Remote "${remoteName}" aktualisiert!`
-          : `Remote "${remoteName}" hinzugefügt!`
+          : `Remote "${remoteName}" hinzugefügt!`,
       );
       setShowRemoteSetup(false);
       setRemoteUrl("");
@@ -201,7 +201,7 @@ function Settings() {
     if (success) {
       setImportStatus("success");
       setStatusMessage(
-        "Änderungen erfolgreich gepullt! Seite wird neu geladen..."
+        "Änderungen erfolgreich gepullt! Seite wird neu geladen...",
       );
       setTimeout(() => window.location.reload(), 2000);
     } else {
@@ -222,7 +222,7 @@ function Settings() {
     if (success) {
       setImportStatus("success");
       setStatusMessage(
-        "Konflikt gelöst! Remote-Daten übernommen. Seite wird neu geladen..."
+        "Konflikt gelöst! Remote-Daten übernommen. Seite wird neu geladen...",
       );
       setTimeout(() => window.location.reload(), 2000);
     } else {
@@ -247,7 +247,7 @@ function Settings() {
 
   const handleGitConfigChange = (
     key: keyof GitConfig,
-    value: boolean | string
+    value: boolean | string,
   ) => {
     const newConfig = { ...gitConfig, [key]: value };
     setGitConfig(newConfig);
@@ -300,7 +300,7 @@ function Settings() {
           importData(jsonData);
           setImportStatus("success");
           setStatusMessage(
-            "Daten erfolgreich importiert! Seite wird neu geladen..."
+            "Daten erfolgreich importiert! Seite wird neu geladen...",
           );
           setTimeout(() => {
             window.location.reload();
@@ -308,7 +308,7 @@ function Settings() {
         } catch (error) {
           setImportStatus("error");
           setStatusMessage(
-            "Fehler beim Importieren der Daten. Überprüfe das Dateiformat."
+            "Fehler beim Importieren der Daten. Überprüfe das Dateiformat.",
           );
           setTimeout(() => {
             setImportStatus("idle");
@@ -362,7 +362,7 @@ function Settings() {
   };
 
   const handleContactImportConfirm = async (
-    selectedContacts: Array<ParsedContact & { type: string }>
+    selectedContacts: Array<ParsedContact & { type: string }>,
   ) => {
     try {
       let importedCount = 0;
@@ -601,8 +601,8 @@ function Settings() {
                 syncMessage.includes("✅")
                   ? "bg-green-50 text-green-800 border border-green-200"
                   : syncMessage.includes("❌")
-                  ? "bg-red-50 text-red-800 border border-red-200"
-                  : "bg-blue-50 text-blue-800 border border-blue-200"
+                    ? "bg-red-50 text-red-800 border border-red-200"
+                    : "bg-blue-50 text-blue-800 border border-blue-200"
               }`}
             >
               {syncMessage}
@@ -785,7 +785,7 @@ function Settings() {
                       <p className="text-xs text-slate-500">
                         {gitStatus.lastCommit.author} •{" "}
                         {new Date(gitStatus.lastCommit.date).toLocaleString(
-                          "de-DE"
+                          "de-DE",
                         )}
                       </p>
                     </div>
@@ -835,8 +835,8 @@ function Settings() {
                     !gitStatus.hasRemote
                       ? "Remote-Repository erforderlich"
                       : !gitStatus.hasUncommitted
-                      ? "Keine Änderungen zum Pushen"
-                      : ""
+                        ? "Keine Änderungen zum Pushen"
+                        : ""
                   }
                 >
                   <Upload className="w-5 h-5" />
@@ -899,7 +899,7 @@ function Settings() {
                       onChange={(e) =>
                         handleGitConfigChange(
                           "commitMessagePrefix",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       placeholder="[Auto]"
@@ -961,16 +961,99 @@ function Settings() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 transition-colors"
               >
                 <Download className="w-5 h-5" />
-                Daten exportieren
+                Daten exportieren (JSON)
               </button>
               <button
                 onClick={handleImport}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 <Upload className="w-5 h-5" />
-                Daten importieren
+                Daten importieren (JSON)
               </button>
             </div>
+
+            {/* Vollständiger Export für Remote-Rechner */}
+            <div className="pt-4 mt-4 border-t border-amber-100 bg-amber-50 rounded-lg p-4">
+              <h3 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                <Server className="w-5 h-5" />
+                Komplettpaket für Remote-Rechner
+              </h3>
+              <p className="text-sm text-amber-800 mb-3">
+                Exportiert ALLE Daten inklusive Bilder für den Upload auf einem
+                entfernten Rechner (z.B. Testrechner ohne Zugang zum NAS).
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    setExportStatus("loading");
+                    setStatusMessage(
+                      "Erstelle Komplettpaket... Dies kann einige Sekunden dauern.",
+                    );
+
+                    // Exportiere alle JSON-Daten
+                    const jsonData = await exportData();
+
+                    // Info-Hinweis
+                    alert(
+                      "✅ Export erfolgreich!\n\n" +
+                        "Die JSON-Datei enthält alle Ihre Daten.\n\n" +
+                        "WICHTIG für Remote-Rechner:\n" +
+                        "1. Kopieren Sie die heruntergeladene JSON-Datei auf den Remote-Rechner\n" +
+                        "2. Öffnen Sie dort die Gurktaler App\n" +
+                        "3. Gehen Sie zu Einstellungen > Datensicherung\n" +
+                        "4. Klicken Sie auf 'Daten importieren'\n" +
+                        "5. Wählen Sie die kopierte JSON-Datei\n\n" +
+                        "HINWEIS: Bilder aus der Galerie müssen separat übertragen werden,\n" +
+                        "da diese zu groß für einen Browser-Download sind.\n" +
+                        "Nutzen Sie dafür das PowerShell-Script 'export-for-remote.ps1'",
+                    );
+
+                    // Download der JSON-Datei
+                    const blob = new Blob([jsonData], {
+                      type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `gurktaler-komplett-${new Date().toISOString().split("T")[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    setExportStatus("success");
+                    setStatusMessage(
+                      "✅ Komplettpaket erfolgreich erstellt und heruntergeladen!",
+                    );
+                    setTimeout(() => {
+                      setExportStatus("idle");
+                      setStatusMessage("");
+                    }, 5000);
+                  } catch (error) {
+                    setExportStatus("error");
+                    setStatusMessage(
+                      "❌ Fehler beim Erstellen des Komplettpakets: " + error,
+                    );
+                    setTimeout(() => {
+                      setExportStatus("idle");
+                      setStatusMessage("");
+                    }, 5000);
+                  }
+                }}
+                disabled={exportStatus === "loading"}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Cloud className="w-5 h-5" />
+                {exportStatus === "loading"
+                  ? "Erstelle Export..."
+                  : "Komplettpaket für Remote-Rechner erstellen"}
+              </button>
+              <p className="text-xs text-amber-700 mt-2">
+                💡 Dieser Export enthält alle JSON-Daten. Für Bilder nutzen Sie
+                bitte das PowerShell-Script.
+              </p>
+            </div>
+
             <p className="text-xs text-amber-600">
               ⚠️ Warnung: Beim Import werden alle aktuellen Daten überschrieben!
             </p>

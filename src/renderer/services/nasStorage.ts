@@ -37,6 +37,13 @@ export interface StorageProvider {
   getConfig(): StorageConfig;
   getJsonFilePath(entityType: string): string;
   initializeDirectories(): Promise<void>;
+  // 🔒 NEU: Read-Only-Modus Steuerung
+  setReadOnlyMode?(enabled: boolean): void;
+  isReadOnly?(): boolean;
+  // 🔄 HYBRID: Pending Changes Management
+  hasPendingChanges?(): boolean;
+  getPendingChangesCount?(): number;
+  syncPendingChanges?(): Promise<{ success: boolean; synced: number; errors: string[] }>;
 }
 
 /**
@@ -45,6 +52,7 @@ export interface StorageProvider {
  */
 export class NasStorageProvider implements StorageProvider {
   private config: StorageConfig;
+  private readOnlyMode: boolean = false; // 🔒 NEU: Read-Only Flag
 
   constructor(config?: Partial<StorageConfig>) {
     // localStorage only available in browser context, not during SSR/build
@@ -61,6 +69,146 @@ export class NasStorageProvider implements StorageProvider {
       documentsPath: config?.documentsPath || `${basePath}\\documents`,
       attachmentsPath: config?.attachmentsPath || `${basePath}\\attachments`,
     };
+  }
+
+  /**
+   * 🔒 NEU: Aktiviere Read-Only-Modus
+   */
+  setReadOnlyMode(enabled: boolean): void {
+    this.readOnlyMode = enabled;
+    if (enabled) {
+      console.warn('🔒 NasStorage: Read-Only-Modus AKTIVIERT - Keine Schreibvorgänge möglich!');
+    } else {
+      console.log('✅ NasStorage: Read-Only-Modus deaktiviert');
+    }
+  }
+
+  /**
+   * 🔒 NEU: Prüfe ob Read-Only-Modus aktiv
+   */
+  isReadOnly(): boolean {
+    return this.readOnlyMode;
+  }
+
+  /**
+   * 🔄 HYBRID: Speichere Änderungen in LocalStorage (Pending Changes)
+   */
+  private saveToPendingChanges<T>(filePath: string, data: T[]): void {
+    try {
+      const pendingKey = 'nasStorage_pendingChanges';
+      const existing = localStorage.getItem(pendingKey);
+      const pending = existing ? JSON.parse(existing) : {};
+      
+      pending[filePath] = {
+        data,
+        timestamp: new Date().toISOString(),
+        entityCount: data.length
+      };
+      
+      localStorage.setItem(pendingKey, JSON.stringify(pending));
+      console.log(`[NasStorage] 💾 In LocalStorage gespeichert: ${filePath} (${data.length} Einträge)`);
+    } catch (error) {
+      console.error('[NasStorage] ❌ Fehler beim Speichern in LocalStorage:', error);
+      throw new Error('Konnte Änderungen nicht in LocalStorage speichern');
+    }
+  }
+
+  /**
+   * 🔄 HYBRID: Prüfe ob ungespeicherte Änderungen existieren
+   */
+  hasPendingChanges(): boolean {
+    const pendingKey = 'nasStorage_pendingChanges';
+    const pending = localStorage.getItem(pendingKey);
+    if (!pending) return false;
+    
+    try {
+      const changes = JSON.parse(pending);
+      return Object.keys(changes).length > 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 🔄 HYBRID: Hole Anzahl der Pending Changes
+   */
+  getPendingChangesCount(): number {
+    const pendingKey = 'nasStorage_pendingChanges';
+    const pending = localStorage.getItem(pendingKey);
+    if (!pending) return 0;
+    
+    try {
+      const changes = JSON.parse(pending);
+      return Object.keys(changes).length;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * 🔄 HYBRID: Synchronisiere alle Pending Changes zur NAS
+   */
+  async syncPendingChanges(): Promise<{ success: boolean; synced: number; errors: string[] }> {
+    const pendingKey = 'nasStorage_pendingChanges';
+    const pending = localStorage.getItem(pendingKey);
+    
+    if (!pending) {
+      return { success: true, synced: 0, errors: [] };
+    }
+
+    if (this.readOnlyMode) {
+      return { 
+        success: false, 
+        synced: 0, 
+        errors: ['Kann nicht synchronisieren: Read-Only-Modus ist noch aktiv']
+      };
+    }
+
+    try {
+      const changes = JSON.parse(pending);
+      const filePaths = Object.keys(changes);
+      const errors: string[] = [];
+      let synced = 0;
+
+      console.log(`[NasStorage] 🔄 Synchronisiere ${filePaths.length} ausstehende Änderungen...`);
+
+      for (const filePath of filePaths) {
+        try {
+          const { data } = changes[filePath];
+          
+          // Temporär Read-Only-Modus deaktivieren für Sync
+          const wasReadOnly: boolean = this.readOnlyMode;
+          this.readOnlyMode = false;
+          
+          await this.writeJson(filePath, data);
+          synced++;
+          
+          this.readOnlyMode = wasReadOnly;
+          
+          console.log(`[NasStorage] ✅ Synchronisiert: ${filePath}`);
+        } catch (error) {
+          const errorMsg = `Fehler bei ${filePath}: ${error}`;
+          console.error(`[NasStorage] ❌ ${errorMsg}`);
+          errors.push(errorMsg);
+        }
+      }
+
+      if (errors.length === 0) {
+        // Alle erfolgreich synchronisiert - lösche Pending Changes
+        localStorage.removeItem(pendingKey);
+        console.log(`[NasStorage] 🎉 Alle ${synced} Änderungen erfolgreich synchronisiert!`);
+        return { success: true, synced, errors: [] };
+      } else {
+        return { success: false, synced, errors };
+      }
+    } catch (error) {
+      console.error('[NasStorage] ❌ Fehler beim Synchronisieren:', error);
+      return { 
+        success: false, 
+        synced: 0, 
+        errors: [`Fehler beim Parsen der Pending Changes: ${error}`]
+      };
+    }
   }
 
   getConfig(): StorageConfig {
@@ -90,8 +238,16 @@ export class NasStorageProvider implements StorageProvider {
 
   /**
    * JSON-Datei schreiben - MIT AUTOMATISCHEM BACKUP & VALIDIERUNG
+   * Im Read-Only-Modus: Speichere in LocalStorage für spätere Synchronisation
    */
   async writeJson<T>(filePath: string, data: T[]): Promise<void> {
+    // 🔄 HYBRID-MODUS: Im Read-Only-Modus in LocalStorage speichern
+    if (this.readOnlyMode) {
+      console.warn('[NasStorage] 🔄 Read-Only-Modus: Speichere in LocalStorage für spätere Sync');
+      this.saveToPendingChanges(filePath, data);
+      return; // Erfolgreich in LocalStorage gespeichert
+    }
+
     try {
       // 🔒 SICHERHEIT 1: Validiere dass Daten nicht leer sind
       if (!Array.isArray(data)) {

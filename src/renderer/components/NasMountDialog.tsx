@@ -1,91 +1,96 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 interface NasMountDialogProps {
-  onClose: () => void
-  onSuccess: () => void
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
 interface TailscalePeer {
-  hostname: string
-  ip: string
-  online: boolean
-  os: string
+  hostname: string;
+  ip: string;
+  online: boolean;
+  os: string;
 }
 
 export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [tailscaleRunning, setTailscaleRunning] = useState(false)
-  const [peers, setPeers] = useState<TailscalePeer[]>([])
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [tailscaleRunning, setTailscaleRunning] = useState(false);
+  const [peers, setPeers] = useState<TailscalePeer[]>([]);
+
   // Form State
-  const [ip, setIp] = useState('100.121.103.107')
-  const [share, setShare] = useState('zweipunktnull')
-  const [username, setUsername] = useState('admin')
-  const [password, setPassword] = useState('')
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [ip, setIp] = useState("100.121.103.107");
+  const [share, setShare] = useState("zweipunktnull");
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
-    checkTailscale()
-  }, [])
+    checkTailscale();
+  }, []);
 
   const checkTailscale = async () => {
-    if (!window.electron) return
-    
+    if (!window.electron) return;
+
     try {
-      const result = await window.electron.invoke('nas:tailscale-status') as { success: boolean; running: boolean; peers?: TailscalePeer[] }
+      const result = (await window.electron.invoke("nas:tailscale-status")) as {
+        success: boolean;
+        running: boolean;
+        peers?: TailscalePeer[];
+      };
       if (result.success && result.running) {
-        setTailscaleRunning(true)
-        setPeers(result.peers || [])
-        
+        setTailscaleRunning(true);
+        setPeers(result.peers || []);
+
         // Finde Synology NAS in der Liste
-        const synology = result.peers?.find((p: TailscalePeer) => 
-          p.hostname.toLowerCase().includes('synology') || 
-          p.hostname.toLowerCase().includes('nas')
-        )
-        
+        const synology = result.peers?.find(
+          (p: TailscalePeer) =>
+            p.hostname.toLowerCase().includes("synology") ||
+            p.hostname.toLowerCase().includes("nas")
+        );
+
         if (synology) {
-          setIp(synology.ip)
+          setIp(synology.ip);
         }
       }
     } catch (err) {
-      console.error('Tailscale-Status fehlgeschlagen:', err)
+      console.error("Tailscale-Status fehlgeschlagen:", err);
     }
-  }
+  };
 
   const handleMount = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
       if (!window.electron) {
-        setError('Electron API nicht verfügbar (PWA-Modus)')
-        return
+        setError("Electron API nicht verfügbar (PWA-Modus)");
+        return;
       }
 
-      const result = await window.electron.invoke('nas:mount', {
+      const result = (await window.electron.invoke("nas:mount", {
         ip,
         share,
         username: username || undefined,
-        password: password || undefined
-      }) as { success: boolean; error?: string; alreadyMounted?: boolean }
+        password: password || undefined,
+      })) as { success: boolean; error?: string; alreadyMounted?: boolean };
 
       if (result.success) {
-        console.log('✅ NAS erfolgreich verbunden!')
-        onSuccess()
+        console.log("✅ NAS erfolgreich verbunden!");
+        onSuccess();
       } else {
-        setError(result.error || 'Verbindung fehlgeschlagen')
+        setError(result.error || "Verbindung fehlgeschlagen");
       }
     } catch (err: any) {
-      setError(err.message || 'Unbekannter Fehler')
+      setError(err.message || "Unbekannter Fehler");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const selectPeer = (peer: TailscalePeer) => {
-    setIp(peer.ip)
-  }
+    setIp(peer.ip);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -95,7 +100,8 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
             🔌 NAS-Laufwerk verbinden
           </h2>
           <p className="text-sm text-slate-600 mt-2">
-            Laufwerk Y: ist nicht verfügbar. Verbinde dein Synology NAS über Tailscale.
+            Laufwerk Y: ist nicht verfügbar. Verbinde dein Synology NAS über
+            Tailscale.
           </p>
         </div>
 
@@ -105,9 +111,11 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
             <div className="p-4 bg-green-50 border border-green-200 rounded-vintage">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">✅</span>
-                <span className="font-semibold text-green-800">Tailscale aktiv</span>
+                <span className="font-semibold text-green-800">
+                  Tailscale aktiv
+                </span>
               </div>
-              
+
               {peers.length > 0 && (
                 <div className="mt-3">
                   <p className="text-sm text-green-700 mb-2">
@@ -120,14 +128,16 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
                         onClick={() => selectPeer(peer)}
                         className={`w-full text-left px-3 py-2 rounded border transition-colors ${
                           peer.ip === ip
-                            ? 'bg-green-100 border-green-300 text-green-900'
-                            : 'bg-white border-green-200 text-green-800 hover:bg-green-50'
+                            ? "bg-green-100 border-green-300 text-green-900"
+                            : "bg-white border-green-200 text-green-800 hover:bg-green-50"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
                             <span className="font-medium">{peer.hostname}</span>
-                            <span className="text-xs text-green-600 ml-2">{peer.os}</span>
+                            <span className="text-xs text-green-600 ml-2">
+                              {peer.os}
+                            </span>
                           </div>
                           <code className="text-xs bg-white px-2 py-0.5 rounded border border-green-200">
                             {peer.ip}
@@ -145,14 +155,16 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-vintage">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">⚠️</span>
-                <span className="font-semibold text-yellow-800">Tailscale nicht erkannt</span>
+                <span className="font-semibold text-yellow-800">
+                  Tailscale nicht erkannt
+                </span>
               </div>
               <p className="text-sm text-yellow-700 mb-2">
                 Tailscale ist nicht installiert oder läuft nicht.
               </p>
-              <a 
-                href="https://tailscale.com/download" 
-                target="_blank" 
+              <a
+                href="https://tailscale.com/download"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-blue-600 hover:underline"
               >
@@ -166,7 +178,9 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
             <div className="p-4 bg-red-50 border border-red-200 rounded-vintage">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl">❌</span>
-                <span className="font-semibold text-red-800">Verbindung fehlgeschlagen</span>
+                <span className="font-semibold text-red-800">
+                  Verbindung fehlgeschlagen
+                </span>
               </div>
               <pre className="text-sm text-red-700 whitespace-pre-wrap mt-2">
                 {error}
@@ -214,7 +228,7 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="text-sm text-gurktaler-600 hover:text-gurktaler-700 font-medium"
             >
-              {showAdvanced ? '▼' : '▶'} Erweiterte Einstellungen
+              {showAdvanced ? "▼" : "▶"} Erweiterte Einstellungen
             </button>
 
             {showAdvanced && (
@@ -259,7 +273,7 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
             disabled={loading || !ip || !share}
             className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-vintage hover:bg-gurktaler-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '🔄 Verbinde...' : '🔌 Jetzt verbinden'}
+            {loading ? "🔄 Verbinde..." : "🔌 Jetzt verbinden"}
           </button>
           <button
             onClick={onClose}
@@ -275,12 +289,14 @@ export function NasMountDialog({ onClose, onSuccess }: NasMountDialogProps) {
           <p className="font-medium mb-2">💡 Hilfe:</p>
           <ul className="space-y-1 list-disc list-inside">
             <li>Stelle sicher dass Tailscale auf diesem PC läuft</li>
-            <li>Stelle sicher dass dein Synology NAS mit Tailscale verbunden ist</li>
+            <li>
+              Stelle sicher dass dein Synology NAS mit Tailscale verbunden ist
+            </li>
             <li>Die Freigabe "{share}" muss in DSM existieren</li>
             <li>Nach erfolgreicher Verbindung ist das Laufwerk Y: verfügbar</li>
           </ul>
         </div>
       </div>
     </div>
-  )
+  );
 }

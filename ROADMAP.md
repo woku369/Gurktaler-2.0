@@ -456,6 +456,23 @@
 
 ---
 
+## 🚨 KRITISCHE AUFGABEN (Diese Woche - Januar 2026)
+
+### Backup & Datensicherheit
+
+| Status | Priorität | Aufgabe | Beschreibung |
+| ------ | --------- | ------- | ------------ |
+| 🔄 | **KRITISCH** | Startup-Sequenz anpassen | NAS-Check ZUERST, dann Daten laden. Verhindert, dass leere Daten auf NAS geschrieben werden. |
+| 📋 | **KRITISCH** | Schreibschutz im Legacy-Modus | Wenn NAS nicht verfügbar → NUR LESEN, kein Schreiben erlauben. |
+| 📋 | HOCH | Snapshot-System aktivieren | Backup bei JEDEM Speichervorgang (letzte 10 Snapshots, 1h Aufbewahrung). |
+| 📋 | HOCH | backup-full.ps1 erstellen | Tägliche vollständige Backups um 02:00 Uhr, 7 Tage Aufbewahrung. |
+
+**Grund:** Nach Datenverlust-Vorfällen am 19.01.2026 müssen diese Sicherheitsmaßnahmen SOFORT implementiert werden!
+
+**Details:** Siehe `docs/BACKUP_STRATEGY_ANALYSIS.md` und `NOTFALL_MASSNAHMEN_19_01_2026.md`
+
+---
+
 ## Notizen & Ideen (Backlog)
 
 - [ ] Dark Mode

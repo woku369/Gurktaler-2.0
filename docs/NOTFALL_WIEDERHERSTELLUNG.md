@@ -91,7 +91,81 @@ net use Y: \\100.121.103.107\Gurktaler\zweipunktnull /persistent:yes
 
 ---
 
-## 🛡️ NEUE SICHERHEITS-FEATURES (v1.6.1)
+## � DATEN FÜR REMOTE-RECHNER EXPORTIEREN (NEU in v1.7.1)
+
+### Szenario: Testrechner ohne Zugang zum NAS
+
+**Problem:** Du bist auf einem entfernten Rechner (z.B. Testrechner) und hast keinen Zugang zum NAS-Laufwerk Y:\. Du brauchst aber einen aktuellen Datenbestand zum Testen.
+
+**Lösung: In-App Export/Import-Funktion**
+
+### Schritt 1: Auf dem Home-Office-Rechner (mit NAS-Zugang)
+
+1. Öffne die **Gurktaler Desktop-App** oder **PWA** (http://100.121.103.107/gurktaler)
+2. Gehe zu **Einstellungen** (⚙️ Icon in der Sidebar)
+3. Scrolle zur Sektion **"Datensicherung"**
+4. Finde den Bereich **"Komplettpaket für Remote-Rechner"** (gelber/oranger Kasten)
+5. Klicke auf **"Komplettpaket für Remote-Rechner erstellen"**
+6. Die App erstellt eine JSON-Datei mit ALLEN Daten und lädt sie herunter
+7. Dateiname: `gurktaler-komplett-2026-01-19.json` (mit aktuellem Datum)
+
+### Schritt 2: Datei auf Remote-Rechner übertragen
+
+**Optionen:**
+- USB-Stick
+- E-Mail (Achtung: Dateigröße beachten!)
+- Cloud-Upload (OneDrive, Dropbox, etc.)
+- Netzwerk-Freigabe
+
+### Schritt 3: Auf dem Remote-Rechner importieren
+
+1. Öffne die **Gurktaler App** (Desktop oder PWA)
+2. Gehe zu **Einstellungen** → **"Datensicherung"**
+3. Klicke auf **"Daten importieren (JSON)"**
+4. Wähle die kopierte JSON-Datei aus
+5. Bestätige die Warnung (⚠️ Aktuelle Daten werden überschrieben!)
+6. Die App lädt sich automatisch neu
+7. ✅ **Alle Daten sind jetzt verfügbar!**
+
+### Was ist enthalten?
+
+✅ **Vollständiger Datenbestand:**
+- Alle Projekte (24+)
+- Alle Produkte
+- Alle Rezepturen
+- Alle Kontakte
+- Alle Notizen
+- Alle Tasks
+- Alle Workspaces
+- Alle Zutaten, Gebinde, Weblinks
+- Alle Tags und Zuordnungen
+
+⚠️ **NICHT enthalten:** Bildergalerie (zu groß)
+
+### Für Bilder: PowerShell-Script nutzen
+
+Wenn auch Bilder benötigt werden:
+
+```powershell
+# Auf Home-Office-Rechner:
+.\export-for-remote.ps1
+
+# Erstellt ZIP-Archiv mit ALLEM (inkl. Bilder)
+# Dann manuell auf Remote-Rechner kopieren und entpacken
+```
+
+### Vorteile der In-App-Lösung
+
+✅ Kein VS Code oder Terminal nötig
+✅ Funktioniert in Desktop-App UND PWA
+✅ Ein Klick zum Export
+✅ Ein Klick zum Import
+✅ Detaillierte Anleitungen direkt in der App
+✅ Automatische Validierung der Daten
+
+---
+
+## �🛡️ NEUE SICHERHEITS-FEATURES (v1.6.1)
 
 ### Automatisches Backup bei jedem Speichern
 

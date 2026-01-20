@@ -16,7 +16,8 @@ contextBridge.exposeInMainWorld('electron', {
             'file:readJson', 'file:writeJson', 'file:listDirectory',
             'file:uploadImage', 'file:uploadDocument', 'file:deleteFile',
             'file:moveFile', 'file:readImage', 'file:createDirectory',
-            'nas-read', 'nas-write', 'nas-readdir', 'nas-mkdir'
+            'nas-read', 'nas-write', 'nas-readdir', 'nas-mkdir',
+            'nas:check-drive', 'nas:mount'
         ];
         if (validChannels.includes(channel)) {
             return ipcRenderer.invoke(channel, ...args);

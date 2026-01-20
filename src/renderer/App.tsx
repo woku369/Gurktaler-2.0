@@ -22,6 +22,7 @@ import DesignPreview from "./pages/DesignPreview";
 import QuickNoteButton from "./components/QuickNoteButton";
 import { NasMountDialog } from "./components/NasMountDialog";
 import { setupService } from "./services/setup";
+import { nasStorage } from "./services/nasStorage";
 import { AlertCircle, Download, RefreshCw } from "lucide-react";
 
 function App() {
@@ -30,19 +31,76 @@ function App() {
     type: "loading" | "error" | "success";
     message: string;
   }>({ show: false, type: "loading", message: "" });
-  
+
   const [showNasMountDialog, setShowNasMountDialog] = useState(false);
+  const [readOnlyMode, setReadOnlyMode] = useState(false);
+  const [pendingChangesCount, setPendingChangesCount] = useState(0);
+
+  // 🔄 Prüfe periodisch auf Pending Changes
+  useEffect(() => {
+    const checkPendingChanges = () => {
+      if (typeof nasStorage.getPendingChangesCount === "function") {
+        setPendingChangesCount(nasStorage.getPendingChangesCount());
+      }
+    };
+    checkPendingChanges();
+    const interval = setInterval(checkPendingChanges, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🔄 Prüfe periodisch ob NAS wieder verfügbar (alle 30s)
+  useEffect(() => {
+    if (!readOnlyMode) return;
+
+    const checkNasReconnect = async () => {
+      try {
+        const connected = await setupService.testConnection();
+        if (connected) {
+          console.log("[App] ✅ NAS wieder verfügbar! Synchronisiere...");
+          setReadOnlyMode(false);
+
+          if (typeof nasStorage.setReadOnlyMode === "function") {
+            nasStorage.setReadOnlyMode(false);
+          }
+
+          if (typeof nasStorage.syncPendingChanges === "function") {
+            const result = await nasStorage.syncPendingChanges();
+            if (result.success) {
+              setSyncStatus({
+                show: true,
+                type: "success",
+                message: `✅ NAS verfügbar! ${result.synced} Änderung(en) synchronisiert`,
+              });
+              setPendingChangesCount(0);
+              setTimeout(
+                () =>
+                  setSyncStatus({ show: false, type: "loading", message: "" }),
+                5000,
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.log("[App] NAS noch offline");
+      }
+    };
+
+    const interval = setInterval(checkNasReconnect, 30000);
+    return () => clearInterval(interval);
+  }, [readOnlyMode]);
 
   useEffect(() => {
     const performNasSetup = async () => {
       // NAS-Setup beim App-Start (nur wenn noch nicht migriert)
       try {
         console.log("🚀 Prüfe NAS-Setup...");
-        
+
         // Prüfe ob Y: Laufwerk verfügbar ist (nur in Electron)
         if (window.electron) {
-          const driveCheck = await window.electron.invoke('nas:check-drive') as { success: boolean; available?: boolean; configured?: boolean };
-          
+          const driveCheck = (await window.electron.invoke(
+            "nas:check-drive",
+          )) as { success: boolean; available?: boolean; configured?: boolean };
+
           if (driveCheck.success && !driveCheck.available) {
             // Y: ist NICHT verfügbar → Mount-Dialog anzeigen
             console.warn("⚠️ Laufwerk Y: nicht verfügbar - zeige Mount-Dialog");
@@ -50,28 +108,95 @@ function App() {
             return;
           }
         }
-        
+
         const connected = await setupService.testConnection();
 
         if (connected) {
           console.log("✅ NAS-Verbindung OK");
-
-          // Migration automatisch durchführen (wird übersprungen wenn bereits erledigt)
           await setupService.runFullSetup();
+
+          setReadOnlyMode(false);
+          if (typeof nasStorage.setReadOnlyMode === "function") {
+            nasStorage.setReadOnlyMode(false);
+          }
         } else {
-          console.warn(
-            "⚠️ NAS nicht erreichbar - App läuft im Legacy-Modus (LocalStorage)"
-          );
+          console.warn("⚠️ NAS nicht erreichbar - Offline-Modus");
+          setReadOnlyMode(true);
+
+          if (typeof nasStorage.setReadOnlyMode === "function") {
+            nasStorage.setReadOnlyMode(true);
+          }
+
+          setSyncStatus({
+            show: true,
+            type: "error",
+            message: "⚠️ Offline-Modus - Änderungen werden lokal gespeichert",
+          });
         }
       } catch (error) {
         console.error("❌ NAS-Setup fehlgeschlagen:", error);
-        console.warn("⚠️ App läuft im Legacy-Modus (LocalStorage)");
+        setReadOnlyMode(true);
+
+        if (typeof nasStorage.setReadOnlyMode === "function") {
+          nasStorage.setReadOnlyMode(true);
+        }
+
+        setSyncStatus({
+          show: true,
+          type: "error",
+          message: "❌ NAS-Fehler - Offline-Modus aktiv",
+        });
       }
     };
 
     performNasSetup();
   }, []);
-  
+
+  // 🔄 Manuelle Synchronisation
+  const handleManualSync = async () => {
+    if (readOnlyMode) {
+      alert("NAS ist noch nicht verfügbar.");
+      return;
+    }
+
+    if (typeof nasStorage.syncPendingChanges !== "function") return;
+
+    setSyncStatus({
+      show: true,
+      type: "loading",
+      message: "Synchronisiere...",
+    });
+
+    try {
+      const result = await nasStorage.syncPendingChanges();
+
+      if (result.success) {
+        setSyncStatus({
+          show: true,
+          type: "success",
+          message: `✅ ${result.synced} Änderung(en) synchronisiert`,
+        });
+        setPendingChangesCount(0);
+        setTimeout(
+          () => setSyncStatus({ show: false, type: "loading", message: "" }),
+          3000,
+        );
+      } else {
+        setSyncStatus({
+          show: true,
+          type: "error",
+          message: `❌ Sync-Fehler`,
+        });
+      }
+    } catch (error) {
+      setSyncStatus({
+        show: true,
+        type: "error",
+        message: `❌ Sync fehlgeschlagen`,
+      });
+    }
+  };
+
   const handleNasMountSuccess = () => {
     setShowNasMountDialog(false);
     // Reload um NAS-Verbindung zu nutzen
@@ -80,14 +205,42 @@ function App() {
 
   return (
     <>
+      {/* 🔄 Offline-Modus Banner */}
+      {readOnlyMode && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-600 text-white py-2.5 px-4 shadow-lg">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm">🔄 OFFLINE-MODUS</div>
+                <div className="text-xs text-amber-100 truncate">
+                  Änderungen werden lokal gespeichert
+                  {pendingChangesCount > 0 &&
+                    ` • ${pendingChangesCount} wartend`}
+                </div>
+              </div>
+            </div>
+            {pendingChangesCount > 0 && !readOnlyMode && (
+              <button
+                onClick={handleManualSync}
+                className="bg-white text-amber-700 px-3 py-1 rounded text-xs font-medium hover:bg-amber-50 flex items-center gap-1.5 flex-shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Sync
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {syncStatus.show && (
         <div
           className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border-2 min-w-[300px] ${
             syncStatus.type === "loading"
               ? "bg-blue-50 border-blue-200"
               : syncStatus.type === "success"
-              ? "bg-green-50 border-green-200"
-              : "bg-amber-50 border-amber-200"
+                ? "bg-green-50 border-green-200"
+                : "bg-amber-50 border-amber-200"
           }`}
         >
           <div className="flex items-start gap-3">
@@ -106,8 +259,8 @@ function App() {
                   syncStatus.type === "loading"
                     ? "text-blue-800"
                     : syncStatus.type === "success"
-                    ? "text-green-800"
-                    : "text-amber-800"
+                      ? "text-green-800"
+                      : "text-amber-800"
                 }`}
               >
                 {syncStatus.message}
@@ -126,7 +279,7 @@ function App() {
           </div>
         </div>
       )}
-      
+
       {/* NAS Mount Dialog */}
       {showNasMountDialog && (
         <NasMountDialog
@@ -134,7 +287,7 @@ function App() {
           onSuccess={handleNasMountSuccess}
         />
       )}
-      
+
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
