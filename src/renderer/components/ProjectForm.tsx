@@ -19,6 +19,7 @@ interface ProjectFormProps {
 }
 
 const statusOptions: { value: ProjectStatus; label: string }[] = [
+  { value: "planned", label: "In Planung" },
   { value: "active", label: "Aktiv" },
   { value: "paused", label: "Pausiert" },
   { value: "completed", label: "Abgeschlossen" },
@@ -33,18 +34,18 @@ export default function ProjectForm({
   const [name, setName] = useState(project?.name || "");
   const [description, setDescription] = useState(project?.description || "");
   const [status, setStatus] = useState<ProjectStatus>(
-    project?.status || "active"
+    project?.status || "active",
   );
   const [color, setColor] = useState(project?.color || "#3b82f6");
   const [workspaceId, setWorkspaceId] = useState<string | undefined>(
-    project?.workspace_id
+    project?.workspace_id,
   );
   const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
   const [documents, setDocuments] = useState<Document[]>(
-    project?.documents || []
+    project?.documents || [],
   );
   const [timeline, setTimeline] = useState<ProjectTimeline | undefined>(
-    project?.timeline
+    project?.timeline,
   );
 
   useEffect(() => {

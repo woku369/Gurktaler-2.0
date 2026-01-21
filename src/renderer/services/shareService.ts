@@ -155,6 +155,7 @@ export async function share(
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
+    planned: "In Planung",
     active: "Aktiv",
     paused: "Pausiert",
     completed: "Abgeschlossen",

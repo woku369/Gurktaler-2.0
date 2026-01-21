@@ -47,7 +47,7 @@ export default function GanttChart({
     endDate.setDate(0); // Letzter Tag des vorherigen Monats
 
     const totalDays = Math.ceil(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     // Bars für jedes Projekt erstellen und nach sortOrder sortieren
@@ -71,17 +71,18 @@ export default function GanttChart({
 
         // Position berechnen (0-100%)
         const daysFromStart = Math.ceil(
-          (pStart.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+          (pStart.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
         );
         const projectDays = Math.ceil(
-          (pEnd.getTime() - pStart.getTime()) / (1000 * 60 * 60 * 24)
+          (pEnd.getTime() - pStart.getTime()) / (1000 * 60 * 60 * 24),
         );
 
         const startX = (daysFromStart / totalDays) * 100;
         const width = (projectDays / totalDays) * 100;
 
         // Farbe basierend auf Status (für Füllung)
-        let color = "#84cc16"; // gurktaler-400 (geplant)
+        let color = "#60a5fa"; // blue-400 (In Planung)
+        if (project.status === "planned") color = "#84cc16"; // gurktaler-400 (geplant - fallback)
         if (project.status === "active") color = "#65a30d"; // gurktaler-600
         if (project.status === "completed") color = "#cbd5e1"; // slate-300
         if (project.status === "archived") color = "#e2e8f0"; // slate-200
@@ -104,7 +105,8 @@ export default function GanttChart({
       for (let q = 0; q < 4; q++) {
         const quarterStart = new Date(today.getFullYear() + y, q * 3, 1);
         const daysFromStart = Math.ceil(
-          (quarterStart.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+          (quarterStart.getTime() - startDate.getTime()) /
+            (1000 * 60 * 60 * 24),
         );
         const x = (daysFromStart / totalDays) * 100;
 
@@ -333,11 +335,11 @@ export default function GanttChart({
 
                   const daysFromProjectStart = Math.ceil(
                     (mDate.getTime() - bar.startDate.getTime()) /
-                      (1000 * 60 * 60 * 24)
+                      (1000 * 60 * 60 * 24),
                   );
                   const projectTotalDays = Math.ceil(
                     (bar.endDate.getTime() - bar.startDate.getTime()) /
-                      (1000 * 60 * 60 * 24)
+                      (1000 * 60 * 60 * 24),
                   );
                   const milestoneX =
                     (daysFromProjectStart / projectTotalDays) * 100;
@@ -348,7 +350,7 @@ export default function GanttChart({
                       className="absolute top-0 -translate-y-1/2"
                       style={{ left: `${milestoneX}%` }}
                       title={`${milestone.name} - ${new Date(
-                        milestone.date
+                        milestone.date,
                       ).toLocaleDateString("de-DE")}`}
                     >
                       <div
@@ -460,7 +462,7 @@ export default function GanttChart({
 
                   // Finde Kapazität für dieses Quartal
                   const capacity = capacityData.quarters.find(
-                    (cap) => cap.quarter === q.label
+                    (cap) => cap.quarter === q.label,
                   );
                   const percentage = capacity?.percentage || 0;
 

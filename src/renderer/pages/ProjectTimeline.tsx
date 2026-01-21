@@ -88,7 +88,7 @@ export default function ProjectTimeline() {
       saveToNAS = window.confirm(
         "PDF auf NAS speichern?\n\n" +
           "JA = Auf NAS speichern (Zugriff von überall)\n" +
-          "NEIN = Lokal herunterladen"
+          "NEIN = Lokal herunterladen",
       );
     }
 
@@ -99,14 +99,14 @@ export default function ProjectTimeline() {
       saveToNAS,
       showCapacity ? capacityData : undefined,
       activeWorkspace,
-      workspaces
+      workspaces,
     );
 
     if (result.success) {
       if (saveToNAS && result.url) {
         // Option zum Öffnen
         const openPDF = window.confirm(
-          `${result.message}\n\nDatei: ${result.filename}\n\nPDF jetzt öffnen?`
+          `${result.message}\n\nDatei: ${result.filename}\n\nPDF jetzt öffnen?`,
         );
         if (openPDF) {
           window.open(result.url, "_blank");
@@ -286,6 +286,10 @@ export default function ProjectTimeline() {
             Projekt-Status
           </p>
           <div className="flex flex-wrap gap-4 text-sm text-slate-600">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-3 bg-blue-400 rounded"></div>
+              <span>In Planung</span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-3 bg-gurktaler-400 rounded"></div>
               <span>Geplant</span>

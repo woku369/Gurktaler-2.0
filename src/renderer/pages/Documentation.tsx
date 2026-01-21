@@ -119,7 +119,7 @@ const sections: Section[] = [
     icon: FolderKanban,
     content: {
       description:
-        "Projekte sind Container für zusammenhängende Produkte, Notizen und Kontakte. Sie haben einen Status (Aktiv, Pausiert, Abgeschlossen, Archiviert).",
+        "Projekte sind Container für zusammenhängende Produkte, Notizen und Kontakte. Sie haben einen Status (In Planung, Aktiv, Pausiert, Abgeschlossen, Archiviert).",
       howTo: [
         {
           title: "Neues Projekt erstellen",
@@ -1045,7 +1045,7 @@ export default function Documentation() {
 
   const toggleSection = (id: string) => {
     setExpandedSections((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
   };
 

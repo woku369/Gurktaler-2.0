@@ -1,7 +1,7 @@
 // Shared TypeScript Types for Gurktaler 2.0
 
 // Status Types
-export type ProjectStatus = 'active' | 'paused' | 'completed' | 'archived';
+export type ProjectStatus = 'planned' | 'active' | 'paused' | 'completed' | 'archived';
 export type ProductStatus = 'draft' | 'testing' | 'approved' | 'archived';
 export type NoteType = 'idea' | 'note' | 'todo' | 'research';
 export type IngredientCategory = 'mazerat' | 'destillat' | 'rohstoff' | 'alkohol' | 'sonstiges';

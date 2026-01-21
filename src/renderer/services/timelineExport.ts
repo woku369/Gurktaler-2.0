@@ -487,7 +487,7 @@ export async function exportTimelineToPDF(
 
     // Status
     const statusLabels: Record<string, string> = {
-      planned: "Geplant",
+      planned: "In Planung",
       active: "In Arbeit",
       completed: "Abgeschlossen",
       archived: "Archiviert",

@@ -35,6 +35,7 @@ interface ProjectCardProps {
 }
 
 const statusColors: Record<ProjectStatus, string> = {
+  planned: "bg-blue-100 text-blue-800",
   active: "bg-green-100 text-green-800",
   paused: "bg-bronze-100 text-bronze-800",
   completed: "bg-gurktaler-100 text-gurktaler-800",
@@ -42,6 +43,7 @@ const statusColors: Record<ProjectStatus, string> = {
 };
 
 const statusLabels: Record<ProjectStatus, string> = {
+  planned: "In Planung",
   active: "Aktiv",
   paused: "Pausiert",
   completed: "Abgeschlossen",
@@ -102,7 +104,7 @@ export default function ProjectCard({
             workspaces &&
             (() => {
               const workspace = workspaces.find(
-                (ws) => ws.id === project.workspace_id
+                (ws) => ws.id === project.workspace_id,
               );
               if (workspace) {
                 return (
