@@ -4,6 +4,8 @@ import Modal from "@/renderer/components/Modal";
 import ProductForm from "@/renderer/components/ProductForm";
 import ProductCard from "@/renderer/components/ProductCard";
 import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
+import BatchPrintView from "@/renderer/components/BatchPrintView";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import {
   products as productsService,
   projects as projectsService,
@@ -16,19 +18,23 @@ import type { Product, Project, Image, Tag, Document } from "@/shared/types";
 function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productImages, setProductImages] = useState<Record<string, Image[]>>(
-    {}
+    {},
   );
   const [projects, setProjects] = useState<Project[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [versioningProduct, setVersioningProduct] = useState<Product | null>(
-    null
+    null,
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
   const [quickUrlProduct, setQuickUrlProduct] = useState<Product | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
+    new Set(),
+  );
+  const [showBatchPrint, setShowBatchPrint] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -47,14 +53,14 @@ function Products() {
     for (const product of allProducts) {
       imageMap[product.id] = await imagesService.getByEntity(
         "product",
-        product.id
+        product.id,
       );
     }
     setProductImages(imageMap);
   };
 
   const handleSubmit = async (
-    data: Omit<Product, "id" | "created_at" | "updated_at">
+    data: Omit<Product, "id" | "created_at" | "updated_at">,
   ) => {
     if (editingProduct) {
       await productsService.update(editingProduct.id, data);
@@ -135,23 +141,86 @@ function Products() {
     // Clipboard copy happens in ProductCard
   };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleToggleSelect = (productId: string) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+  };
 
-    let matchesTag = true;
-    // TODO: Tag filtering disabled (needs async refactor with pre-loaded assignments)
-    // if (selectedTagId) {
-    //   const assignments = await tagAssignmentsService.getByEntity(
-    //     "product",
-    //     product.id
-    //   );
-    //   matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
-    // }
+  const handleSelectAll = () => {
+    if (selectedProducts.size === filteredProducts.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(filteredProducts.map((p) => p.id)));
+    }
+  };
 
-    return matchesSearch && matchesTag;
-  });
+  const handleBatchPrint = () => {
+    if (selectedProducts.size === 0) return;
+    setShowBatchPrint(true);
+  };
+
+  const filteredProducts = products
+    .filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      let matchesTag = true;
+      // TODO: Tag filtering disabled (needs async refactor with pre-loaded assignments)
+      // if (selectedTagId) {
+      //   const assignments = await tagAssignmentsService.getByEntity(
+      //     "product",
+      //     product.id
+      //   );
+      //   matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
+      // }
+
+      return matchesSearch && matchesTag;
+    })
+    .sort((a, b) => {
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (productId: string, newIndex: number) => {
+    // Reorder logic: update display_order for all affected products
+    const sorted = [...filteredProducts];
+    const draggedItem = sorted.find((p) => p.id === productId);
+    const oldIndex = sorted.findIndex((p) => p.id === productId);
+
+    if (!draggedItem || oldIndex === -1) return;
+
+    // Remove from old position and insert at new position
+    sorted.splice(oldIndex, 1);
+    sorted.splice(newIndex, 0, draggedItem);
+
+    // Update display_order for all affected products
+    const updates = sorted.map((product, index) =>
+      productsService.update(product.id, { display_order: index }),
+    );
+
+    await Promise.all(updates);
+    await loadData();
+  };
+
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredProducts, handleReorder);
 
   return (
     <div className="p-8">
@@ -225,28 +294,94 @@ function Products() {
 
       {/* Products Grid */}
       {filteredProducts.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              image={productImages[product.id]?.[0]}
-              isFavorite={false}
-              onToggleFavorite={() => {
-                favoritesService.toggle("product", product.id);
-                loadData();
-              }}
-              onEdit={() => handleEdit(product)}
-              onDelete={() => handleDelete(product.id)}
-              onCreateVersion={() => handleCreateVersion(product)}
-              onAddUrl={() => handleQuickAddUrl(product)}
-              onAddDocument={() => handleQuickAddDocument(product)}
-              onAddImage={() => handleQuickAddImage(product)}
-              onCopy={handleCopyName}
-              onUpdate={loadData}
-            />
-          ))}
-        </div>
+        <>
+          {/* Batch Selection Toolbar */}
+          <div className="mb-4 flex items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={
+                  selectedProducts.size === filteredProducts.length &&
+                  filteredProducts.length > 0
+                }
+                onChange={handleSelectAll}
+                className="w-4 h-4 rounded border-slate-300 text-gurktaler-600 focus:ring-2 focus:ring-gurktaler-500"
+              />
+              <span className="text-sm font-medium text-slate-700">
+                {selectedProducts.size === filteredProducts.length &&
+                filteredProducts.length > 0
+                  ? "Alle abwählen"
+                  : "Alle auswählen"}
+              </span>
+            </label>
+
+            {selectedProducts.size > 0 && (
+              <>
+                <div className="h-6 w-px bg-slate-300" />
+                <span className="text-sm text-slate-600">
+                  {selectedProducts.size}{" "}
+                  {selectedProducts.size === 1 ? "Karte" : "Karten"} ausgewählt
+                </span>
+                <button
+                  onClick={handleBatchPrint}
+                  className="ml-auto flex items-center gap-2 px-4 py-2 bg-gurktaler-500 text-white rounded-lg hover:bg-gurktaler-600 transition-colors font-medium"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    />
+                  </svg>
+                  Ausgewählte drucken
+                </button>
+              </>
+            )}
+          </div>
+
+          <div className="mb-4 text-sm text-slate-600 italic">
+            💡 Tipp: Karten können per Drag & Drop sortiert werden
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredProducts.map((product, index) => (
+              <div
+                key={product.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`transition-opacity ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+              >
+                <ProductCard
+                  product={product}
+                  image={productImages[product.id]?.[0]}
+                  isFavorite={false}
+                  onToggleFavorite={() => {
+                    favoritesService.toggle("product", product.id);
+                    loadData();
+                  }}
+                  onEdit={() => handleEdit(product)}
+                  onDelete={() => handleDelete(product.id)}
+                  onCreateVersion={() => handleCreateVersion(product)}
+                  onAddUrl={() => handleQuickAddUrl(product)}
+                  onAddDocument={() => handleQuickAddDocument(product)}
+                  onAddImage={() => handleQuickAddImage(product)}
+                  onCopy={handleCopyName}
+                  onUpdate={loadData}
+                  isSelected={selectedProducts.has(product.id)}
+                  onToggleSelect={() => handleToggleSelect(product.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Quick Add URL Dialog */}
@@ -269,8 +404,8 @@ function Products() {
             editingProduct
               ? "Produkt bearbeiten"
               : versioningProduct
-              ? `Neue Version von "${versioningProduct.name}"`
-              : "Neues Produkt"
+                ? `Neue Version von "${versioningProduct.name}"`
+                : "Neues Produkt"
           }
           size="lg"
         >
@@ -286,6 +421,17 @@ function Products() {
             projects={projects}
           />
         </Modal>
+      )}
+
+      {/* Batch Print View */}
+      {showBatchPrint && (
+        <BatchPrintView
+          productIds={Array.from(selectedProducts)}
+          onClose={() => {
+            setShowBatchPrint(false);
+            setSelectedProducts(new Set()); // Auswahl zurücksetzen nach Druck
+          }}
+        />
       )}
     </div>
   );

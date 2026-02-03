@@ -9,10 +9,13 @@ import {
   GitBranch,
   ImagePlus,
   Share2,
+  Printer,
 } from "lucide-react";
 import { share } from "@/renderer/services/shareService";
 import TagBadgeList from "@/renderer/components/TagBadgeList";
+import ProductPrintView from "@/renderer/components/ProductPrintView";
 import type { Product, Image, Document, ProductStatus } from "@/shared/types";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -27,6 +30,8 @@ interface ProductCardProps {
   onAddImage: () => void;
   onCopy: () => void;
   onUpdate?: () => void;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 const statusColors: Record<ProductStatus, string> = {
@@ -56,10 +61,18 @@ export default function ProductCard({
   onAddImage,
   onCopy,
   onUpdate,
+  isSelected = false,
+  onToggleSelect,
 }: ProductCardProps) {
+  const [showPrintView, setShowPrintView] = useState(false);
+
   const handleCopyName = () => {
     navigator.clipboard.writeText(product.name);
     onCopy();
+  };
+
+  const handlePrint = () => {
+    setShowPrintView(true);
   };
 
   const handleShare = async () => {
@@ -75,7 +88,26 @@ export default function ProductCard({
   };
 
   return (
-    <div className="bg-white rounded-vintage border-vintage border-distillery-200 shadow-paper hover:shadow-vintage transition-all duration-200 overflow-hidden">
+    <div
+      className={`bg-white rounded-vintage border-vintage border-distillery-200 shadow-paper hover:shadow-vintage transition-all duration-200 overflow-hidden ${isSelected ? "ring-2 ring-gurktaler-500" : ""}`}
+    >
+      {/* Checkbox Section */}
+      {onToggleSelect && (
+        <div className="px-4 pt-3 pb-1">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              className="w-4 h-4 rounded border-slate-300 text-gurktaler-600 focus:ring-2 focus:ring-gurktaler-500"
+            />
+            <span className="text-sm text-slate-600 font-medium">
+              Zum Drucken auswählen
+            </span>
+          </label>
+        </div>
+      )}
+
       {/* Titel Section */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center gap-2 mb-1">
@@ -213,6 +245,14 @@ export default function ProductCard({
       {/* Quick Actions Footer */}
       <div className="border-t border-distillery-100 px-4 py-2 bg-distillery-25 flex items-center gap-2">
         <button
+          onClick={handlePrint}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-distillery-200 text-distillery-700 rounded hover:bg-distillery-50 transition-colors font-body font-semibold"
+          title="Drucken"
+        >
+          <Printer className="w-3.5 h-3.5" />
+          Drucken
+        </button>
+        <button
           onClick={handleShare}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-distillery-200 text-distillery-700 rounded hover:bg-distillery-50 transition-colors font-body font-semibold"
           title="Per E-Mail teilen"
@@ -273,6 +313,15 @@ export default function ProductCard({
           </div>
         )}
       </div>
+
+      {/* Print View */}
+      {showPrintView && (
+        <ProductPrintView
+          product={product}
+          image={image}
+          onClose={() => setShowPrintView(false)}
+        />
+      )}
     </div>
   );
 }

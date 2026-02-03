@@ -48,14 +48,19 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 ## Features
 
 ### Implementiert ✅
-- **Projekt-Verwaltung**: Vollständiges CRUD, Status-Tracking, Tag-Zuordnung
+- **Projekt-Verwaltung**: Vollständiges CRUD, Status-Tracking, Tag-Zuordnung, Timeline mit Gantt-Chart
+- **Workspace-System**: Projektebenen (Workspaces) mit Farben, Filtern und Sichtbarkeits-Toggles
+- **Timeline-Visualisierung**: Gantt-Chart mit Drag & Drop (Strg+Drag für horizontale Verschiebung)
 - **Produkt-Versionierung**: Hierarchische Struktur (X → X1 → X2), Archivierung mit Begründung
+- **Drag & Drop Sortierung**: Produkte mit useDragSort-Hook
+- **Batch-Druck**: Mehrere Produkte auswählen und drucken (BatchPrintView)
 - **Notizen & Chaosablage**: Quick-Entry, Markdown-Editor mit Live-Preview, Projekt-Zuordnung, Bild-Upload
-- **Kontakte**: Verwaltung mit Typen, Projekt-Verknüpfung mit Rollen, vCard-Import (Google Contacts)
+- **Kontakte**: Mehrere Telefonnummern/E-Mails pro Kontakt mit Labels, selbst definierbare Kategorien, vCard-Import
+- **Kontakt-Kategorien**: CRUD-Manager mit Farben, Icons und Sortierung (Settings)
 - **Weblinks & Recherche**: URL-Sammlung, Kategorisierung, Konkurrenz-Tracking
 - **Tag-System**: Flexible Kategorisierung mit Farben, Filter in allen Bereichen
 - **KI-Assistenten**: ChatGPT, Claude, Qwen & DeepSeek Integration für Recherche und Produktentwicklung
-- **Bild-Upload**: Vollständig integriert in Notizen & Produkte (Base64-Speicherung)
+- **Bild-Upload**: Vollständig integriert in Notizen & Produkte, Image-Cache (23 MB JSON)
 - **Rezeptur-Verwaltung**: Card-Grid UI, Zutaten-DB mit Alkohol%/Preisen, Gebinde-Management, Expandierbare Zutatenliste
 - **Rezeptur-Versionierung**: Auto-Versionierung (v1.0), Auto-Inkrement bei Ableitungen (1.0→1.1→1.2), Datenübernahme
 - **Rezeptur-Kalkulation**: Automatische Berechnung von Volumen, Alkoholgehalt & Kosten mit Unit-Conversion
@@ -63,7 +68,8 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **Git-Integration**: Auto-Commit, Auto-Push, Git-Status UI, Remote-Setup ohne Terminal
 - **Excel-Import/Export**: Zutaten & Gebinde mit Template-Generator
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
-- **PWA (Android/Mobile)**: Installierbare Web-App, Offline-Funktionalität, Quick-Note Button
+- **PWA (Android/Mobile)**: Installierbare Web-App, Offline-Funktionalität, Quick-Note Button, Bilder in Notizen
+- **UI/UX**: Globaler Loading-Spinner, Auto-Close Modals, Mobile Button-Layouts
 
 ### In Entwicklung 🔄
 - Volltext-Suche über alle Bereiche (bereits implementiert)

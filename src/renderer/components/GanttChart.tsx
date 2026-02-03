@@ -11,6 +11,7 @@ interface GanttChartProps {
   years: number;
   onProjectClick?: (project: Project) => void;
   onReorder?: (projectId: string, newIndex: number) => void;
+  onDateChange?: (projectId: string, newStartDate: Date) => void;
   showCapacity?: boolean;
   capacityData?: CapacityUtilization;
 }
@@ -32,6 +33,7 @@ export default function GanttChart({
   years,
   onProjectClick,
   onReorder,
+  onDateChange,
   showCapacity = false,
   capacityData,
 }: GanttChartProps) {
@@ -120,10 +122,71 @@ export default function GanttChart({
     return { bars, quarters, startDate, endDate, totalDays };
   }, [projects, years]);
 
-  const { bars, quarters } = chartData;
+  const { bars, quarters, startDate, totalDays } = chartData;
 
   const ROW_HEIGHT = 60;
   const CHART_HEIGHT = bars.length * ROW_HEIGHT + 50; // +50 für Header
+
+  // Horizontales Dragging der Timeline-Balken
+  const handleTimelineMouseDown = (e: React.MouseEvent, barIndex: number) => {
+    // Nur bei Ctrl+Drag für horizontales Verschieben
+    if (!e.ctrlKey || !onDateChange) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    const container = (e.target as HTMLElement).closest(
+      ".gantt-chart-container",
+    );
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const startMouseX = e.clientX;
+    const bar = bars[barIndex];
+    const initialStartX = bar.startX;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startMouseX;
+      const deltaPercent = (deltaX / rect.width) * 100;
+
+      // Verhindere negative Position
+      const newStartX = Math.max(
+        0,
+        Math.min(100 - bar.width, initialStartX + deltaPercent),
+      );
+
+      // Temporäre visuelle Aktualisierung
+      const barElement = document.querySelector(
+        `[data-bar-id="${bar.project.id}"]`,
+      ) as HTMLElement;
+      if (barElement) {
+        barElement.style.left = `${newStartX}%`;
+      }
+    };
+
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      const deltaX = upEvent.clientX - startMouseX;
+      const deltaPercent = (deltaX / rect.width) * 100;
+      const newStartX = Math.max(
+        0,
+        Math.min(100 - bar.width, initialStartX + deltaPercent),
+      );
+
+      // Berechne neues Startdatum
+      const daysFromStart = (newStartX / 100) * totalDays;
+      const newStartDate = new Date(startDate);
+      newStartDate.setDate(newStartDate.getDate() + Math.round(daysFromStart));
+
+      // Callback mit neuem Datum
+      onDateChange(bar.project.id, newStartDate);
+
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
 
   return (
     <div style={{ minHeight: CHART_HEIGHT }}>
@@ -144,7 +207,7 @@ export default function GanttChart({
 
       {/* Gantt Bars */}
       <div
-        className="relative"
+        className="relative gantt-chart-container"
         style={{ minHeight: `${bars.length * ROW_HEIGHT}px` }}
       >
         {/* Weekly Grid Lines (Kalenderwochen) */}
@@ -242,6 +305,7 @@ export default function GanttChart({
 
               {/* Timeline Bar */}
               <div
+                data-bar-id={bar.project.id}
                 className="absolute top-1/2 -translate-y-1/2 h-10 rounded-md shadow-sm hover:shadow-lg transition-all cursor-move group overflow-visible"
                 style={{
                   left: `${bar.startX}%`,
@@ -251,6 +315,12 @@ export default function GanttChart({
                   border: `3px solid ${bar.project.color || bar.color}`,
                 }}
                 onDoubleClick={() => onProjectClick?.(bar.project)}
+                onMouseDown={(e) => handleTimelineMouseDown(e, index)}
+                title={
+                  onDateChange
+                    ? "Doppelklick zum Öffnen • Ctrl+Drag zum horizontal Verschieben"
+                    : "Doppelklick zum Öffnen"
+                }
               >
                 {/* Progress Bar (darker overlay) */}
                 <div

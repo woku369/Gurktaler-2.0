@@ -23,6 +23,7 @@ export interface GalleryFilter {
 export async function getAllGalleryImages(): Promise<GalleryImage[]> {
   console.log('[GalleryService] 🔄 getAllGalleryImages gestartet...');
   try {
+    // PERFORMANCE: imageCache lädt nur einmal beim ersten Aufruf
     const allImages = await imagesService.getAll();
     console.log('[GalleryService] 📦 Rohdaten geladen:', {
       imageCount: allImages.length,

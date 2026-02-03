@@ -118,6 +118,7 @@ export interface Product extends BaseEntity {
     alcohol_percentage?: number; // Alkoholgehalt in %vol.
     include_alcohol_tax?: boolean; // Checkbox: Alkoholsteuer (12€/L) für Preisfindung
     alcohol_tax_amount?: number; // Berechneter Steuerbetrag
+    display_order?: number; // Manuelle Sortierung (optional)
     notes?: string; // Bemerkungsfeld
     documents?: Document[]; // Pfad-basierte Dokumente
 }
@@ -137,6 +138,7 @@ export interface Recipe extends BaseEntity {
     yield_unit?: string; // Einheit (ml, liter)
     notes?: string; // Bemerkungsfeld
     documents?: Document[]; // Pfad-basierte Dokumente
+    display_order?: number; // Manuelle Sortierung (optional)
 }
 
 // Alkoholsteuer-Konstante: 12 Euro pro Liter reinem Alkohol
@@ -173,6 +175,7 @@ export interface Ingredient extends BaseEntity {
     unit: 'liter' | 'kilogram'; // Einheit für Preis
     notes?: string; // Bemerkung
     documents?: Document[]; // Pfad-basierte Dokumente
+    display_order?: number; // Manuelle Sortierung (optional)
 }
 
 // Note / Chaos Storage
@@ -216,8 +219,18 @@ export interface Contact extends BaseEntity {
     last_name?: string;     // Nachname für Sortierung
     type: ContactType;
     company?: string;
-    email?: string;
-    phone?: string;
+    email?: string;         // Legacy: Haupt-E-Mail (abwärtskompatibel)
+    phone?: string;         // Legacy: Haupt-Telefon (abwärtskompatibel)
+    emails?: Array<{        // Neu: Multiple E-Mail-Adressen
+        value: string;
+        label?: string;     // z.B. "Geschäftlich", "Privat", "Notfall"
+        isPrimary?: boolean;
+    }>;
+    phones?: Array<{        // Neu: Multiple Telefonnummern
+        value: string;
+        label?: string;     // z.B. "Mobil", "Festnetz", "Fax"
+        isPrimary?: boolean;
+    }>;
     address?: string;
     notes?: string;
     documents?: Document[]; // Pfad-basierte Dokumente
@@ -256,6 +269,7 @@ export interface Container extends BaseEntity {
     notes?: string; // Bemerkung
     price?: number; // Preis pro Einheit
     documents?: Document[]; // Pfad-basierte Dokumente
+    display_order?: number; // Manuelle Sortierung (optional)
 }
 
 // Image

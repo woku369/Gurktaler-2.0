@@ -27,6 +27,9 @@ export default function ProjectTimeline() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<string>("all");
+  const [visibleWorkspaces, setVisibleWorkspaces] = useState<Set<string>>(
+    new Set(),
+  );
   const [timelineYears, setTimelineYears] = useState(2);
   const [loading, setLoading] = useState(true);
   const [showCapacity, setShowCapacity] = useState(false);
@@ -48,6 +51,8 @@ export default function ProjectTimeline() {
   const loadWorkspaces = async () => {
     const ws = await workspacesService.getAll();
     setWorkspaces(ws);
+    // Initial alle Workspaces als sichtbar setzen
+    setVisibleWorkspaces(new Set(ws.map((w) => w.id)));
   };
 
   const loadData = async () => {
@@ -64,17 +69,25 @@ export default function ProjectTimeline() {
     setLoading(false);
   };
 
-  // Filter: Nur Projekte mit aktivierter Timeline + Workspace-Filter
+  // Filter: Nur Projekte mit aktivierter Timeline + Workspace-Filter + Sichtbarkeit
   const timelineProjects = useMemo(() => {
     let filtered = projects.filter((p) => p.timeline?.enabled);
 
-    // Workspace-Filter
+    // Workspace-Filter: nur wenn spezifischer Workspace ausgewählt
     if (activeWorkspace !== "all") {
       filtered = filtered.filter((p) => p.workspace_id === activeWorkspace);
+    } else {
+      // Bei "Alle": nur sichtbare Workspaces anzeigen
+      filtered = filtered.filter((p) => {
+        // Projekte ohne Workspace immer anzeigen
+        if (!p.workspace_id) return true;
+        // Projekte nur anzeigen, wenn ihr Workspace sichtbar ist
+        return visibleWorkspaces.has(p.workspace_id);
+      });
     }
 
     return filtered;
-  }, [projects, activeWorkspace]);
+  }, [projects, activeWorkspace, visibleWorkspaces]);
 
   const handleExportPDF = async () => {
     // Prüfe ob PWA (hat window.storageProvider mit baseUrl) oder Desktop (Electron)
@@ -147,6 +160,34 @@ export default function ProjectTimeline() {
     loadData();
   };
 
+  const handleDateChange = async (projectId: string, newStartDate: Date) => {
+    const project = projects.find((p) => p.id === projectId);
+    if (!project || !project.timeline) return;
+
+    // Aktualisiere nur das Startdatum, behalte Dauer bei
+    await storage.projects.update(projectId, {
+      timeline: {
+        ...project.timeline,
+        startDate: newStartDate.toISOString().split("T")[0],
+      },
+    });
+
+    // Reload data
+    loadData();
+  };
+
+  const handleToggleWorkspaceVisibility = (workspaceId: string) => {
+    setVisibleWorkspaces((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(workspaceId)) {
+        newSet.delete(workspaceId);
+      } else {
+        newSet.add(workspaceId);
+      }
+      return newSet;
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -196,6 +237,9 @@ export default function ProjectTimeline() {
           activeWorkspaceId={activeWorkspace}
           onWorkspaceChange={setActiveWorkspace}
           showAllTab={true}
+          visibleWorkspaces={visibleWorkspaces}
+          onToggleVisibility={handleToggleWorkspaceVisibility}
+          showVisibilityToggles={activeWorkspace === "all"}
         />
       </div>
 
@@ -263,7 +307,8 @@ export default function ProjectTimeline() {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 overflow-x-auto">
         <div className="mb-4 text-sm text-slate-600 italic">
           💡 Tipp: Projekte können per Drag & Drop sortiert werden • Doppelklick
-          öffnet Projektkarte
+          öffnet Projektkarte • Ctrl+Drag verschiebt horizontal (Startdatum
+          ändern)
         </div>
         <GanttChart
           projects={timelineProjects}
@@ -273,6 +318,7 @@ export default function ProjectTimeline() {
           showCapacity={showCapacity}
           capacityData={capacityData}
           onReorder={handleReorder}
+          onDateChange={handleDateChange}
         />
       </div>
 

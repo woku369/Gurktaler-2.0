@@ -481,16 +481,46 @@
 - [ ] Kostenkalkulation
 - [ ] Produktionsplanung
 - [ ] Mehrsprachigkeit (DE/EN)
-- [ ] **Kontakte: Mehrere Telefonnummern & E-Mails**
-  - Aktuell: Nur 1 Telefonnummer und 1 E-Mail pro Kontakt
-  - Gewünscht: Mehrere Nummern (Mobil, Büro, Privat) und E-Mails
-  - Array-basiertes Datenmodell statt einzelne Felder
-  - UI: Dynamisches Hinzufügen/Entfernen von Feldern
-- [ ] **Kontakte: Kategorienverwaltung reparieren**
-  - Bug: Kategorienzuordnung funktioniert nicht
-  - Keine eigenen Kategorien erstellbar
-  - Überarbeitung: Freie Kategorie-Tags wie bei Projekten
-  - Settings: Kategorie-Manager für Kontakte
+- [x] **Kontakte: Mehrere Telefonnummern & E-Mails** ✅ v1.8.0
+  - Implementiert: Array-basiertes Datenmodell mit Labels
+  - UI: Dynamisches Hinzufügen/Entfernen von Feldern mit "+ Weitere hinzufügen"
+  - Primär-Markierung mit ★-Button
+  - Labels für Kontextualisierung (Geschäftlich, Mobil, Privat, etc.)
+  - Rückwärtskompatibel mit alten Kontakten
+- [x] **Kontakte: Eigene Kategorien definierbar** ✅ v1.8.0
+  - Settings: ContactCategoryManager (CRUD für Kategorien)
+  - Farben und Icons wählbar (8 Presets + eigene)
+  - Sortierung verwalten
+  - Kategorie-Filter in Kontaktliste
+- [x] **Projekte: Timeline horizontal verschieben** ✅ v1.8.0
+  - Gantt-Chart: Strg+Drag auf Projekt-Balken
+  - Startdatum wird automatisch aktualisiert
+  - Pixel-zu-Datums-Konvertierung
+- [x] **Projekte: Workspace-Ebenen ein-/ausblenden** ✅ v1.8.0
+  - Checkboxen über Workspace-Tabs (nur bei "Alle Ebenen")
+  - Echtzeit-Filterung der Projekt-Ansicht
+  - Set-basierte Sichtbarkeitsverwaltung
+  - Eye/EyeOff Icons für visuelle Rückmeldung
+- [x] **Drag & Drop Sortierung** ✅ v1.8.0
+  - useDragSort Hook für Produkte
+  - Visuelle Drag-Indikatoren
+  - Order-Feld automatisch aktualisiert
+- [x] **Batch-Druck** ✅ v1.8.0
+  - Checkbox-Auswahl für mehrere Produkte
+  - BatchPrintView Komponente
+  - Alle/Keine Selektoren
+- [x] **Bilder in Notizen (PWA)** ✅ v1.8.0
+  - Kamera + Galerie-Buttons in Mobile-Ansicht
+  - ImageUpload Komponente integriert
+- [x] **Globaler Loading-Spinner** ✅ v1.8.0
+  - LoadingContext für zentrales State-Management
+  - Overlay mit Spinner in allen Views
+- [x] **Auto-Close Modals** ✅ v1.8.0
+  - Automatisches Schließen nach erfolgreicher Aktion
+  - Implementiert in allen Formularen
+- [x] **Image-Cache (23 MB JSON)** ✅ v1.8.0
+  - imageCache.ts Service
+  - Cached Bilder für schnelleren Zugriff
 - [ ] **Bildergalerie & Dokumente: Zuordnung in Klartext**
   - Statt nur ID anzeigen: Projekt-/Produkt-/Entitätsname
   - Klickbare Zuordnung öffnet die verknüpfte Entität

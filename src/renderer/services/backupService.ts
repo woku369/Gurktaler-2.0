@@ -35,7 +35,23 @@ interface NasResult {
  * Backup Service - Verwaltet Backups und Wiederherstellung
  */
 class BackupService {
-  private basePath = 'Y:\\zweipunktnull';
+  /**
+   * Ermittle basePath dynamisch aus localStorage (wie NasStorageProvider)
+   * Verhindert Inkonsistenzen zwischen BackupService und NasStorage
+   */
+  private getBasePath(): string {
+    let savedPath = "Y:\\zweipunktnull";
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const networkPath = localStorage.getItem("sync_network_path");
+      if (networkPath) {
+        // Entferne \data.json falls vorhanden, normalisiere doppeltes "zweipunktnull"
+        savedPath = networkPath
+          .replace(/\\data\.json$/, '')
+          .replace(/\\zweipunktnull\\zweipunktnull/g, '\\zweipunktnull');
+      }
+    }
+    return savedPath;
+  }
   
   /**
    * Liste alle verfügbaren Backups
@@ -48,7 +64,7 @@ class BackupService {
         return [];
       }
 
-      const backupPath = `${this.basePath}\\backups`;
+      const backupPath = `${this.getBasePath()}\\backups`;
       const result = await window.electron.invoke('nas-readdir', backupPath) as NasResult;
       
       if (!result.success || !result.files) {
@@ -174,7 +190,7 @@ class BackupService {
     try {
       console.log(`[BackupService] 🔄 Stelle Backup wieder her: ${backupPath}`);
       
-      const databasePath = `${this.basePath}\\database`;
+      const databasePath = `${this.getBasePath()}\\database`;
       
       // Liste alle JSON-Dateien im Backup
       const result = await window.electron.invoke('nas-readdir', backupPath) as NasResult;
@@ -233,8 +249,8 @@ class BackupService {
         .replace(/:/g, '-')
         .split('.')[0];
       
-      const sourcePath = `${this.basePath}\\database`;
-      const backupPath = `${this.basePath}\\backups\\backup_${timestamp}`;
+      const sourcePath = `${this.getBasePath()}\\database`;
+      const backupPath = `${this.getBasePath()}\\backups\\backup_${timestamp}`;
       
       // Erstelle Backup-Verzeichnis
       await window.electron.invoke('nas-mkdir', backupPath);
@@ -276,7 +292,7 @@ class BackupService {
    * Zeige aktuelle Datenbank-Statistiken
    */
   async getCurrentStats(): Promise<BackupPreview> {
-    const databasePath = `${this.basePath}\\database`;
+    const databasePath = `${this.getBasePath()}\\database`;
     return this.previewBackup(databasePath);
   }
 }

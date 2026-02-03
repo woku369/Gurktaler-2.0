@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect } from "react";
+import { Plus, X } from "lucide-react";
 import ContactProjectSelector from "./ContactProjectSelector";
 import DocumentManager from "./DocumentManager";
 import ImageUpload from "./ImageUpload";
@@ -21,14 +22,30 @@ export default function ContactForm({
   const [lastName, setLastName] = useState(contact?.last_name || "");
   const [type, setType] = useState(contact?.type || "supplier");
   const [company, setCompany] = useState(contact?.company || "");
-  const [email, setEmail] = useState(contact?.email || "");
-  const [phone, setPhone] = useState(contact?.phone || "");
   const [address, setAddress] = useState(contact?.address || "");
   const [notes, setNotes] = useState(contact?.notes || "");
   const [documents, setDocuments] = useState<Document[]>(
-    contact?.documents || []
+    contact?.documents || [],
   );
   const [categories, setCategories] = useState<ContactCategoryEntity[]>([]);
+
+  // Multi-field state
+  const [emails, setEmails] = useState<
+    Array<{ value: string; label?: string; isPrimary?: boolean }>
+  >(
+    contact?.emails ||
+      (contact?.email
+        ? [{ value: contact.email, isPrimary: true }]
+        : [{ value: "", isPrimary: true }]),
+  );
+  const [phones, setPhones] = useState<
+    Array<{ value: string; label?: string; isPrimary?: boolean }>
+  >(
+    contact?.phones ||
+      (contact?.phone
+        ? [{ value: contact.phone, isPrimary: true }]
+        : [{ value: "", isPrimary: true }]),
+  );
 
   useEffect(() => {
     loadCategories();
@@ -76,13 +93,25 @@ export default function ContactForm({
       return;
     }
 
+    // Filter out empty emails and phones
+    const validEmails = emails.filter((e) => e.value.trim());
+    const validPhones = phones.filter((p) => p.value.trim());
+
+    // Get primary values for backward compatibility
+    const primaryEmail =
+      validEmails.find((e) => e.isPrimary)?.value || validEmails[0]?.value;
+    const primaryPhone =
+      validPhones.find((p) => p.isPrimary)?.value || validPhones[0]?.value;
+
     onSubmit({
       name: name.trim(),
       last_name: lastName.trim() || undefined,
       type,
       company: company.trim() || undefined,
-      email: email.trim() || undefined,
-      phone: phone.trim() || undefined,
+      email: primaryEmail || undefined,
+      phone: primaryPhone || undefined,
+      emails: validEmails.length > 0 ? validEmails : undefined,
+      phones: validPhones.length > 0 ? validPhones : undefined,
       address: address.trim() || undefined,
       notes: notes.trim() || undefined,
       documents: documents.length > 0 ? documents : undefined,
@@ -158,29 +187,145 @@ export default function ContactForm({
       {/* Email */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">
-          E-Mail
+          E-Mail Adressen
         </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-          placeholder="max@beispiel.at"
-        />
+        <div className="space-y-2">
+          {emails.map((emailItem, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                type="email"
+                value={emailItem.value}
+                onChange={(e) => {
+                  const newEmails = [...emails];
+                  newEmails[index].value = e.target.value;
+                  setEmails(newEmails);
+                }}
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                placeholder="max@beispiel.at"
+              />
+              <input
+                type="text"
+                value={emailItem.label || ""}
+                onChange={(e) => {
+                  const newEmails = [...emails];
+                  newEmails[index].label = e.target.value;
+                  setEmails(newEmails);
+                }}
+                className="w-32 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                placeholder="Label"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newEmails = [...emails];
+                  newEmails[index].isPrimary = !newEmails[index].isPrimary;
+                  setEmails(newEmails);
+                }}
+                className={`px-3 py-2 border rounded-lg transition-colors ${
+                  emailItem.isPrimary
+                    ? "bg-gurktaler-500 text-white border-gurktaler-500"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                }`}
+                title="Als primär markieren"
+              >
+                ★
+              </button>
+              {emails.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEmails(emails.filter((_, i) => i !== index))
+                  }
+                  className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() =>
+              setEmails([...emails, { value: "", isPrimary: false }])
+            }
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gurktaler-600 hover:text-gurktaler-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Weitere E-Mail hinzufügen
+          </button>
+        </div>
       </div>
 
       {/* Phone */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">
-          Telefon
+          Telefonnummern
         </label>
-        <input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
-          placeholder="+43 123 456789"
-        />
+        <div className="space-y-2">
+          {phones.map((phoneItem, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                type="tel"
+                value={phoneItem.value}
+                onChange={(e) => {
+                  const newPhones = [...phones];
+                  newPhones[index].value = e.target.value;
+                  setPhones(newPhones);
+                }}
+                className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                placeholder="+43 123 456789"
+              />
+              <input
+                type="text"
+                value={phoneItem.label || ""}
+                onChange={(e) => {
+                  const newPhones = [...phones];
+                  newPhones[index].label = e.target.value;
+                  setPhones(newPhones);
+                }}
+                className="w-32 px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500"
+                placeholder="Label"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const newPhones = [...phones];
+                  newPhones[index].isPrimary = !newPhones[index].isPrimary;
+                  setPhones(newPhones);
+                }}
+                className={`px-3 py-2 border rounded-lg transition-colors ${
+                  phoneItem.isPrimary
+                    ? "bg-gurktaler-500 text-white border-gurktaler-500"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                }`}
+                title="Als primär markieren"
+              >
+                ★
+              </button>
+              {phones.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPhones(phones.filter((_, i) => i !== index))
+                  }
+                  className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() =>
+              setPhones([...phones, { value: "", isPrimary: false }])
+            }
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gurktaler-600 hover:text-gurktaler-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Weitere Telefonnummer hinzufügen
+          </button>
+        </div>
       </div>
 
       {/* Address */}

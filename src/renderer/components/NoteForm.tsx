@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useRef } from "react";
 import {
   Lightbulb,
   FileText,
@@ -6,6 +6,8 @@ import {
   BookOpen,
   Eye,
   Code,
+  Camera,
+  X,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import TagSelector from "./TagSelector";
@@ -42,6 +44,9 @@ export default function NoteForm({
   const [url, setUrl] = useState(note?.url || "");
   const [showPreview, setShowPreview] = useState(false);
   const [documents, setDocuments] = useState<Document[]>(note?.documents || []);
+  const [pendingImages, setPendingImages] = useState<string[]>([]); // Base64 Data URLs
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddDocument = (doc: Omit<Document, "id" | "created_at">) => {
     const newDoc: Document = {
@@ -50,6 +55,29 @@ export default function NoteForm({
       created_at: new Date().toISOString(),
     };
     setDocuments([...documents, newDoc]);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        setPendingImages((prev) => [...prev, dataUrl]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset input for re-selection
+    e.target.value = "";
+  };
+
+  const removePendingImage = (index: number) => {
+    setPendingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleDeleteDocument = (id: string) => {
@@ -84,6 +112,13 @@ export default function NoteForm({
       url: url.trim() || undefined,
       documents: documents.length > 0 ? documents : undefined,
     });
+
+    // Save pending images after note is created (in parent component)
+    // Parent should handle this via callback after getting the new note ID
+    if (pendingImages.length > 0 && !note) {
+      // Signal to parent that images need to be saved
+      (window as any)._pendingNoteImages = pendingImages;
+    }
   };
 
   return (
@@ -233,10 +268,80 @@ export default function NoteForm({
         </div>
       )}
 
-      {/* Images */}
-      {note && (
+      {/* Images - Now available for new notes too! */}
+      {note ? (
         <div>
           <ImageUpload entityType="note" entityId={note.id} maxImages={20} />
+        </div>
+      ) : (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Bilder ({pendingImages.length})
+          </label>
+
+          {/* Mobile-First Upload Buttons */}
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-gurktaler-500 hover:bg-gurktaler-600 text-white rounded-lg transition-colors"
+            >
+              <FileText className="w-5 h-5" />
+              Aus Galerie
+            </button>
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-300"
+            >
+              <Camera className="w-5 h-5" />
+              Foto aufnehmen
+            </button>
+          </div>
+
+          {/* Hidden Inputs */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+
+          {/* Image Preview */}
+          {pendingImages.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {pendingImages.map((dataUrl, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={dataUrl}
+                    alt={`Bild ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border border-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePendingImage(index)}
+                    className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs text-slate-500 mt-2">
+            💡 Bilder werden gespeichert sobald du die Notiz erstellst
+          </p>
         </div>
       )}
 

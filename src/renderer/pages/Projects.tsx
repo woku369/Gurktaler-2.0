@@ -24,11 +24,14 @@ import type {
 function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectImages, setProjectImages] = useState<Record<string, Image[]>>(
-    {}
+    {},
   );
   const [tags, setTags] = useState<Tag[]>([]);
   const [workspaces, setWorkspaces] = useState<ProjectWorkspace[]>([]);
   const [activeWorkspace, setActiveWorkspace] = useState<string>("all");
+  const [visibleWorkspaces, setVisibleWorkspaces] = useState<Set<string>>(
+    new Set(),
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +53,8 @@ function Projects() {
   const loadWorkspaces = async () => {
     const ws = await workspacesService.getAll();
     setWorkspaces(ws);
+    // Initial alle Workspaces als sichtbar setzen
+    setVisibleWorkspaces(new Set(ws.map((w) => w.id)));
   };
 
   const loadProjects = async () => {
@@ -62,14 +67,14 @@ function Projects() {
     for (const project of allProjects) {
       imageMap[project.id] = await imagesService.getByEntity(
         "project",
-        project.id
+        project.id,
       );
     }
     setProjectImages(imageMap);
   };
 
   const handleCreate = async (
-    data: Omit<Project, "id" | "created_at" | "updated_at">
+    data: Omit<Project, "id" | "created_at" | "updated_at">,
   ) => {
     await projectsService.create(data);
     await loadProjects();
@@ -82,7 +87,7 @@ function Projects() {
   };
 
   const handleUpdate = async (
-    data: Omit<Project, "id" | "created_at" | "updated_at">
+    data: Omit<Project, "id" | "created_at" | "updated_at">,
   ) => {
     if (editingProject) {
       await projectsService.update(editingProject.id, data);
@@ -148,8 +153,16 @@ function Projects() {
     let filtered = projects;
     if (activeWorkspace !== "all") {
       filtered = projects.filter(
-        (project) => project.workspace_id === activeWorkspace
+        (project) => project.workspace_id === activeWorkspace,
       );
+    } else {
+      // Bei "Alle": nur sichtbare Workspaces anzeigen
+      filtered = projects.filter((project) => {
+        // Projekte ohne Workspace immer anzeigen
+        if (!project.workspace_id) return true;
+        // Projekte nur anzeigen, wenn ihr Workspace sichtbar ist
+        return visibleWorkspaces.has(project.workspace_id);
+      });
     }
 
     // Dann nach Suchbegriff filtern
@@ -168,7 +181,25 @@ function Projects() {
     });
 
     return filtered;
-  }, [projects, activeWorkspace, searchQuery, selectedTagId]);
+  }, [
+    projects,
+    activeWorkspace,
+    visibleWorkspaces,
+    searchQuery,
+    selectedTagId,
+  ]);
+
+  const handleToggleWorkspaceVisibility = (workspaceId: string) => {
+    setVisibleWorkspaces((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(workspaceId)) {
+        newSet.delete(workspaceId);
+      } else {
+        newSet.add(workspaceId);
+      }
+      return newSet;
+    });
+  };
 
   return (
     <div className="p-8">
@@ -197,6 +228,9 @@ function Projects() {
         activeWorkspaceId={activeWorkspace}
         onWorkspaceChange={setActiveWorkspace}
         showAllTab={true}
+        visibleWorkspaces={visibleWorkspaces}
+        onToggleVisibility={handleToggleWorkspaceVisibility}
+        showVisibilityToggles={activeWorkspace === "all"}
       />
 
       {/* Search & Tag Filter */}
@@ -238,7 +272,7 @@ function Projects() {
               onToggleFavorite={async () => {
                 const existing = await favoritesService.getByEntity(
                   "project",
-                  project.id
+                  project.id,
                 );
                 if (existing) {
                   await favoritesService.delete(existing.id);

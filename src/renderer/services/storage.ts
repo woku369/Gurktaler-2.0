@@ -355,26 +355,56 @@ export const recipeIngredients = {
     delete: (id: string) => deleteEntity<RecipeIngredient>('recipe_ingredients', id),
 }
 
-// Images
+// Images (mit Cache für Performance)
+import { imageCache } from './imageCache'
+
 export const images = {
-    getAll: async (): Promise<Image[]> => await nasStorage.readJson<Image>(nasStorage.getJsonFilePath('images')),
+    getAll: async (): Promise<Image[]> => await imageCache.getAll(),
+    
     getById: async (id: string): Promise<Image | undefined> => {
-        const all = await nasStorage.readJson<Image>(nasStorage.getJsonFilePath('images'))
-        return all.find(i => i.id === id)
+        return await imageCache.getById(id)
     },
+    
     getByEntity: async (entityType: string, entityId: string): Promise<Image[]> => {
-        const all = await nasStorage.readJson<Image>(nasStorage.getJsonFilePath('images'))
-        return all.filter(i => i.entity_type === entityType && i.entity_id === entityId)
+        return await imageCache.getByEntity(entityType, entityId)
     },
-    create: (image: Omit<Image, 'id' | 'created_at'>) => createEntity<Image>('images', image),
-    update: (id: string, updates: Partial<Image>) => updateEntity<Image>('images', id, updates),
-    delete: (id: string) => deleteEntity<Image>('images', id),
+    
+    create: async (image: Omit<Image, 'id' | 'created_at'>) => {
+        const newImage = await createEntity<Image>('images', image)
+        imageCache.addToCache(newImage)
+        return newImage
+    },
+    
+    update: async (id: string, updates: Partial<Image>) => {
+        const updated = await updateEntity<Image>('images', id, updates)
+        if (updated) {
+            imageCache.updateInCache(id, updates)
+        }
+        return updated
+    },
+    
+    delete: async (id: string) => {
+        const result = await deleteEntity<Image>('images', id)
+        if (result) {
+            imageCache.removeFromCache(id)
+        }
+        return result
+    },
+    
     deleteByEntity: async (entityType: string, entityId: string) => {
         const filePath = nasStorage.getJsonFilePath('images')
         let data = await nasStorage.readJson<Image>(filePath)
+        const toDelete = data.filter(i => i.entity_type === entityType && i.entity_id === entityId)
         data = data.filter(i => !(i.entity_type === entityType && i.entity_id === entityId))
         await nasStorage.writeJson(filePath, data)
+        
+        // Cache aktualisieren
+        toDelete.forEach(img => imageCache.removeFromCache(img.id))
     },
+    
+    // Cache-Verwaltung
+    clearCache: () => imageCache.invalidate(),
+    getCacheStats: () => imageCache.getStats(),
 }
 
 // Favorites

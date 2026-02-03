@@ -70,7 +70,7 @@ function Notes() {
   const [selectedType, setSelectedType] = useState<NoteType>("note");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "chaos" | "project">(
-    "all"
+    "all",
   );
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,12 +106,34 @@ function Notes() {
   };
 
   const handleUpdate = async (
-    data: Omit<Note, "id" | "created_at" | "updated_at">
+    data: Omit<Note, "id" | "created_at" | "updated_at">,
   ) => {
     if (editingNote) {
       await notesService.update(editingNote.id, data);
     } else {
-      await notesService.create(data);
+      const newNote = await notesService.create(data);
+
+      // Save pending images if any
+      const pendingImages = (window as any)._pendingNoteImages as
+        | string[]
+        | undefined;
+      if (pendingImages && pendingImages.length > 0 && newNote) {
+        const { images: imagesService } =
+          await import("@/renderer/services/storage");
+
+        for (const dataUrl of pendingImages) {
+          await imagesService.create({
+            entity_type: "note",
+            entity_id: newNote.id,
+            data_url: dataUrl,
+            file_name: `note-image-${Date.now()}.jpg`,
+            caption: "",
+          });
+        }
+
+        // Clear pending images
+        delete (window as any)._pendingNoteImages;
+      }
     }
     await loadData();
     setIsModalOpen(false);
@@ -156,7 +178,7 @@ function Notes() {
     })
     .sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
   const formatDate = (dateString: string) => {
@@ -199,8 +221,8 @@ function Notes() {
           className="w-full p-3 border-vintage border-distillery-200 rounded-vintage resize-none focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
           rows={3}
         />
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 gap-3">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             {Object.entries(typeLabels).map(([key, label]) => {
               const Icon = typeIcons[key as NoteType];
               const isSelected = selectedType === key;
@@ -208,7 +230,7 @@ function Notes() {
                 <button
                   key={key}
                   onClick={() => setSelectedType(key as NoteType)}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-all border-vintage font-body font-semibold ${
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm transition-all border-vintage font-body font-semibold ${
                     isSelected
                       ? typeColors[key as NoteType]
                       : "bg-gurktaler-50 text-distillery-700 border-distillery-200 hover:bg-gurktaler-100"
@@ -223,7 +245,7 @@ function Notes() {
           <button
             onClick={handleQuickSave}
             disabled={!quickNote.trim()}
-            className="px-4 py-2 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Speichern
           </button>
@@ -231,10 +253,10 @@ function Notes() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
         <button
           onClick={() => setFilterTab("all")}
-          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold whitespace-nowrap ${
             filterTab === "all"
               ? "bg-gurktaler-500 text-white shadow-md"
               : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
@@ -244,7 +266,7 @@ function Notes() {
         </button>
         <button
           onClick={() => setFilterTab("chaos")}
-          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold whitespace-nowrap ${
             filterTab === "chaos"
               ? "bg-gurktaler-500 text-white shadow-md"
               : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
@@ -254,7 +276,7 @@ function Notes() {
         </button>
         <button
           onClick={() => setFilterTab("project")}
-          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
+          className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold whitespace-nowrap ${
             filterTab === "project"
               ? "bg-gurktaler-500 text-white shadow-md"
               : "bg-gurktaler-50 text-distillery-700 border-vintage border-distillery-200 hover:bg-gurktaler-100"
@@ -337,7 +359,7 @@ function Notes() {
                     onClick={async () => {
                       const existing = await favoritesService.getByEntity(
                         "note",
-                        note.id
+                        note.id,
                       );
                       if (existing) {
                         await favoritesService.delete(existing.id);

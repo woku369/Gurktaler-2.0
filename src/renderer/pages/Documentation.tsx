@@ -119,7 +119,7 @@ const sections: Section[] = [
     icon: FolderKanban,
     content: {
       description:
-        "Projekte sind Container für zusammenhängende Produkte, Notizen und Kontakte. Sie haben einen Status (In Planung, Aktiv, Pausiert, Abgeschlossen, Archiviert).",
+        "Projekte sind Container für zusammenhängende Produkte, Notizen und Kontakte. Sie haben einen Status (In Planung, Aktiv, Pausiert, Abgeschlossen, Archiviert). Mit Timeline-Visualisierung und Workspace-Verwaltung.",
       howTo: [
         {
           title: "Neues Projekt erstellen",
@@ -127,6 +127,7 @@ const sections: Section[] = [
             'Klicke auf "Neues Projekt" Button',
             "Gib Namen und Beschreibung ein",
             "Wähle den Status",
+            "Weise Projekt einem Workspace (Ebene) zu",
             "Speichern",
             "Optional: Tags hinzufügen nach Erstellung",
           ],
@@ -140,11 +141,34 @@ const sections: Section[] = [
             "Produkt wird im Projekt verknüpft",
           ],
         },
+        {
+          title: "Timeline-Ansicht nutzen",
+          steps: [
+            "Navigation → Timeline",
+            "Gantt-Chart zeigt alle Projekte chronologisch",
+            "Strg + Drag auf Projekt-Balken: Horizontal verschieben",
+            "Projekt wird mit neuem Startdatum aktualisiert",
+            "Farbcodierung nach Workspace",
+          ],
+        },
+        {
+          title: "Workspaces (Ebenen) filtern",
+          steps: [
+            'Tab "Alle Ebenen" auswählen',
+            "Checkboxen erscheinen über Workspace-Tabs",
+            "Checkbox deaktivieren = Workspace ausblenden",
+            "Nur aktive Workspaces werden angezeigt",
+            "Filter funktioniert auf Projekt- und Timeline-Seite",
+          ],
+        },
       ],
       tips: [
         "Nutze Tags für projektübergreifende Kategorisierung",
         'Status "Pausiert" für zurückgestellte Projekte',
         "Notizen mit Projekt verknüpfen für Kontext",
+        "Workspaces für thematische Gruppierung (z.B. 'Kleinserien', 'Forschung')",
+        "Timeline-Drag für schnelle Planungsanpassungen",
+        "Workspace-Filter für fokussierte Ansicht",
       ],
     },
   },
@@ -325,17 +349,42 @@ const sections: Section[] = [
     icon: Users,
     content: {
       description:
-        "Kontaktverwaltung für Lieferanten, Partner, Kunden. Mit vCard-Import aus Google Contacts.",
+        "Kontaktverwaltung für Lieferanten, Partner, Kunden. Mit vCard-Import, mehreren Telefonnummern/E-Mails und selbst definierbaren Kategorien.",
       howTo: [
         {
           title: "Kontakt erstellen",
           steps: [
             'Klicke auf "Neuer Kontakt"',
             "Name, Firma eingeben",
-            "Typ wählen (Lieferant, Partner, Kunde, Sonstiges)",
-            "E-Mail, Telefon, Adresse (optional)",
-            "Notizen",
+            "Typ wählen (Lieferant, Partner, Kunde, oder eigene Kategorie)",
+            "E-Mail-Adressen: Mehrere möglich mit Labels (Geschäftlich, Privat, etc.)",
+            "Telefonnummern: Mehrere möglich mit Labels (Mobil, Festnetz, Fax)",
+            "Mit ★ primäre Kontaktdaten markieren",
+            "Adresse, Notizen (optional)",
             "Speichern",
+          ],
+        },
+        {
+          title: "Mehrere Telefonnummern/E-Mails verwalten",
+          steps: [
+            'Im Kontaktformular: Klicke "+ Weitere E-Mail hinzufügen"',
+            'Oder: "+ Weitere Telefonnummer hinzufügen"',
+            "Wert eingeben + Label (z.B. 'Geschäftlich', 'Mobil')",
+            "★-Button: Als primär markieren",
+            "Rotes X: Eintrag entfernen",
+            "Primäre Kontakte werden in Übersicht hervorgehoben",
+          ],
+        },
+        {
+          title: "Kontakt-Kategorien definieren",
+          steps: [
+            "Settings → Kontakt-Kategorien",
+            '"+"-Button für neue Kategorie',
+            "Name (Anzeigename) und Wert (interner Key) eingeben",
+            "Farbe wählen (Preset oder Farbwähler)",
+            "Icon wählen (Emoji-Auswahl verfügbar)",
+            "Kategorien bearbeiten oder löschen (mit Warnung)",
+            "Eigene Kategorien erscheinen im Kontaktformular",
           ],
         },
         {
@@ -364,6 +413,9 @@ const sections: Section[] = [
         "Filter nach Typ für schnellen Zugriff",
         "Tags für weitere Kategorisierung",
         "Projekt-Rollen dokumentieren",
+        "Labels helfen bei Kontextualisierung (z.B. 'Notfall', 'Büro', 'Privat')",
+        "Primäre Kontakte (★) werden in Kontaktkarten prominent angezeigt",
+        "Eigene Kategorien mit passenden Icons und Farben übersichtlicher",
       ],
     },
   },
@@ -573,7 +625,7 @@ const sections: Section[] = [
     icon: Settings,
     content: {
       description:
-        "Datenexport/-import als JSON, vCard-Import, API-Key-Verwaltung für KI-Assistenten, automatisches Backup-System über Custom API Server (Port 3002).",
+        "Datenexport/-import als JSON, vCard-Import, API-Key-Verwaltung für KI-Assistenten, automatisches Backup-System über Custom API Server (Port 3002). NEU: Automatische Pfadvalidierung und Transparenz über aktive Pfade.",
       howTo: [
         {
           title: "Synology NAS-Synchronisation einrichten",
@@ -581,8 +633,11 @@ const sections: Section[] = [
             "Voraussetzung: Tailscale VPN auf allen Geräten installiert (siehe TAILSCALE_SETUP.md)",
             "Netzlaufwerk Y: auf \\\\100.121.103.107\\Gurktaler mappen",
             "Settings → Synology Netzwerk-Synchronisation",
-            "Netzwerkpfad eingeben: Y:\\zweipunktnull\\data.json",
+            "✅ Korrekter Pfad: Y:\\zweipunktnull\\data.json",
             "Alternativ UNC-Pfad: \\\\100.121.103.107\\Gurktaler\\zweipunktnull\\data.json",
+            "⚠️ NICHT verwenden: Y:\\zweipunktnull\\zweipunktnull\\data.json (doppelt!)",
+            "🔍 Pfad-Validierung: App korrigiert fehlerhafte Pfade automatisch",
+            '📂 Nach Verbindung: "Aktive Pfade" zeigt Datenbank-, Backup- und Bild-Pfade an',
             'Klicke "Verbindung testen" - muss ✅ erfolgreich sein',
             'Klicke "Jetzt synchronisieren" für ersten Upload',
             "Aktiviere Auto-Sync (synchronisiert beim App-Start)",
@@ -636,6 +691,22 @@ const sections: Section[] = [
             "Automatisch verschlüsselt gespeichert",
           ],
         },
+        {
+          title: "Pfad-Probleme beheben (Neue Sicherheitsfunktion)",
+          steps: [
+            "Problem: Backups werden nicht angezeigt obwohl sie existieren",
+            "Ursache: Falscher Pfad in Settings (z.B. doppeltes 'zweipunktnull')",
+            "Lösung 1: Settings → Netzwerkpfad prüfen und korrigieren",
+            "🔄 Automatische Korrektur: App erkennt Y:\\zweipunktnull\\zweipunktnull und korrigiert zu Y:\\zweipunktnull",
+            "✅ Warnung wird angezeigt: 'Pfad wurde korrigiert: Doppeltes zweipunktnull entfernt'",
+            "📂 Nach Verbindung: Prüfe 'Aktive Pfade' - alle drei Pfade müssen korrekt sein:",
+            "   - Datenbank: Y:\\zweipunktnull\\database",
+            "   - Backups: Y:\\zweipunktnull\\backups",
+            "   - Bilder: Y:\\zweipunktnull\\images",
+            "Lösung 2: Falls Daten in falschem Ordner liegen, mit Windows Explorer verschieben",
+            "Tipp: Bei Neuinstallation immer Pfad aus Anleitung kopieren!",
+          ],
+        },
       ],
       tips: [
         "🔐 Backup-Strategie: Synology NAS = Zentraler Datenspeicher für alle Geräte",
@@ -644,9 +715,14 @@ const sections: Section[] = [
         "☁️ Tailscale VPN = Sicherer Zugriff von überall (CGNAT-Problem gelöst)",
         "💾 Zusätzlich: JSON-Export als lokales Backup vor kritischen Aktionen",
         "⚠️ Konfliktgefahr: Nicht gleichzeitig auf mehreren Geräten editieren",
-        "🏠 Y:\\ Netzlaufwerk = Einfacher Zugriff über Laufwerksbuchstabe",
-        "🌐 UNC-Pfad \\\\100.121.103.107\\Gurktaler = Alternativer Zugriff ohne Laufwerk",
-        "🚫 API-Keys nie teilen oder auf NAS ablegen",
+        "🏠 Korrekter Pfad: Y:\\zweipunktnull\\data.json (KEIN doppeltes zweipunktnull!)",
+        "📂 Backup-Pfad: Y:\\zweipunktnull\\backups (alle Backups hier)",
+        "💾 Datenbank-Pfad: Y:\\zweipunktnull\\database (aktive JSON-Dateien)",
+        "🌐 UNC-Pfad: \\\\100.121.103.107\\Gurktaler\\zweipunktnull (Alternativer Zugriff)",
+        "� NEU: Automatische Pfadvalidierung verhindert fehlerhafte Konfiguration",
+        "✅ NEU: Pfad-Anzeige in Settings zeigt alle aktiven Pfade (Transparenz!)",
+        "🛡️ NEU: BackupService und NasStorage verwenden denselben Pfad (konsistent!)",
+        "�🚫 API-Keys nie teilen oder auf NAS ablegen",
         "📊 Synology NAS-Verbindungsstatus wird in Settings angezeigt",
         "📱 Smartphone: Synology Drive App für Offline-Zugriff nutzen",
         "🔧 Details: Siehe docs/TAILSCALE_SETUP.md und NAS_ARCHITEKTUR.md",
@@ -940,7 +1016,9 @@ const sections: Section[] = [
       ],
       tips: [
         "🏢 Im Büro ohne VS Code: Öffne einfach PowerShell und führe die Befehle aus!",
-        "🔌 NAS nicht verbunden? net use Y: \\\\100.121.103.107\\Gurktaler\\zweipunktnull",
+        "🔌 NAS nicht verbunden? net use Y: \\\\100.121.103.107\\Gurktaler",
+        "📂 Alle Backups liegen unter: Y:\\zweipunktnull\\backups",
+        "💾 Aktive Datenbank liegt unter: Y:\\zweipunktnull\\database",
         "📱 Per Remote Desktop: Verbinde zu Home-Rechner und stelle dort wieder her",
         "⏱️ Backups: Stündlich für 7 Tage = bis zu 168 Wiederherstellungspunkte",
         "💾 Manuelles Backup jederzeit: Einstellungen → Backup & Wiederherstellung → Manuelles Backup",

@@ -34,6 +34,7 @@ import {
 import { parseVCard } from "@/renderer/services/vcardParser";
 import ContactImportDialog from "@/renderer/components/ContactImportDialog";
 import { WorkspaceManager } from "@/renderer/components/WorkspaceManager";
+import { ContactCategoryManager } from "@/renderer/components/ContactCategoryManager";
 import type { ParsedContact } from "@/renderer/services/vcardParser";
 import {
   getGitStatus,
@@ -151,9 +152,61 @@ function Settings() {
     }, 3000);
   };
 
+  // Pfad-Validierung und -Normalisierung
+  const validateAndNormalizePath = (
+    path: string,
+  ): { valid: boolean; normalized: string; warning?: string } => {
+    let normalized = path.trim();
+    let warning: string | undefined;
+
+    // Prüfe auf doppeltes "zweipunktnull" und korrigiere automatisch
+    if (normalized.includes("\\zweipunktnull\\zweipunktnull")) {
+      normalized = normalized.replace(
+        /\\zweipunktnull\\zweipunktnull/g,
+        "\\zweipunktnull",
+      );
+      warning = '⚠️ Pfad wurde korrigiert: Doppeltes "zweipunktnull" entfernt';
+    }
+
+    // Prüfe ob Pfad mit data.json endet
+    if (!normalized.endsWith("data.json")) {
+      return {
+        valid: false,
+        normalized,
+        warning: '❌ Pfad muss mit "data.json" enden',
+      };
+    }
+
+    // Prüfe auf gültige Basis (Y:\ oder UNC)
+    const validPatterns = [
+      /^Y:\\zweipunktnull\\data\.json$/,
+      /^\\\\[\d\.]+\\Gurktaler\\zweipunktnull\\data\.json$/,
+    ];
+
+    const isValid = validPatterns.some((pattern) => pattern.test(normalized));
+
+    return { valid: isValid, normalized, warning };
+  };
+
   const handleSyncConnect = async () => {
     if (!networkPath) {
       setSyncMessage("❌ Bitte Netzwerkpfad eingeben");
+      return;
+    }
+
+    // Validiere und normalisiere Pfad
+    const validation = validateAndNormalizePath(networkPath);
+
+    if (validation.warning) {
+      setSyncMessage(validation.warning);
+      // Aktualisiere Eingabefeld mit normalisiertem Pfad
+      setNetworkPath(validation.normalized);
+      // Warte kurz, damit Benutzer die Warnung sieht
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+
+    if (!validation.valid) {
+      setSyncMessage(validation.warning || "❌ Ungültiger Pfad");
       return;
     }
 
@@ -465,6 +518,9 @@ function Settings() {
         {/* Workspace Management */}
         <WorkspaceManager />
 
+        {/* Contact Category Management */}
+        <ContactCategoryManager />
+
         {/* Data Management */}
         <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -517,10 +573,21 @@ function Settings() {
           {!syncStatus.isConnected ? (
             <div className="space-y-4">
               <p className="text-slate-600">
-                Verbinde das Synology-Netzlaufwerk (z.B.
-                Y:\zweipunktnull\data.json oder
-                \\100.121.103.107\Gurktaler\zweipunktnull\data.json)
+                Verbinde das Synology-Netzlaufwerk zum korrekten Pfad:
               </p>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                <p className="text-sm text-blue-900 font-semibold mb-2">
+                  ✅ Korrekter Pfad:
+                </p>
+                <code className="text-xs text-blue-800">
+                  Y:\zweipunktnull\data.json
+                </code>
+                <p className="text-xs text-blue-700 mt-2">oder</p>
+                <code className="text-xs text-blue-800">
+                  \\100.121.103.107\Gurktaler\zweipunktnull\data.json
+                </code>
+              </div>
 
               <div className="space-y-3">
                 <div>
@@ -535,8 +602,8 @@ function Settings() {
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-mono text-sm"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    Beispiele: Y:\zweipunktnull\data.json oder
-                    \\100.121.103.107\Gurktaler\zweipunktnull\data.json
+                    ⚠️ Wichtig: Pfad muss exakt Y:\zweipunktnull sein (kein
+                    doppeltes "zweipunktnull"!)
                   </p>
                 </div>
 
@@ -569,6 +636,42 @@ function Settings() {
                         })}
                       </p>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Aktive Pfade anzeigen */}
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <p className="text-xs font-medium text-slate-700 mb-2">
+                  📂 Aktive Pfade:
+                </p>
+                <div className="space-y-1 text-xs font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Datenbank:</span>
+                    <code className="text-slate-800">
+                      {syncStatus.networkPath?.replace(
+                        "\\data.json",
+                        "\\database",
+                      )}
+                    </code>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Backups:</span>
+                    <code className="text-slate-800">
+                      {syncStatus.networkPath?.replace(
+                        "\\data.json",
+                        "\\backups",
+                      )}
+                    </code>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Bilder:</span>
+                    <code className="text-slate-800">
+                      {syncStatus.networkPath?.replace(
+                        "\\data.json",
+                        "\\images",
+                      )}
+                    </code>
                   </div>
                 </div>
               </div>

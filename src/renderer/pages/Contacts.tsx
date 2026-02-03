@@ -41,7 +41,7 @@ function Contacts() {
   };
 
   const handleSubmit = async (
-    data: Omit<Contact, "id" | "created_at" | "updated_at">
+    data: Omit<Contact, "id" | "created_at" | "updated_at">,
   ) => {
     if (editingContact) {
       await contactsService.update(editingContact.id, data);
@@ -76,7 +76,13 @@ function Contacts() {
         contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         contact.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         contact.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contact.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        contact.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        contact.emails?.some((e) =>
+          e.value.toLowerCase().includes(searchQuery.toLowerCase()),
+        ) ||
+        contact.phones?.some((p) =>
+          p.value.toLowerCase().includes(searchQuery.toLowerCase()),
+        );
 
       const matchesType = filterType === "all" || contact.type === filterType;
 
@@ -277,29 +283,61 @@ function Contacts() {
                 </div>
               )}
 
-              {contact.email && (
-                <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+              {(contact.emails && contact.emails.length > 0
+                ? contact.emails
+                : contact.email
+                  ? [{ value: contact.email, isPrimary: true }]
+                  : []
+              ).map((emailItem, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 text-sm text-slate-600 mb-1"
+                >
                   <Mail className="w-4 h-4" />
                   <a
-                    href={`mailto:${contact.email}`}
+                    href={`mailto:${emailItem.value}`}
                     className="hover:text-gurktaler-600 transition-colors"
                   >
-                    {contact.email}
+                    {emailItem.value}
                   </a>
+                  {emailItem.label && (
+                    <span className="text-xs text-slate-400">
+                      ({emailItem.label})
+                    </span>
+                  )}
+                  {emailItem.isPrimary && (
+                    <span className="text-xs text-gurktaler-600">★</span>
+                  )}
                 </div>
-              )}
+              ))}
 
-              {contact.phone && (
-                <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+              {(contact.phones && contact.phones.length > 0
+                ? contact.phones
+                : contact.phone
+                  ? [{ value: contact.phone, isPrimary: true }]
+                  : []
+              ).map((phoneItem, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 text-sm text-slate-600 mb-1"
+                >
                   <Phone className="w-4 h-4" />
                   <a
-                    href={`tel:${contact.phone}`}
+                    href={`tel:${phoneItem.value}`}
                     className="hover:text-gurktaler-600 transition-colors"
                   >
-                    {contact.phone}
+                    {phoneItem.value}
                   </a>
+                  {phoneItem.label && (
+                    <span className="text-xs text-slate-400">
+                      ({phoneItem.label})
+                    </span>
+                  )}
+                  {phoneItem.isPrimary && (
+                    <span className="text-xs text-gurktaler-600">★</span>
+                  )}
                 </div>
-              )}
+              ))}
 
               {contact.address && (
                 <div className="flex items-start gap-2 text-sm text-slate-600 mt-2">
