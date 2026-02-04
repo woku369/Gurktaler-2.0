@@ -391,28 +391,27 @@
 
 ---
 
-## Phase 12: PWA Optimierung & Monitoring (v1.9.x) �
+## Phase 12: PWA Optimierung & Monitoring (v1.7.3) ✅
 
 | Status | Aufgabe                   | Beschreibung                                   |
 | ------ | ------------------------- | ---------------------------------------------- |
 | ✅     | Server-Status UI          | Node.js API Server Status in Settings anzeigen|
-| 📋     | Auto-Start API Server     | Synology Task Scheduler Setup                  |
-| 📋     | Log-Viewer in App         | Echtzeit-Logs vom Node.js Server               |
-| 📋     | Server-Health-Check       | Periodische Prüfung auf Erreichbarkeit         |
+| ✅     | Auto-Start API Server     | Synology Task Scheduler Setup (dokumentiert)  |
+| ✅     | Log-Viewer in App         | Echtzeit-Logs vom Node.js Server               |
+| ✅     | Server-Health-Check       | Health-Metriken (Memory, Uptime, PID, Version) |
 
-**Implementiert (4. Februar 2026):**
+**Abgeschlossen (4. Februar 2026):**
 - Server-Status Section in Settings mit Live-Indicator
-- Manueller Status-Check Button mit Refresh-Animation
+- Manueller Status-Check Button mit Refresh-Animation  
 - Server-Details: Endpoint, Port, PWA URL, Uptime
 - Setup-Anleitung für manuellen und automatischen Start
 - Fehler-Hinweise bei Offline-Status
-- Dokumentation in "Anleitungen" Section
+- **Log-Viewer:** Letzte 50 Zeilen, Farbcodierung, Refresh-Button
+- **Health-Metriken:** Memory (Used/Total), PID, Node Version
+- **API-Endpoints:** /api/logs, /api/health
+- Dokumentation in "Anleitungen" Section komplett
 - Automatische Prüfung alle 30 Sekunden (Layout.tsx)
 - check-server.ps1 Script für Windows-Monitoring
-
-**Noch offen:**
-- Log-Viewer für server.log in der App
-- Erweiterte Health-Metrics (Memory, CPU, Requests/min)
 
 ---
 

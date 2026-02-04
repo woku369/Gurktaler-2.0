@@ -54,10 +54,16 @@ function Settings() {
 
   // Server-Status State
   const setupService = new SetupService();
-  const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
+  const [serverStatus, setServerStatus] = useState<
+    "checking" | "online" | "offline"
+  >("checking");
   const [lastServerCheck, setLastServerCheck] = useState<Date | null>(null);
   const [serverUptime, setServerUptime] = useState<string | null>(null);
   const [isCheckingServer, setIsCheckingServer] = useState(false);
+  const [serverLogs, setServerLogs] = useState<string[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [serverHealth, setServerHealth] = useState<any>(null);
 
   // Git-Integration State
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
@@ -95,19 +101,52 @@ function Settings() {
       const connected = await setupService.testConnection();
       setServerStatus(connected ? "online" : "offline");
       setLastServerCheck(new Date());
-      
-      // Uptime simulieren (könnte aus API kommen)
+
+      // Health-Daten abrufen wenn online
       if (connected) {
-        setServerUptime("Seit letztem Neustart");
+        try {
+          const response = await fetch(
+            "http://100.121.103.107:3002/api/health",
+          );
+          if (response.ok) {
+            const health = await response.json();
+            setServerHealth(health);
+            setServerUptime(health.uptimeFormatted || "Unbekannt");
+          }
+        } catch (error) {
+          setServerUptime("Seit letztem Neustart");
+        }
       } else {
         setServerUptime(null);
+        setServerHealth(null);
       }
     } catch (error) {
       setServerStatus("offline");
       setLastServerCheck(new Date());
       setServerUptime(null);
+      setServerHealth(null);
     } finally {
       setIsCheckingServer(false);
+    }
+  };
+
+  // Server-Logs laden
+  const loadServerLogs = async () => {
+    setIsLoadingLogs(true);
+    try {
+      const response = await fetch(
+        "http://100.121.103.107:3002/api/logs?lines=50",
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setServerLogs(data.logs || []);
+      } else {
+        setServerLogs(["Fehler beim Laden der Logs"]);
+      }
+    } catch (error) {
+      setServerLogs(["Server nicht erreichbar oder Logs nicht verfügbar"]);
+    } finally {
+      setIsLoadingLogs(false);
     }
   };
 
@@ -515,16 +554,16 @@ function Settings() {
                       serverStatus === "online"
                         ? "bg-green-500 animate-pulse"
                         : serverStatus === "offline"
-                        ? "bg-red-500"
-                        : "bg-yellow-500 animate-pulse"
+                          ? "bg-red-500"
+                          : "bg-yellow-500 animate-pulse"
                     }`}
                   />
                   <span className="font-medium text-slate-700">
                     {serverStatus === "online"
                       ? "Server läuft"
                       : serverStatus === "offline"
-                      ? "Server offline"
-                      : "Prüfe..."}
+                        ? "Server offline"
+                        : "Prüfe..."}
                   </span>
                 </div>
                 <button
@@ -532,7 +571,9 @@ function Settings() {
                   disabled={isCheckingServer}
                   className="px-3 py-1.5 bg-distillery-600 text-white rounded-lg hover:bg-distillery-700 disabled:opacity-50 flex items-center gap-2 text-sm"
                 >
-                  <RefreshCw className={`w-4 h-4 ${isCheckingServer ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`w-4 h-4 ${isCheckingServer ? "animate-spin" : ""}`}
+                  />
                   Prüfen
                 </button>
               </div>
@@ -578,9 +619,10 @@ function Settings() {
                   Server nicht erreichbar
                 </h3>
                 <p className="text-sm text-yellow-800 mb-3">
-                  Der Node.js API Server läuft nicht. Starte ihn manuell oder richte automatischen Start ein.
+                  Der Node.js API Server läuft nicht. Starte ihn manuell oder
+                  richte automatischen Start ein.
                 </p>
-                
+
                 <div className="space-y-3">
                   <div>
                     <p className="text-xs font-semibold text-yellow-900 mb-1">
@@ -589,7 +631,9 @@ function Settings() {
                     <div className="bg-yellow-100 rounded p-2 font-mono text-xs text-yellow-900 space-y-1">
                       <div>ssh admin@100.121.103.107</div>
                       <div>cd /volume1/Gurktaler/api</div>
-                      <div>nohup node server.js &gt; server.log 2&gt;&amp;1 &amp;</div>
+                      <div>
+                        nohup node server.js &gt; server.log 2&gt;&amp;1 &amp;
+                      </div>
                     </div>
                   </div>
 
@@ -599,11 +643,17 @@ function Settings() {
                     </p>
                     <ul className="text-xs text-yellow-800 space-y-1 ml-4 list-disc">
                       <li>Synology DSM → Systemsteuerung → Aufgabenplanung</li>
-                      <li>Erstellen → Geplante Aufgabe → Benutzerdefiniertes Script</li>
+                      <li>
+                        Erstellen → Geplante Aufgabe → Benutzerdefiniertes
+                        Script
+                      </li>
                       <li>Task-Name: "Gurktaler API Server"</li>
                       <li>Benutzer: root</li>
                       <li>Zeitplan: Bei Start</li>
-                      <li>Script: cd /volume1/Gurktaler/api &amp;&amp; node server.js &gt; server.log 2&gt;&amp;1</li>
+                      <li>
+                        Script: cd /volume1/Gurktaler/api &amp;&amp; node
+                        server.js &gt; server.log 2&gt;&amp;1
+                      </li>
                     </ul>
                   </div>
 
@@ -621,15 +671,112 @@ function Settings() {
 
             {/* Success Message */}
             {serverStatus === "online" && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center gap-2 text-green-900">
                   <CheckCircle className="w-4 h-4" />
                   <p className="text-sm font-medium">
                     Server läuft einwandfrei!
                   </p>
                 </div>
-                <p className="text-xs text-green-700 mt-1">
+                <p className="text-xs text-green-700">
                   Die PWA kann auf alle NAS-Ressourcen zugreifen.
+                </p>
+
+                {/* Health Metrics */}
+                {serverHealth && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2 border-t border-green-200">
+                    <div className="text-center">
+                      <p className="text-xs text-green-600">Memory (Used)</p>
+                      <p className="font-mono text-sm text-green-900">
+                        {serverHealth.memory?.heapUsed}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-green-600">Memory (Total)</p>
+                      <p className="font-mono text-sm text-green-900">
+                        {serverHealth.memory?.heapTotal}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-green-600">PID</p>
+                      <p className="font-mono text-sm text-green-900">
+                        {serverHealth.pid}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-green-600">Node Version</p>
+                      <p className="font-mono text-sm text-green-900">
+                        {serverHealth.version}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Log Viewer Toggle */}
+                <div className="pt-2 border-t border-green-200">
+                  <button
+                    onClick={() => {
+                      setShowLogs(!showLogs);
+                      if (!showLogs) loadServerLogs();
+                    }}
+                    className="w-full px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 text-sm"
+                  >
+                    <FileText className="w-4 h-4" />
+                    {showLogs ? "Logs ausblenden" : "Server-Logs anzeigen"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Log Viewer */}
+            {showLogs && serverStatus === "online" && (
+              <div className="bg-slate-900 rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Server-Logs (letzte 50 Zeilen)
+                  </h3>
+                  <button
+                    onClick={loadServerLogs}
+                    disabled={isLoadingLogs}
+                    className="px-2 py-1 bg-slate-700 text-slate-200 rounded text-xs hover:bg-slate-600 disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <RefreshCw
+                      className={`w-3 h-3 ${isLoadingLogs ? "animate-spin" : ""}`}
+                    />
+                    Aktualisieren
+                  </button>
+                </div>
+
+                <div className="bg-slate-950 rounded p-3 max-h-96 overflow-y-auto font-mono text-xs">
+                  {isLoadingLogs ? (
+                    <p className="text-slate-400">Lade Logs...</p>
+                  ) : serverLogs.length > 0 ? (
+                    serverLogs.map((log, index) => (
+                      <div
+                        key={index}
+                        className={`py-0.5 ${
+                          log.includes("🚨") ||
+                          log.includes("❌") ||
+                          log.includes("KRITISCH")
+                            ? "text-red-400"
+                            : log.includes("⚠️") || log.includes("WARNUNG")
+                              ? "text-yellow-400"
+                              : log.includes("✅") || log.includes("💾")
+                                ? "text-green-400"
+                                : "text-slate-300"
+                        }`}
+                      >
+                        {log}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-400">Keine Logs verfügbar</p>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-400 mt-2">
+                  💡 Logs werden in server.log auf dem NAS gespeichert
                 </p>
               </div>
             )}
@@ -637,8 +784,10 @@ function Settings() {
             {/* Documentation Link */}
             <div className="pt-3 border-t border-slate-200">
               <p className="text-xs text-slate-500">
-                💡 <strong>Tipp:</strong> Der Server wird automatisch alle 30 Sekunden geprüft. 
-                Für Details siehe <span className="font-mono">check-server.ps1</span> und <span className="font-mono">server.js</span>
+                💡 <strong>Tipp:</strong> Der Server wird automatisch alle 30
+                Sekunden geprüft. Für Details siehe{" "}
+                <span className="font-mono">check-server.ps1</span> und{" "}
+                <span className="font-mono">server.js</span>
               </p>
             </div>
           </div>

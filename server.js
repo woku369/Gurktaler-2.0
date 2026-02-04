@@ -336,6 +336,55 @@ const server = http.createServer(async (req, res) => {
       }
     }
     
+    // 📊 GET /api/logs - Server-Logs abrufen
+    else if (req.method === 'GET' && url.pathname === '/api/logs') {
+      const lines = parseInt(url.searchParams.get('lines') || '100');
+      const logPath = path.join(__dirname, 'server.log');
+      
+      try {
+        const logContent = await fs.readFile(logPath, 'utf8');
+        const logLines = logContent.split('\n').filter(line => line.trim());
+        const lastLines = logLines.slice(-lines);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: true, 
+          logs: lastLines,
+          total: logLines.length,
+          returned: lastLines.length
+        }));
+      } catch (error) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Log file not found or empty',
+          logs: []
+        }));
+      }
+    }
+    
+    // 💚 GET /api/health - Health-Check mit Metriken
+    else if (req.method === 'GET' && url.pathname === '/api/health') {
+      const uptime = process.uptime();
+      const memoryUsage = process.memoryUsage();
+      
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        success: true,
+        status: 'online',
+        uptime: Math.floor(uptime),
+        uptimeFormatted: formatUptime(uptime),
+        memory: {
+          rss: Math.round(memoryUsage.rss / 1024 / 1024) + ' MB',
+          heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024) + ' MB',
+          heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024) + ' MB'
+        },
+        pid: process.pid,
+        version: process.version,
+        platform: process.platform
+      }));
+    }
+    
     // 404 - Not found
     else {
       res.writeHead(404, { 'Content-Type': 'application/json' });
@@ -347,6 +396,16 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ error: error.message }));
   }
 });
+
+function formatUptime(seconds) {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Gurktaler API Server running on port ${PORT} (accessible on all interfaces)`);

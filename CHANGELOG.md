@@ -7,11 +7,52 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.7.3] - 2026-02-04
+
+### ✨ Neue Features
+
+#### 🖥️ PWA Server-Monitoring - Phase 12 ABGESCHLOSSEN ✅
+
+**Log-Viewer in der App:**
+- Letzte 50 Zeilen von server.log direkt in Settings anzeigen
+- Farbcodierung: Rot (Fehler/KRITISCH), Gelb (Warnung), Grün (Erfolg)
+- Refresh-Button für manuelle Aktualisierung
+- Scrollbarer Container mit Terminal-Look (schwarzer Hintergrund)
+- API-Endpoint: GET /api/logs?lines=50
+
+**Health-Metriken:**
+- Memory Usage: Heap Used / Heap Total in MB
+- Process ID (PID) für Monitoring
+- Node.js Version
+- Uptime formatiert (Tage/Stunden/Minuten)
+- API-Endpoint: GET /api/health
+- Automatische Abfrage bei Status-Check
+
+**Server.js Erweiterungen:**
+- Neuer Endpoint: /api/logs - Server-Logs abrufen
+- Neuer Endpoint: /api/health - Health-Check mit Metriken
+- formatUptime() Helper-Funktion
+- CORS-Header für alle Endpoints
+
+**UI-Verbesserungen:**
+- Health-Metriken im grünen Success-Banner
+- "Server-Logs anzeigen" Button (Toggle)
+- Log-Viewer mit dunklem Theme und Syntax-Highlighting
+- Responsive Grid für Health-Daten (2x2 / 4x1)
+
+### 📚 Dokumentation
+- README.md aktualisiert: PWA Server-Monitoring komplett
+- ROADMAP.md: Phase 12 als ✅ ABGESCHLOSSEN markiert
+- Documentation.tsx: Log-Viewer und Health-Metriken How-To hinzugefügt
+- AI_ASSISTANT_RULES.md: Regeln für automatische Dokumentation
+
+---
+
 ## [1.7.2] - 2026-02-04
 
 ### ✨ Neue Features
 
-#### 🖥️ PWA Server-Monitoring (Phase 12)
+#### 🖥️ PWA Server-Monitoring (Phase 12 - Teil 1)
 - **Server-Status Section in Settings:**
   - Live-Status-Anzeige mit farbigen Indikatoren (Grün/Rot/Gelb)
   - Manueller Status-Check Button mit Refresh-Animation
