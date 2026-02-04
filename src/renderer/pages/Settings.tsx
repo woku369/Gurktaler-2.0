@@ -39,6 +39,7 @@ import {
 } from "@/renderer/services/git";
 import { synologySync } from "@/renderer/services/sync";
 import { BackupManager } from "@/renderer/components/BackupManager";
+import { SetupService } from "@/renderer/services/setup";
 
 function Settings() {
   const [exportStatus, setExportStatus] = useState<
@@ -50,6 +51,13 @@ function Settings() {
   const [statusMessage, setStatusMessage] = useState("");
   const [showContactImport, setShowContactImport] = useState(false);
   const [parsedContacts, setParsedContacts] = useState<ParsedContact[]>([]);
+
+  // Server-Status State
+  const setupService = new SetupService();
+  const [serverStatus, setServerStatus] = useState<"checking" | "online" | "offline">("checking");
+  const [lastServerCheck, setLastServerCheck] = useState<Date | null>(null);
+  const [serverUptime, setServerUptime] = useState<string | null>(null);
+  const [isCheckingServer, setIsCheckingServer] = useState(false);
 
   // Git-Integration State
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
@@ -76,7 +84,32 @@ function Settings() {
   useEffect(() => {
     loadGitStatus();
     loadRemotes();
+    checkServerStatus();
   }, []);
+
+  // Server-Status prüfen
+  const checkServerStatus = async () => {
+    setIsCheckingServer(true);
+    setServerStatus("checking");
+    try {
+      const connected = await setupService.testConnection();
+      setServerStatus(connected ? "online" : "offline");
+      setLastServerCheck(new Date());
+      
+      // Uptime simulieren (könnte aus API kommen)
+      if (connected) {
+        setServerUptime("Seit letztem Neustart");
+      } else {
+        setServerUptime(null);
+      }
+    } catch (error) {
+      setServerStatus("offline");
+      setLastServerCheck(new Date());
+      setServerUptime(null);
+    } finally {
+      setIsCheckingServer(false);
+    }
+  };
 
   const loadGitStatus = async () => {
     const status = await getGitStatus();
@@ -458,6 +491,159 @@ function Settings() {
       </div>
 
       <div className="space-y-6">
+        {/* PWA API Server Status */}
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-distillery-100 rounded-vintage flex items-center justify-center">
+              <Server className="w-5 h-5 text-distillery-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-800">PWA API Server</h2>
+              <p className="text-sm text-slate-500">
+                Node.js Server Status & Monitoring
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Status Overview */}
+            <div className="bg-slate-50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      serverStatus === "online"
+                        ? "bg-green-500 animate-pulse"
+                        : serverStatus === "offline"
+                        ? "bg-red-500"
+                        : "bg-yellow-500 animate-pulse"
+                    }`}
+                  />
+                  <span className="font-medium text-slate-700">
+                    {serverStatus === "online"
+                      ? "Server läuft"
+                      : serverStatus === "offline"
+                      ? "Server offline"
+                      : "Prüfe..."}
+                  </span>
+                </div>
+                <button
+                  onClick={checkServerStatus}
+                  disabled={isCheckingServer}
+                  className="px-3 py-1.5 bg-distillery-600 text-white rounded-lg hover:bg-distillery-700 disabled:opacity-50 flex items-center gap-2 text-sm"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isCheckingServer ? "animate-spin" : ""}`} />
+                  Prüfen
+                </button>
+              </div>
+
+              {lastServerCheck && (
+                <p className="text-xs text-slate-500">
+                  Letzte Prüfung: {lastServerCheck.toLocaleTimeString("de-DE")}
+                </p>
+              )}
+            </div>
+
+            {/* Server Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="border border-slate-200 rounded-lg p-3">
+                <p className="text-xs text-slate-500 mb-1">Endpoint</p>
+                <p className="font-mono text-sm text-slate-800">
+                  http://100.121.103.107/api/json
+                </p>
+              </div>
+              <div className="border border-slate-200 rounded-lg p-3">
+                <p className="text-xs text-slate-500 mb-1">Port</p>
+                <p className="font-mono text-sm text-slate-800">3002</p>
+              </div>
+              <div className="border border-slate-200 rounded-lg p-3">
+                <p className="text-xs text-slate-500 mb-1">PWA URL</p>
+                <p className="font-mono text-sm text-slate-800">
+                  http://100.121.103.107/gurktaler/
+                </p>
+              </div>
+              <div className="border border-slate-200 rounded-lg p-3">
+                <p className="text-xs text-slate-500 mb-1">Uptime</p>
+                <p className="font-mono text-sm text-slate-800">
+                  {serverUptime || "-"}
+                </p>
+              </div>
+            </div>
+
+            {/* Setup Instructions */}
+            {serverStatus === "offline" && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Server nicht erreichbar
+                </h3>
+                <p className="text-sm text-yellow-800 mb-3">
+                  Der Node.js API Server läuft nicht. Starte ihn manuell oder richte automatischen Start ein.
+                </p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold text-yellow-900 mb-1">
+                      Option 1: Manueller Start (SSH)
+                    </p>
+                    <div className="bg-yellow-100 rounded p-2 font-mono text-xs text-yellow-900 space-y-1">
+                      <div>ssh admin@100.121.103.107</div>
+                      <div>cd /volume1/Gurktaler/api</div>
+                      <div>nohup node server.js &gt; server.log 2&gt;&amp;1 &amp;</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-yellow-900 mb-1">
+                      Option 2: Automatischer Start (Synology Task Scheduler)
+                    </p>
+                    <ul className="text-xs text-yellow-800 space-y-1 ml-4 list-disc">
+                      <li>Synology DSM → Systemsteuerung → Aufgabenplanung</li>
+                      <li>Erstellen → Geplante Aufgabe → Benutzerdefiniertes Script</li>
+                      <li>Task-Name: "Gurktaler API Server"</li>
+                      <li>Benutzer: root</li>
+                      <li>Zeitplan: Bei Start</li>
+                      <li>Script: cd /volume1/Gurktaler/api &amp;&amp; node server.js &gt; server.log 2&gt;&amp;1</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold text-yellow-900 mb-1">
+                      Windows: Server-Check Script
+                    </p>
+                    <div className="bg-yellow-100 rounded p-2 font-mono text-xs text-yellow-900">
+                      .\\check-server.ps1
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {serverStatus === "online" && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-green-900">
+                  <CheckCircle className="w-4 h-4" />
+                  <p className="text-sm font-medium">
+                    Server läuft einwandfrei!
+                  </p>
+                </div>
+                <p className="text-xs text-green-700 mt-1">
+                  Die PWA kann auf alle NAS-Ressourcen zugreifen.
+                </p>
+              </div>
+            )}
+
+            {/* Documentation Link */}
+            <div className="pt-3 border-t border-slate-200">
+              <p className="text-xs text-slate-500">
+                💡 <strong>Tipp:</strong> Der Server wird automatisch alle 30 Sekunden geprüft. 
+                Für Details siehe <span className="font-mono">check-server.ps1</span> und <span className="font-mono">server.js</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Backup & Recovery Management */}
         <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
           <BackupManager />

@@ -70,6 +70,7 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **Excel-Import/Export**: Zutaten & Gebinde mit Template-Generator
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
 - **PWA (Android/Mobile)**: Installierbare Web-App, Offline-Funktionalität, Quick-Note Button, Bilder in Notizen
+- **PWA Server-Monitoring**: Live-Status-Anzeige in Settings, Auto-Check alle 30s, Setup-Anleitungen für Synology Task Scheduler
 - **UI/UX**: Globaler Loading-Spinner, Auto-Close Modals, Mobile Button-Layouts
 
 ### In Entwicklung 🔄

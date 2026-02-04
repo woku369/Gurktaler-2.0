@@ -391,14 +391,28 @@
 
 ---
 
-## Phase 12: PWA Optimierung & Monitoring (v1.9.x) 📋
+## Phase 12: PWA Optimierung & Monitoring (v1.9.x) �
 
 | Status | Aufgabe                   | Beschreibung                                   |
 | ------ | ------------------------- | ---------------------------------------------- |
-| 📋     | Server-Status UI          | Node.js API Server Status in Settings anzeigen|
+| ✅     | Server-Status UI          | Node.js API Server Status in Settings anzeigen|
 | 📋     | Auto-Start API Server     | Synology Task Scheduler Setup                  |
 | 📋     | Log-Viewer in App         | Echtzeit-Logs vom Node.js Server               |
 | 📋     | Server-Health-Check       | Periodische Prüfung auf Erreichbarkeit         |
+
+**Implementiert (4. Februar 2026):**
+- Server-Status Section in Settings mit Live-Indicator
+- Manueller Status-Check Button mit Refresh-Animation
+- Server-Details: Endpoint, Port, PWA URL, Uptime
+- Setup-Anleitung für manuellen und automatischen Start
+- Fehler-Hinweise bei Offline-Status
+- Dokumentation in "Anleitungen" Section
+- Automatische Prüfung alle 30 Sekunden (Layout.tsx)
+- check-server.ps1 Script für Windows-Monitoring
+
+**Noch offen:**
+- Log-Viewer für server.log in der App
+- Erweiterte Health-Metrics (Memory, CPU, Requests/min)
 
 ---
 

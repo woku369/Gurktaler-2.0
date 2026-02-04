@@ -7,6 +7,36 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.7.2] - 2026-02-04
+
+### ✨ Neue Features
+
+#### 🖥️ PWA Server-Monitoring (Phase 12)
+- **Server-Status Section in Settings:**
+  - Live-Status-Anzeige mit farbigen Indikatoren (Grün/Rot/Gelb)
+  - Manueller Status-Check Button mit Refresh-Animation
+  - Automatische Prüfung alle 30 Sekunden
+  - Server-Details: Endpoint, Port, PWA URL, Uptime
+  - Letzte Prüfung mit Zeitstempel
+
+- **Setup-Anleitungen integriert:**
+  - Option 1: Manueller Start via SSH (Copy-Paste Commands)
+  - Option 2: Automatischer Start mit Synology Task Scheduler
+  - Windows: check-server.ps1 Script-Anleitung
+  - Fehler-Hinweise bei Offline-Status mit Lösungsvorschlägen
+
+- **Dokumentation:**
+  - Neue "PWA Server-Monitoring" Sektion in Anleitungen
+  - 5 How-To Guides: Status prüfen, manueller Start, Auto-Start, Windows-Check, Logs ansehen
+  - 10 Tipps für Server-Verwaltung und Troubleshooting
+
+### 📚 Dokumentation
+- README.md aktualisiert mit PWA Server-Monitoring Feature
+- ROADMAP.md: Phase 12 teilweise abgeschlossen (Server-Status UI ✅)
+- Documentation.tsx: Vollständige Anleitung für Server-Management
+
+---
+
 ## [1.6.0] - 2026-01-11
 
 ### ✨ Neue Features

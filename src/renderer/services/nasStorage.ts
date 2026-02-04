@@ -314,7 +314,9 @@ export class NasStorageProvider implements StorageProvider {
         await window.electronAPI.fileWriteJson(snapshotFile, currentData);
         
         // Cleanup: Behalte nur die letzten 10 Snapshots pro Datei
-        await this.cleanupOldSnapshots(fileName, 10);
+        if (fileName) {
+          await this.cleanupOldSnapshots(fileName, 10);
+        }
       }
     } catch (error) {
       console.warn('[NasStorage] ⚠️ Snapshot-Erstellung fehlgeschlagen:', error);
@@ -344,7 +346,7 @@ export class NasStorageProvider implements StorageProvider {
         
         for (const snapshot of toDelete) {
           try {
-            await window.electronAPI.fileDelete(snapshot.path);
+            await this.deleteFile(snapshot.path);
           } catch (error) {
             console.warn(`[NasStorage] ⚠️ Konnte Snapshot nicht löschen: ${snapshot.name}`);
           }

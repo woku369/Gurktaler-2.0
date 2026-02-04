@@ -18,6 +18,7 @@ import {
   Smartphone,
   ShieldAlert,
   Clock,
+  Database,
 } from "lucide-react";
 
 type Section = {
@@ -1041,13 +1042,146 @@ const sections: Section[] = [
     },
   },
   {
+    id: "backup-system",
+    title: "🛡️ 4-Ebenen Backup-System",
+    icon: Database,
+    content: {
+      subtitle: "Maximale Datensicherheit mit automatischer Mehrfach-Sicherung",
+      description:
+        "NEU in v1.7.1: Komplettes Backup-System mit 4 Sicherheitsebenen - automatische Snapshots, stündliche Backups, tägliche Vollsicherung und Read-Only-Fallback. Deine Daten sind bombensicher!",
+      howTo: [
+        {
+          title: "Ebene 1: Automatische Snapshots (immer aktiv)",
+          steps: [
+            "🔄 Erstellt AUTOMATISCH bei jedem Speichervorgang",
+            "📁 Speicherort: Y:\\zweipunktnull\\backups\\snapshots\\",
+            "📝 Format: dateiname_2026-02-04_14-30-15.json",
+            "⏱️ Retention: Letzte 10 Versionen pro Datei",
+            "💾 Keine Einrichtung nötig - läuft sofort!",
+            "🎯 Wiederherstellung: Einfach ältere Snapshot-Datei kopieren",
+          ],
+        },
+        {
+          title: "Ebene 2: Stündliche Backups (optional)",
+          steps: [
+            "⏰ Läuft jede Stunde via Task Scheduler",
+            "📁 Speicherort: Y:\\zweipunktnull\\backups\\backup_YYYY-MM-DD_HH-mm-ss\\",
+            "💾 Sichert: Komplette Database + Images + Documents",
+            "⏱️ Retention: 7 Tage (168 Wiederherstellungspunkte)",
+            "⚙️ Setup: Task Scheduler konfigurieren (siehe nächste Sektion)",
+            "📜 Script: backup-hourly.ps1",
+          ],
+        },
+        {
+          title: "Ebene 3: Tägliche Vollsicherung (empfohlen)",
+          steps: [
+            "🌙 Läuft täglich um 02:00 Uhr via Task Scheduler",
+            "📁 Speicherort: Y:\\zweipunktnull\\backups\\full\\backup_YYYY-MM-DD_HH-mm-ss\\",
+            "💾 Sichert: ALLES (Database + Images + Documents + Metadata)",
+            "⏱️ Retention: 7 Tage (automatische Cleanup)",
+            "📊 Erstellt backup-info.json mit Statistiken",
+            "⚙️ Setup: Task Scheduler konfigurieren (siehe unten)",
+            "📜 Script: backup-full.ps1",
+          ],
+        },
+        {
+          title: "Ebene 4: Read-Only Fallback (Notfall)",
+          steps: [
+            "🔒 Aktiviert sich AUTOMATISCH bei NAS-Ausfall",
+            "💾 Speichert Änderungen temporär in LocalStorage",
+            "⚠️ Gelbes Banner warnt vor Read-Only-Modus",
+            "🔄 Synchronisiert automatisch beim Reconnect",
+            "🛡️ Verhindert Datenverlust bei Verbindungsproblemen",
+            "✅ Keine Einrichtung nötig - Always-On-Safety",
+          ],
+        },
+      ],
+      tips: [
+        "🎯 Empfehlung: Aktiviere Ebene 1+3 (Snapshots + Tägliche Vollsicherung)",
+        "⚡ Ebene 2 optional für höchste Sicherheit (stündlich)",
+        "🔒 Ebene 4 läuft immer automatisch als Sicherheitsnetz",
+        "📂 Alle Backups liegen unter: Y:\\zweipunktnull\\backups\\",
+        "⏱️ Snapshot-Cleanup: Automatisch (10 neueste behalten)",
+        "🧹 Full-Backup-Cleanup: Automatisch nach 7 Tagen",
+        "📊 Monitoring: Siehe BACKUP_SYSTEM.md für PowerShell-Befehle",
+        "🚀 Startup-Check: App prüft NAS-Verbindung beim Start (3-Phasen-Check)",
+      ],
+    },
+  },
+  {
+    id: "backup-setup",
+    title: "⚙️ Task Scheduler Setup",
+    icon: Settings,
+    content: {
+      subtitle: "Automatische Backups mit Windows Task Scheduler einrichten",
+      description:
+        "Einmalige Einrichtung für automatische tägliche Vollsicherung (02:00 Uhr) und optionale stündliche Backups. Danach läuft alles automatisch!",
+      howTo: [
+        {
+          title: "Option A: Automatische Einrichtung (PowerShell)",
+          steps: [
+            "PowerShell als Administrator öffnen (Win+X → Windows PowerShell (Administrator))",
+            "cd C:\\Users\\wolfg\\Desktop\\zweipunktnullVS",
+            "Tägliche Vollsicherung: .\\backup-full.ps1 -SetupScheduledTask",
+            "Optionale Stündliche Backups: .\\backup-hourly.ps1 -SetupScheduledTask",
+            "Fertig! Überprüfe in Aufgabenplanung: taskschd.msc",
+          ],
+        },
+        {
+          title: "Option B: Manuelle Einrichtung (Vollsicherung)",
+          steps: [
+            "Windows-Taste → tippe: Aufgabenplanung → Enter",
+            "Rechtsklick 'Aufgabenplanungsbibliothek' → Aufgabe erstellen",
+            "Name: Gurktaler Vollsicherung (02:00)",
+            "Häkchen: 'Mit höchsten Privilegien ausführen'",
+            "Tab 'Trigger' → Neu → Täglich um 02:00 Uhr",
+            "Tab 'Aktionen' → Neu → Programm starten:",
+            "   Programm: powershell.exe",
+            '   Argumente: -NoProfile -ExecutionPolicy Bypass -File "C:\\Users\\wolfg\\Desktop\\zweipunktnullVS\\backup-full.ps1"',
+            "   Starten in: C:\\Users\\wolfg\\Desktop\\zweipunktnullVS",
+            "Tab 'Bedingungen' → Häkchen ENTFERNEN bei 'Nur bei Netzbetrieb'",
+            "OK → Passwort eingeben → OK",
+          ],
+        },
+        {
+          title: "Backup manuell testen",
+          steps: [
+            "PowerShell öffnen (nicht Administrator nötig)",
+            "cd C:\\Users\\wolfg\\Desktop\\zweipunktnullVS",
+            "Test Vollsicherung: .\\backup-full.ps1",
+            "Test Stündlich: .\\backup-hourly.ps1",
+            "Prüfe Ergebnis: Get-ChildItem Y:\\zweipunktnull\\backups\\full\\ -Directory | Sort-Object Name -Descending | Select-Object -First 1",
+          ],
+        },
+        {
+          title: "Monitoring & Troubleshooting",
+          steps: [
+            "Letzte 5 Backups: Get-ChildItem Y:\\zweipunktnull\\backups\\full\\ -Directory | Sort-Object Name -Descending | Select-Object -First 5",
+            "Backup-Größe prüfen: $latest = Get-ChildItem Y:\\zweipunktnull\\backups\\full\\ -Directory | Sort-Object Name -Descending | Select-Object -First 1; (Get-ChildItem $latest.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB",
+            "Task-Status prüfen: Get-ScheduledTask | Where-Object {$_.TaskName -like '*Gurktaler*'}",
+            "Task-Historie: Get-ScheduledTask -TaskName 'Gurktaler*' | Get-ScheduledTaskInfo",
+          ],
+        },
+      ],
+      tips: [
+        "🌙 Empfohlene Zeit: 02:00 Uhr (Nacht, keine Arbeit)",
+        "🔋 'Nur bei Netzbetrieb' deaktivieren für Laptops!",
+        "📊 backup-info.json enthält Statistiken (Dateien, Größe, Dauer)",
+        "🧹 Alte Backups werden automatisch gelöscht (7 Tage Retention)",
+        "⚠️ NAS muss verbunden sein: net use Y: \\\\100.121.103.107\\Gurktaler",
+        "📂 Vollständige Dokumentation: docs/BACKUP_SYSTEM.md",
+        "🔍 Exit-Codes: 0=Erfolg, 1=Fehler, prüfbar in Task-Historie",
+      ],
+    },
+  },
+  {
     id: "backup",
     title: "🚨 Notfall-Wiederherstellung",
     icon: ShieldAlert,
     content: {
       subtitle: "Datenrettung bei Datenverlust - Schritt für Schritt",
       description:
-        "Falls alle Daten in der App verschwunden sind: KEINE PANIK! Alle Daten werden stündlich auf dem NAS gesichert. Diese Anleitung hilft dir, Daten in wenigen Minuten wiederherzustellen - auch ohne VS Code im Büro.",
+        "Falls alle Daten in der App verschwunden sind: KEINE PANIK! Alle Daten werden mehrfach gesichert. Diese Anleitung hilft dir, Daten in wenigen Minuten wiederherzustellen - auch ohne VS Code im Büro.",
       howTo: [
         {
           title: "1. Sofort-Maßnahmen",
@@ -1188,6 +1322,85 @@ const sections: Section[] = [
         "⏰ Erste Ausführung: Bei nächster Anmeldung + jede Stunde danach",
         "🔒 Wichtig: Pfade müssen exakt stimmen (Anführungszeichen bei Leerzeichen!)",
         "💡 Alternative: Script manuell starten: .\\backup-hourly.ps1 in PowerShell",
+      ],
+    },
+  },
+  {
+    id: "pwa-server",
+    title: "🖥️ PWA Server-Monitoring",
+    icon: Server,
+    content: {
+      subtitle: "Node.js API Server Status & Verwaltung",
+      description:
+        "Die PWA (Progressive Web App) benötigt einen Node.js API Server auf dem Synology NAS, um auf Daten zugreifen zu können. Dieser läuft auf Port 3002 und stellt JSON-Dateien sowie Bilder bereit.",
+      howTo: [
+        {
+          title: "Server-Status in der App prüfen",
+          steps: [
+            "Öffne Einstellungen in der App",
+            "Ganz oben siehst du 'PWA API Server' Section",
+            "Status-Anzeige: Grün = Online, Rot = Offline, Gelb = Prüfe...",
+            "Button 'Prüfen' klicken für manuellen Check",
+            "Automatische Prüfung: Alle 30 Sekunden",
+          ],
+        },
+        {
+          title: "Server manuell starten (SSH)",
+          steps: [
+            "SSH-Verbindung zum NAS: ssh admin@100.121.103.107",
+            "Zum Verzeichnis wechseln: cd /volume1/Gurktaler/api",
+            "Server starten: nohup node server.js > server.log 2>&1 &",
+            "Prozess läuft im Hintergrund",
+            "Prüfen: curl http://localhost:3002/api/json?path=/database/projects.json",
+          ],
+        },
+        {
+          title: "Automatischer Start beim Boot (Synology Task)",
+          steps: [
+            "Synology DSM öffnen → Systemsteuerung → Aufgabenplanung",
+            "Erstellen → Geplante Aufgabe → Benutzerdefiniertes Script",
+            "Aufgabenname: 'Gurktaler API Server'",
+            "Benutzer: root (wichtig für Zugriffsrechte!)",
+            "Tab 'Zeitplan': Ereignis auswählen → Bei Start",
+            "Tab 'Aufgabeneinstellungen':",
+            "   Script: cd /volume1/Gurktaler/api && node server.js > server.log 2>&1",
+            "Speichern → Server startet automatisch bei NAS-Neustart",
+          ],
+        },
+        {
+          title: "Server-Status von Windows prüfen",
+          steps: [
+            "PowerShell öffnen",
+            "cd C:\\Users\\wolfg\\Desktop\\zweipunktnullVS",
+            ".\\check-server.ps1",
+            "Zeigt: NAS-Erreichbarkeit, Server-Status, Projekt-Count",
+            "Bei Offline: Anleitung zum manuellen Start wird angezeigt",
+            "Mit -Restart Flag: .\\check-server.ps1 -Restart",
+          ],
+        },
+        {
+          title: "Server-Logs ansehen",
+          steps: [
+            "SSH zum NAS: ssh admin@100.121.103.107",
+            "Log-Datei anzeigen: tail -f /volume1/Gurktaler/api/server.log",
+            "Alle API-Requests werden geloggt",
+            "Backup-Operationen werden dokumentiert",
+            "Fehler und Warnungen sichtbar",
+            "Ctrl+C zum Beenden",
+          ],
+        },
+      ],
+      tips: [
+        "🔄 Automatische Prüfung: Sidebar zeigt Live-Status (Wifi/WifiOff Icon)",
+        "🖥️ Desktop-App: Nutzt direkten NAS-Zugriff, benötigt KEINEN Server",
+        "📱 PWA/Mobile: Benötigt ZWINGEND den Node.js Server auf Port 3002",
+        "🌐 Endpoint: http://100.121.103.107/api/json",
+        "📂 Server-Code: server.js im Projekt-Root",
+        "💾 Backup-System: Server erstellt automatisch Backups vor Schreibvorgängen",
+        "🚨 Datenverlust-Schutz: Server blockt leere Arrays über volle Daten",
+        "⚠️ Bei Server-Ausfall: App zeigt roten Status, keine Schreibvorgänge möglich",
+        "🔧 Server-Port ändern: In server.js PORT-Variable anpassen",
+        "📊 Health-Check: /api/json?path=/database/projects.json liefert Projekt-Count",
       ],
     },
   },
