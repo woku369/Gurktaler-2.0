@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Tag as TagIcon } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Tag as TagIcon,
+  Grid3x3,
+  List,
+} from "lucide-react";
 import {
   tags as tagsService,
   tagAssignments as tagAssignmentsService,
@@ -11,6 +18,7 @@ export default function Tags() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [formData, setFormData] = useState({ name: "", color: "#10b981" });
 
   useEffect(() => {
@@ -73,7 +81,7 @@ export default function Tags() {
   };
 
   const filteredTags = tagsList.filter((tag) =>
-    tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+    tag.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const predefinedColors = [
@@ -98,13 +106,39 @@ export default function Tags() {
             Organisieren Sie Projekte, Produkte und Notizen
           </p>
         </div>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
-        >
-          <Plus className="w-5 h-5" />
-          Neuer Tag
-        </button>
+        <div className="flex gap-3">
+          <div className="flex border border-distillery-200 rounded-vintage overflow-hidden">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={`px-3 py-2 transition-colors ${
+                viewMode === "grid"
+                  ? "bg-gurktaler-500 text-white"
+                  : "bg-white text-distillery-600 hover:bg-distillery-50"
+              }`}
+              title="Kartenansicht"
+            >
+              <Grid3x3 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={`px-3 py-2 transition-colors ${
+                viewMode === "list"
+                  ? "bg-gurktaler-500 text-white"
+                  : "bg-white text-distillery-600 hover:bg-distillery-50"
+              }`}
+              title="Listenansicht"
+            >
+              <List className="w-5 h-5" />
+            </button>
+          </div>
+          <button
+            onClick={() => setIsFormOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
+          >
+            <Plus className="w-5 h-5" />
+            Neuer Tag
+          </button>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -198,65 +232,157 @@ export default function Tags() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTags.map((tag) => {
-            const usageCount = getTagUsageCount(tag.id);
-            const usageDetails = getTagUsageDetails(tag.id);
+        <>
+          {viewMode === "grid" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredTags.map((tag) => {
+                const usageCount = getTagUsageCount(tag.id);
+                const usageDetails = getTagUsageDetails(tag.id);
 
-            return (
-              <div
-                key={tag.id}
-                className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: tag.color }}
-                    />
-                    <span className="font-medium text-gray-900">
-                      {tag.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleEdit(tag)}
-                      className="p-1.5 text-gray-600 hover:text-gurktaler-primary hover:bg-gray-100 rounded transition-colors"
-                      title="Bearbeiten"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(tag.id)}
-                      className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title="Löschen"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  {usageCount > 0 ? (
-                    <div>
-                      <div className="font-medium text-gray-700">
-                        {usageCount} Verwendungen
+                return (
+                  <div
+                    key={tag.id}
+                    className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: tag.color }}
+                        />
+                        <span className="font-medium text-gray-900">
+                          {tag.name}
+                        </span>
                       </div>
-                      <div className="text-xs mt-1">{usageDetails}</div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleEdit(tag)}
+                          className="p-1.5 text-gray-600 hover:text-gurktaler-primary hover:bg-gray-100 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(tag.id)}
+                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  ) : (
-                    <span className="text-gray-400">Noch nicht verwendet</span>
-                  )}
-                </div>
 
-                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                  Erstellt:{" "}
-                  {new Date(tag.created_at).toLocaleDateString("de-DE")}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                    <div className="text-sm text-gray-600">
+                      {usageCount > 0 ? (
+                        <div>
+                          <div className="font-medium text-gray-700">
+                            {usageCount} Verwendungen
+                          </div>
+                          <div className="text-xs mt-1">{usageDetails}</div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">
+                          Noch nicht verwendet
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                      Erstellt:{" "}
+                      {new Date(tag.created_at).toLocaleDateString("de-DE")}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {viewMode === "list" && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      Farbe
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      Verwendungen
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                      Erstellt
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                      Aktionen
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredTags.map((tag) => {
+                    const usageCount = getTagUsageCount(tag.id);
+                    const usageDetails = getTagUsageDetails(tag.id);
+
+                    return (
+                      <tr
+                        key={tag.id}
+                        className="hover:bg-gray-25 transition-colors"
+                      >
+                        <td className="px-4 py-3">
+                          <div
+                            className="w-6 h-6 rounded-full"
+                            style={{ backgroundColor: tag.color }}
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-medium text-gray-900">
+                          {tag.name}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {usageCount > 0 ? (
+                            <div>
+                              <div className="font-medium text-gray-700">
+                                {usageCount} Verwendungen
+                              </div>
+                              <div className="text-xs mt-0.5">
+                                {usageDetails}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">
+                              Noch nicht verwendet
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {new Date(tag.created_at).toLocaleDateString("de-DE")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEdit(tag)}
+                              className="p-1.5 text-gray-600 hover:text-gurktaler-primary hover:bg-gray-100 rounded transition-colors"
+                              title="Bearbeiten"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(tag.id)}
+                              className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                              title="Löschen"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

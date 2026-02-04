@@ -6,6 +6,10 @@ import {
   FileSpreadsheet,
   Download,
   Upload,
+  Grid3x3,
+  List,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import {
   containers as containersService,
@@ -24,6 +28,7 @@ import {
   generateTemplate,
   exportContainers,
 } from "@/renderer/services/containerImport";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import type {
   Container,
   ContainerType,
@@ -52,10 +57,10 @@ function Containers() {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
   const [quickUrlContainer, setQuickUrlContainer] = useState<Container | null>(
-    null
+    null,
   );
   const [editingContainer, setEditingContainer] = useState<Container | null>(
-    null
+    null,
   );
   const [formData, setFormData] = useState<Partial<Container>>({
     name: "",
@@ -66,8 +71,9 @@ function Containers() {
     documents: [],
   });
   const [_copiedContainerId, setCopiedContainerId] = useState<string | null>(
-    null
+    null,
   );
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     loadData();
@@ -115,7 +121,7 @@ function Containers() {
     for (const container of allContainers) {
       imagesMap[container.id] = await imagesService.getByEntity(
         "container",
-        container.id
+        container.id,
       );
     }
     setContainerImages(imagesMap);
@@ -131,7 +137,7 @@ function Containers() {
       resetForm(); // This closes the form
     } else {
       const newContainer = await containersService.create(
-        formData as Omit<Container, "id" | "created_at">
+        formData as Omit<Container, "id" | "created_at">,
       );
       // Open the newly created container for editing (to add images/tags)
       setEditingContainer(newContainer);
@@ -235,20 +241,62 @@ function Containers() {
     setShowForm(false);
   };
 
-  const filteredContainers = containers.filter((cont) => {
-    const matchesSearch =
-      cont.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cont.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredContainers = containers
+    .filter((cont) => {
+      const matchesSearch =
+        cont.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cont.notes?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    let matchesTag = true;
-    if (selectedTagId) {
-      // Note: This is synchronous filtering, assignments already loaded
-      // We'll need to refactor this if we want to support dynamic tag filtering
-      matchesTag = false; // Placeholder - needs async refactor
+      let matchesTag = true;
+      if (selectedTagId) {
+        // Note: This is synchronous filtering, assignments already loaded
+        // We'll need to refactor this if we want to support dynamic tag filtering
+        matchesTag = false; // Placeholder - needs async refactor
+      }
+
+      return matchesSearch && matchesTag;
+    })
+    .sort((a, b) => {
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (reordered: Container[]) => {
+    // Update display_order only for containers that changed position
+    const updates = reordered
+      .map((container, index) => {
+        const currentContainer = filteredContainers.find(
+          (c) => c.id === container.id,
+        );
+        const oldOrder = currentContainer?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return containersService.update(container.id, {
+            display_order: index,
+          });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Container> => p !== null);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
     }
+  };
 
-    return matchesSearch && matchesTag;
-  });
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredContainers, handleReorder);
 
   return (
     <div className="p-8">
@@ -299,6 +347,32 @@ function Containers() {
 
       {/* Search & Tag Filter */}
       <div className="mb-6 flex gap-4">
+        {/* View Mode Toggle */}
+        <div className="flex rounded-lg border border-distillery-200 overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "grid"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Kartenansicht"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "list"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Listenansicht"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+
         <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
@@ -508,28 +582,120 @@ function Containers() {
       )}
 
       {/* Containers Grid */}
-      {filteredContainers.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredContainers.map((container) => (
-            <ContainerCard
-              key={container.id}
-              container={container}
-              image={containerImages[container.id]?.[0]}
-              isFavorite={false}
-              onToggleFavorite={() => {
-                favoritesService.toggle("container", container.id);
-                loadData();
-              }}
-              onEdit={() => handleEdit(container)}
-              onDelete={() => handleDelete(container.id)}
-              onAddUrl={() => handleQuickAddUrl(container)}
-              onAddDocument={() => handleQuickAddDocument(container)}
-              onAddImage={() => handleQuickAddImage(container)}
-              onCopy={() => handleCopyName(container.id)}
-              onUpdate={loadData}
-            />
-          ))}
-        </div>
+      {filteredContainers.length > 0 && viewMode === "grid" && (
+        <>
+          <div className="mb-2 text-xs text-distillery-500 italic font-body">
+            💡 Tipp: Karten können per Drag & Drop sortiert werden
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredContainers.map((container, index) => (
+              <div
+                key={container.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`transition-opacity ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+              >
+                <ContainerCard
+                  container={container}
+                  image={containerImages[container.id]?.[0]}
+                  isFavorite={false}
+                  onToggleFavorite={() => {
+                    favoritesService.toggle("container", container.id);
+                    loadData();
+                  }}
+                  onEdit={() => handleEdit(container)}
+                  onDelete={() => handleDelete(container.id)}
+                  onAddUrl={() => handleQuickAddUrl(container)}
+                  onAddDocument={() => handleQuickAddDocument(container)}
+                  onAddImage={() => handleQuickAddImage(container)}
+                  onCopy={() => handleCopyName(container.id)}
+                  onUpdate={loadData}
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Containers List */}
+      {filteredContainers.length > 0 && viewMode === "list" && (
+        <>
+          <div className="mb-2 text-xs text-distillery-500 italic font-body">
+            💡 Tipp: Zeilen können per Drag & Drop sortiert werden
+          </div>
+          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-distillery-50 border-b border-distillery-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Typ
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Volumen
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Preis
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-distillery-900">
+                    Aktionen
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-distillery-100">
+                {filteredContainers.map((container, index) => (
+                  <tr
+                    key={container.id}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`hover:bg-distillery-25 transition-colors cursor-move ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+                  >
+                    <td className="px-4 py-3 font-medium text-distillery-900">
+                      {container.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-700">
+                      {containerTypeLabels[container.type]}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {container.volume ? `${container.volume} ml` : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {container.price
+                        ? `€ ${container.price.toFixed(2)}`
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(container)}
+                          className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(container.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Quick Add URL Dialog */}

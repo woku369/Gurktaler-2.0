@@ -50,9 +50,10 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 ### Implementiert ✅
 - **Projekt-Verwaltung**: Vollständiges CRUD, Status-Tracking, Tag-Zuordnung, Timeline mit Gantt-Chart
 - **Workspace-System**: Projektebenen (Workspaces) mit Farben, Filtern und Sichtbarkeits-Toggles
-- **Timeline-Visualisierung**: Gantt-Chart mit Drag & Drop (Strg+Drag für horizontale Verschiebung)
+- **Timeline-Visualisierung**: Gantt-Chart mit Drag & Drop zum Umsortieren, Strg+Drag für horizontale Verschiebung (ändert Startdatum)
 - **Produkt-Versionierung**: Hierarchische Struktur (X → X1 → X2), Archivierung mit Begründung
-- **Drag & Drop Sortierung**: Produkte mit useDragSort-Hook
+- **Drag & Drop Sortierung**: Universell in allen Card-basierten Ansichten (Produkte, Rezepte, Zutaten, Notizen, Dokumente, Recherche, Gebinde)
+- **Listen-Ansichten**: Grid/List-Toggle für Ingredients (mit Kategorie-Sortierung) und Tags (mit Details)
 - **Batch-Druck**: Mehrere Produkte auswählen und drucken (BatchPrintView)
 - **Notizen & Chaosablage**: Quick-Entry, Markdown-Editor mit Live-Preview, Projekt-Zuordnung, Bild-Upload
 - **Kontakte**: Mehrere Telefonnummern/E-Mails pro Kontakt mit Labels, selbst definierbare Kategorien, vCard-Import
@@ -592,6 +593,51 @@ nohup node server.js > server.log 2>&1 &
 
 **Weitere Details:** Siehe [docs/MOBILE_API.md](docs/MOBILE_API.md)
 
+## Bedienung & Interaktionen
+
+### Timeline (Projekt-Timeline)
+
+Die Timeline-Ansicht zeigt Projekte als Gantt-Chart visualisiert:
+
+**Navigation:**
+- Filter nach Workspace (Dropdown oben)
+- Workspace-Sichtbarkeit per Checkbox-Toggle
+
+**Projekt-Interaktionen:**
+- **Doppelklick** auf Projekt-Balken: Öffnet Projekt-Detail-Dialog
+- **Drag & Drop** (vertikal): Ändert Reihenfolge der Projekte
+- **Strg+Drag** (horizontal): Verschiebt Projekt in der Zeit → ändert Startdatum
+- **Tooltip**: Zeigt "Doppelklick zum Öffnen • Ctrl+Drag zum horizontal Verschieben"
+
+**Zeitleiste:**
+- Quartale werden farblich abgegrenzt
+- Fortschritts-Balken zeigt Projektstatus (Opacity 40%)
+- Dauer in Wochen wird im Balken angezeigt
+
+### Drag & Drop Sortierung
+
+**Verfügbar in:**
+- Produkte, Rezepte, Zutaten, Notizen, Dokumente, Recherche, Gebinde, Tags
+
+**Verwendung:**
+- Karte anklicken und halten
+- An neue Position ziehen
+- Loslassen zum Speichern
+- Sortierreihenfolge wird automatisch in `display_order` gespeichert
+
+### Listen-Ansichten
+
+**Ingredients:**
+- **Toggle**: Grid/List Button oben rechts
+- **List View**: Kompakte Tabelle mit Name, Kategorie, Alkohol%, Preis, Einheit
+- **Sortierung**: "Nach Kategorie sortieren" gruppiert Zutaten nach Kategorie
+- **Drag & Drop**: Auch in List View verfügbar
+
+**Tags:**
+- **Toggle**: Grid/List Button oben rechts  
+- **List View**: Tabelle mit Farbe, Name, Verwendungen, Erstellt am
+- **Farb-Badge**: Visuell hervorgehobene Tag-Farbe in der Liste
+
 ## Versionierung
 
 - **Major** (X.0.0): Große Funktionserweiterungen
@@ -606,5 +652,5 @@ Proprietär - Nur für internen Gebrauch.
 
 ---
 
-**Aktuelle Version**: 1.1.0 (Mobile Write Support)  
-**Letztes Update**: 26. Dezember 2025
+**Aktuelle Version**: 1.7.1  
+**Letztes Update**: 4. Februar 2026

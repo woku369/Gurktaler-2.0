@@ -20,7 +20,7 @@ export default function ContactForm({
 }: ContactFormProps) {
   const [name, setName] = useState(contact?.name || "");
   const [lastName, setLastName] = useState(contact?.last_name || "");
-  const [type, setType] = useState(contact?.type || "supplier");
+  const [type, setType] = useState(contact?.type || "");
   const [company, setCompany] = useState(contact?.company || "");
   const [address, setAddress] = useState(contact?.address || "");
   const [notes, setNotes] = useState(contact?.notes || "");
@@ -55,6 +55,10 @@ export default function ContactForm({
     try {
       const cats = await categoriesService.getAll();
       setCategories(cats);
+      // Set default type to first category if not already set
+      if (!contact && !type && cats.length > 0) {
+        setType(cats[0].value);
+      }
     } catch (error) {
       console.error("Error loading contact categories:", error);
     }

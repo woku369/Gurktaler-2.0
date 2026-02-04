@@ -80,7 +80,7 @@ function Dashboard() {
   // Filter & Sort States
   const [filterStatus, setFilterStatus] = useState<TaskStatus | "all">("all");
   const [filterPriority, setFilterPriority] = useState<TaskPriority | "all">(
-    "all"
+    "all",
   );
   const [filterProject, setFilterProject] = useState<string>("all");
   const [sortBy, setSortBy] = useState<
@@ -105,7 +105,7 @@ function Dashboard() {
       .catch((error) => {
         console.warn(
           "Google Calendar konnte nicht initialisiert werden:",
-          error
+          error,
         );
       });
   }, []);
@@ -367,8 +367,8 @@ function Dashboard() {
         task.status === "completed"
           ? "COMPLETED"
           : task.status === "in-progress"
-          ? "IN-PROCESS"
-          : "NEEDS-ACTION"
+            ? "IN-PROCESS"
+            : "NEEDS-ACTION"
       }`,
       task.completed_at
         ? `COMPLETED:${
@@ -448,7 +448,7 @@ function Dashboard() {
     } catch (error) {
       console.error("Google Calendar Login fehlgeschlagen:", error);
       alert(
-        "❌ Google Calendar Login fehlgeschlagen. Bitte versuche es erneut."
+        "❌ Google Calendar Login fehlgeschlagen. Bitte versuche es erneut.",
       );
     }
   };
@@ -471,7 +471,7 @@ function Dashboard() {
     try {
       const result = await syncAllTasksToGoogleCalendar(todoList);
       alert(
-        `✅ Synchronisierung abgeschlossen!\n\n${result.success} Aufgaben erfolgreich synchronisiert\n${result.failed} Fehler`
+        `✅ Synchronisierung abgeschlossen!\n\n${result.success} Aufgaben erfolgreich synchronisiert\n${result.failed} Fehler`,
       );
     } catch (error) {
       console.error("Sync fehlgeschlagen:", error);
@@ -530,6 +530,80 @@ function Dashboard() {
         <p className="text-distillery-600 font-body">
           Willkommen bei Gurktaler 2.0 — Tradition trifft Innovation
         </p>
+      </div>
+
+      {/* Schnellzugriff & Favoriten */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
+          <h2 className="font-heading font-semibold text-distillery-900 mb-4">
+            Schnellzugriff
+          </h2>
+          <div className="space-y-2">
+            <button
+              onClick={() => handleQuickAction("/notes")}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
+            >
+              <Plus className="w-5 h-5" />
+              Neue Notiz
+            </button>
+            <button
+              onClick={() => handleQuickAction("/projects")}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-100 transition-colors border-vintage border-distillery-200 font-body"
+            >
+              <Plus className="w-5 h-5" />
+              Neues Projekt
+            </button>
+            <button
+              onClick={() => handleQuickAction("/products")}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-100 transition-colors border-vintage border-distillery-200 font-body"
+            >
+              <Plus className="w-5 h-5" />
+              Neues Produkt
+            </button>
+          </div>
+        </div>
+
+        {/* Favorites Widget */}
+        {favoriteItems.length > 0 ? (
+          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-5 h-5 text-bronze-500 fill-bronze-500" />
+              <h2 className="font-heading font-semibold text-distillery-900">
+                Favoriten
+              </h2>
+            </div>
+            <div className="space-y-1">
+              {favoriteItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickAction(item.route)}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gurktaler-50 rounded-vintage transition-colors"
+                  >
+                    <Icon className="w-4 h-4 text-gurktaler-600 flex-shrink-0" />
+                    <span className="text-sm text-distillery-700 truncate font-body">
+                      {item.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Star className="w-5 h-5 text-bronze-500 fill-bronze-500" />
+              <h2 className="font-heading font-semibold text-distillery-900">
+                Favoriten
+              </h2>
+            </div>
+            <p className="text-sm text-distillery-600 font-body">
+              Markiere Projekte, Produkte und mehr als Favoriten für schnellen
+              Zugriff
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stats */}
@@ -776,20 +850,20 @@ function Dashboard() {
                                 day: "2-digit",
                                 month: "2-digit",
                                 year: "numeric",
-                              }
+                              },
                             )}
                           </span>
                         )}
                         {task.project_id &&
                           (() => {
                             const project = availableProjects.find(
-                              (p) => p.id === task.project_id
+                              (p) => p.id === task.project_id,
                             );
                             if (!project) return null;
 
                             const workspace = project.workspace_id
                               ? workspaces.find(
-                                  (w) => w.id === project.workspace_id
+                                  (w) => w.id === project.workspace_id,
                                 )
                               : null;
 
@@ -820,14 +894,14 @@ function Dashboard() {
                     </div>
                     <div
                       className={`flex-shrink-0 ${getPriorityColor(
-                        task.priority
+                        task.priority,
                       )}`}
                     >
                       {getPriorityIcon(task.priority)}
                     </div>
                     <a
                       href={`mailto:?subject=${encodeURIComponent(
-                        `Aufgabe: ${task.title}`
+                        `Aufgabe: ${task.title}`,
                       )}&body=${encodeURIComponent(
                         `Aufgabe: ${task.title}\n` +
                           (task.description
@@ -838,23 +912,23 @@ function Dashboard() {
                             : "") +
                           (task.due_date
                             ? `Fällig am: ${new Date(
-                                task.due_date
+                                task.due_date,
                               ).toLocaleDateString("de-DE")}\n`
                             : "") +
                           `Priorität: ${
                             task.priority === "high"
                               ? "Hoch"
                               : task.priority === "medium"
-                              ? "Mittel"
-                              : "Niedrig"
+                                ? "Mittel"
+                                : "Niedrig"
                           }\n` +
                           `Status: ${
                             task.status === "open"
                               ? "Offen"
                               : task.status === "in-progress"
-                              ? "In Arbeit"
-                              : "Erledigt"
-                          }`
+                                ? "In Arbeit"
+                                : "Erledigt"
+                          }`,
                       )}`}
                       className="flex-shrink-0 text-blue-600 hover:text-blue-700"
                       title="Per E-Mail teilen"
@@ -952,65 +1026,124 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Schnellzugriff & Favoriten */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
-            <h2 className="font-heading font-semibold text-distillery-900 mb-4">
-              Schnellzugriff
+        {/* Google Calendar Widget */}
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200">
+          <div className="p-4 border-b-vintage border-distillery-200 bg-gurktaler-50">
+            <h2 className="font-heading font-semibold text-distillery-900 flex items-center gap-2">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              Google Calendar
             </h2>
-            <div className="space-y-2">
-              <button
-                onClick={() => handleQuickAction("/notes")}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-500 text-white rounded-vintage hover:bg-gurktaler-600 transition-all shadow-md font-body font-semibold"
-              >
-                <Plus className="w-5 h-5" />
-                Neue Notiz
-              </button>
-              <button
-                onClick={() => handleQuickAction("/projects")}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-100 transition-colors border-vintage border-distillery-200 font-body"
-              >
-                <Plus className="w-5 h-5" />
-                Neues Projekt
-              </button>
-              <button
-                onClick={() => handleQuickAction("/products")}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gurktaler-50 text-gurktaler-700 rounded-vintage hover:bg-gurktaler-100 transition-colors border-vintage border-distillery-200 font-body"
-              >
-                <Plus className="w-5 h-5" />
-                Neues Produkt
-              </button>
-            </div>
           </div>
-
-          {/* Favorites Widget */}
-          {favoriteItems.length > 0 && (
-            <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Star className="w-5 h-5 text-bronze-500 fill-bronze-500" />
-                <h2 className="font-heading font-semibold text-distillery-900">
-                  Favoriten
-                </h2>
-              </div>
-              <div className="space-y-1">
-                {favoriteItems.map((item, index) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleQuickAction(item.route)}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gurktaler-50 rounded-vintage transition-colors"
-                    >
-                      <Icon className="w-4 h-4 text-gurktaler-600 flex-shrink-0" />
-                      <span className="text-sm text-distillery-700 truncate font-body">
-                        {item.name}
+          <div className="p-4">
+            {googleCalendarReady ? (
+              googleCalendarLoggedIn ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-vintage">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-green-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="text-sm font-medium text-green-800 font-body">
+                        Verbunden
                       </span>
+                    </div>
+                    <button
+                      onClick={handleGoogleCalendarLogout}
+                      className="text-xs px-2 py-1 bg-white text-green-700 border border-green-300 rounded hover:bg-green-50 transition-colors font-body"
+                    >
+                      Trennen
                     </button>
-                  );
-                })}
+                  </div>
+                  <p className="text-sm text-distillery-600 font-body">
+                    Deine Aufgaben werden mit Google Calendar synchronisiert.
+                    Nutze die Sync-Buttons bei den Aufgaben.
+                  </p>
+                  <div className="pt-3 border-t border-distillery-100">
+                    <a
+                      href="https://calendar.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-gurktaler-600 hover:text-gurktaler-700 font-body"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Google Calendar öffnen
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-distillery-600 font-body">
+                    Verbinde dich mit Google Calendar um deine Aufgaben zu
+                    synchronisieren.
+                  </p>
+                  <button
+                    onClick={handleGoogleCalendarLogin}
+                    className="w-full px-4 py-2 bg-blue-500 text-white rounded-vintage hover:bg-blue-600 transition-colors font-body font-semibold flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    Mit Google verbinden
+                  </button>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-8">
+                <svg
+                  className="w-8 h-8 mx-auto text-distillery-300 mb-3 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <p className="text-sm text-distillery-500 font-body">
+                  Wird geladen...
+                </p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

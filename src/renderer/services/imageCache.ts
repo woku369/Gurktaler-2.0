@@ -1,11 +1,14 @@
 /**
  * Image Cache Service
  * 
- * Löst das Performance-Problem beim Laden von images.json (23 MB):
- * - Lädt images.json nur einmal beim ersten Zugriff
- * - Hält alle Bilder im Speicher (Cache)
+ * Löst das Performance-Problem beim Laden von images.json:
+ * - Lädt images.json nur einmal beim ersten Zugriff (nur Metadaten, kein Base64!)
+ * - Hält alle Bildmetadaten im Speicher (Cache)
  * - Bietet schnelle Filterfunktionen ohne erneutes Laden
  * - Invalidiert Cache bei Änderungen (create/update/delete)
+ * 
+ * WICHTIG: images.json enthält jetzt nur noch Metadaten (~10 KB statt 23 MB),
+ * die eigentlichen Bilder werden lazy über /api/image geladen.
  */
 
 import { nasStorage } from './nasStorage';
@@ -30,7 +33,7 @@ class ImageCacheService {
     }
 
     // Neuen Ladevorgang starten
-    console.log('[ImageCache] 🔄 Lade images.json (einmalig beim Start)...');
+    console.log('[ImageCache] 🔄 Lade Bildmetadaten (images.json - ohne Base64)...');
     const startTime = performance.now();
 
     // Show loading indicator während des ersten Ladens
@@ -136,15 +139,13 @@ class ImageCacheService {
       return { cached: false, count: 0, sizeMB: 0 };
     }
 
-    // Geschätzte Größe (Base64 Bilder)
-    const totalSize = this.cache.reduce((sum, img) => {
-      return sum + (img.data_url?.length || 0);
-    }, 0);
+    // Geschätzte Größe (nur Metadaten, keine Base64 mehr!)
+    const metadataSize = JSON.stringify(this.cache).length;
 
     return {
       cached: true,
       count: this.cache.length,
-      sizeMB: Math.round(totalSize / 1024 / 1024 * 100) / 100
+      sizeMB: Math.round(metadataSize / 1024 / 1024 * 100) / 100
     };
   }
 }

@@ -15,6 +15,7 @@ import {
   type GalleryFilter,
 } from "@/renderer/services/gallery";
 import { tags as tagsService } from "@/renderer/services/storage";
+import { getThumbnailUrl } from "@/renderer/services/imageUrl";
 import type { Tag } from "@/shared/types";
 import GalleryImageModal from "@/renderer/components/GalleryImageModal";
 
@@ -268,11 +269,27 @@ function Gallery() {
               onClick={() => handleImageClick(image)}
             >
               <div className="aspect-square relative overflow-hidden bg-slate-100">
-                <img
-                  src={image.data_url}
-                  alt={image.file_name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {image.thumbnail_path || image.file_path || image.data_url ? (
+                  <img
+                    src={getThumbnailUrl(image)}
+                    alt={image.file_name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    onError={(e) => {
+                      console.error(
+                        "[Gallery] Bild konnte nicht geladen werden:",
+                        image.file_name,
+                        image,
+                      );
+                      e.currentTarget.src =
+                        'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect fill="%23f1f5f9" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%2394a3b8"%3EBild nicht verfügbar%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-distillery-400">
+                    <ImageIcon className="w-12 h-12" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                     <button

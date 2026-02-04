@@ -43,6 +43,7 @@ export interface Document extends BaseEntity {
     file_size?: number; // in bytes
     thumbnail?: string; // Optional: Base64 Mini-Preview
     project_id?: string; // Optional: Zuordnung zu Projekt
+    display_order?: number; // Manuelle Sortierung (optional)
 }
 
 // Base Entity
@@ -187,6 +188,7 @@ export interface Note extends BaseEntity {
     type: NoteType;
     url?: string; // Optional URL reference
     documents?: Document[]; // Pfad-basierte Dokumente
+    display_order?: number; // Manuelle Sortierung (optional)
 }
 
 // Tag
@@ -250,6 +252,7 @@ export interface Weblink extends BaseEntity {
     title: string;
     description?: string;
     type: WeblinkType;
+    display_order?: number; // Manuelle Sortierung (optional)
 }
 
 // By-Product (Marketing materials etc.)
@@ -276,9 +279,20 @@ export interface Container extends BaseEntity {
 export interface Image extends BaseEntity {
     entity_type: 'project' | 'product' | 'note' | 'recipe' | 'ingredient' | 'container' | 'contact';
     entity_id: string;
-    data_url: string; // Base64 encoded image
+    
+    // File-based storage (new system)
+    file_path?: string; // Path to original image on NAS (e.g., /images/product/abc_0.jpg)
+    thumbnail_path?: string; // Path to thumbnail on NAS (e.g., /images/product/abc_0_thumb.jpg)
+    
+    // Legacy Base64 storage (deprecated, will be migrated)
+    data_url?: string; // Base64 encoded image (legacy)
+    
+    // Metadata
     file_name: string;
     caption?: string;
+    width?: number; // Image width in pixels
+    height?: number; // Image height in pixels
+    size_bytes?: number; // File size in bytes
 }
 
 // Task - TODO-Liste

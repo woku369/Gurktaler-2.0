@@ -8,24 +8,12 @@ import {
   CheckCircle,
   AlertCircle,
   Users,
-  Bot,
-  Key,
-  Eye,
-  EyeOff,
   GitBranch,
   GitCommit,
   RefreshCw,
   Server,
   Cloud,
 } from "lucide-react";
-import {
-  getAvailableProviders,
-  saveAPIKey,
-  loadAPIKey,
-  deleteAPIKey,
-  hasAPIKey,
-  type AIProvider,
-} from "@/renderer/services/aiAssistant";
 import {
   exportData,
   importData,
@@ -62,9 +50,6 @@ function Settings() {
   const [statusMessage, setStatusMessage] = useState("");
   const [showContactImport, setShowContactImport] = useState(false);
   const [parsedContacts, setParsedContacts] = useState<ParsedContact[]>([]);
-  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
-  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
-  const [editingKey, setEditingKey] = useState<AIProvider | null>(null);
 
   // Git-Integration State
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
@@ -449,43 +434,6 @@ function Settings() {
         setStatusMessage("");
       }, 3000);
     }
-  };
-
-  const handleSaveAPIKey = (provider: AIProvider) => {
-    const key = apiKeys[provider];
-    if (!key || !key.trim()) return;
-
-    saveAPIKey(provider, key.trim());
-    setApiKeys({ ...apiKeys, [provider]: "" });
-    setEditingKey(null);
-    setImportStatus("success");
-    setStatusMessage(`API-Key für ${provider} gespeichert!`);
-    setTimeout(() => {
-      setImportStatus("idle");
-      setStatusMessage("");
-    }, 3000);
-  };
-
-  const handleDeleteAPIKey = (provider: AIProvider) => {
-    if (confirm(`API-Key für ${provider} wirklich löschen?`)) {
-      deleteAPIKey(provider);
-      setImportStatus("success");
-      setStatusMessage(`API-Key für ${provider} gelöscht!`);
-      setTimeout(() => {
-        setImportStatus("idle");
-        setStatusMessage("");
-      }, 3000);
-    }
-  };
-
-  const toggleShowKey = (provider: AIProvider) => {
-    if (!showKeys[provider] && !apiKeys[provider]) {
-      const key = loadAPIKey(provider);
-      if (key) {
-        setApiKeys({ ...apiKeys, [provider]: key });
-      }
-    }
-    setShowKeys({ ...showKeys, [provider]: !showKeys[provider] });
   };
 
   const getLocalStorageSize = () => {
@@ -1220,140 +1168,6 @@ function Settings() {
                   start-server.ps1 -Restart
                 </code>
               </p>
-            </div>
-          </div>
-        </div>
-
-        {/* AI API Keys */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Bot className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-800">
-                KI-Assistenten API-Keys
-              </h2>
-              <p className="text-sm text-slate-500">
-                API-Schlüssel für ChatGPT, Claude, Qwen & DeepSeek
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="py-3 border-b border-slate-100">
-              <p className="text-sm text-slate-600 mb-2">
-                Hinterlege deine API-Keys um den KI-Assistenten zu nutzen.
-              </p>
-              <p className="text-xs text-slate-500">
-                🔒 API-Keys werden verschlüsselt in LocalStorage gespeichert.
-              </p>
-            </div>
-
-            {getAvailableProviders().map((provider) => (
-              <div
-                key={provider.id}
-                className="p-4 border border-slate-200 rounded-lg space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Key className="w-4 h-4 text-slate-500" />
-                    <span className="font-medium text-slate-800">
-                      {provider.name}
-                    </span>
-                    {hasAPIKey(provider.id) && (
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
-                        ✓ Konfiguriert
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {hasAPIKey(provider.id) && (
-                      <>
-                        <button
-                          onClick={() => toggleShowKey(provider.id)}
-                          className="p-1 hover:bg-slate-100 rounded"
-                          title={
-                            showKeys[provider.id] ? "Verbergen" : "Anzeigen"
-                          }
-                        >
-                          {showKeys[provider.id] ? (
-                            <EyeOff className="w-4 h-4 text-slate-500" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-slate-500" />
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAPIKey(provider.id)}
-                          className="p-1 hover:bg-red-50 rounded"
-                          title="Löschen"
-                        >
-                          <AlertCircle className="w-4 h-4 text-red-500" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {(editingKey === provider.id || !hasAPIKey(provider.id)) && (
-                  <div className="flex gap-2">
-                    <input
-                      type={showKeys[provider.id] ? "text" : "password"}
-                      value={apiKeys[provider.id] || ""}
-                      onChange={(e) =>
-                        setApiKeys({
-                          ...apiKeys,
-                          [provider.id]: e.target.value,
-                        })
-                      }
-                      placeholder="API-Key eingeben..."
-                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <button
-                      onClick={() => handleSaveAPIKey(provider.id)}
-                      disabled={!apiKeys[provider.id]?.trim()}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    >
-                      Speichern
-                    </button>
-                  </div>
-                )}
-
-                {hasAPIKey(provider.id) && editingKey !== provider.id && (
-                  <button
-                    onClick={() => setEditingKey(provider.id)}
-                    className="text-sm text-purple-600 hover:text-purple-700"
-                  >
-                    Ändern
-                  </button>
-                )}
-
-                {showKeys[provider.id] && apiKeys[provider.id] && (
-                  <div className="bg-slate-50 p-2 rounded text-xs font-mono break-all">
-                    {apiKeys[provider.id]}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                💡 <strong>Wo bekomme ich API-Keys?</strong>
-              </p>
-              <ul className="text-xs text-blue-700 mt-2 space-y-1 ml-4">
-                <li>
-                  • <strong>OpenAI:</strong> platform.openai.com/api-keys
-                </li>
-                <li>
-                  • <strong>Claude:</strong> console.anthropic.com
-                </li>
-                <li>
-                  • <strong>Qwen:</strong> dashscope.console.aliyun.com
-                </li>
-                <li>
-                  • <strong>DeepSeek:</strong> platform.deepseek.com/api_keys
-                </li>
-              </ul>
             </div>
           </div>
         </div>

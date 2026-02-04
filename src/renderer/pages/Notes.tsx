@@ -11,6 +11,8 @@ import {
   Star,
   ExternalLink,
   Share2,
+  Grid3x3,
+  List,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Modal from "@/renderer/components/Modal";
@@ -22,6 +24,7 @@ import {
   tags as tagsService,
   favorites as favoritesService,
 } from "@/renderer/services/storage";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import type { Note, Project, Tag } from "@/shared/types";
 
 type NoteType = "idea" | "note" | "todo" | "research";
@@ -75,6 +78,7 @@ function Notes() {
   const [selectedTagId, setSelectedTagId] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     loadData();
@@ -176,10 +180,43 @@ function Notes() {
 
       return matchesSearch && matchesTab && matchesTag;
     })
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
+    .sort((a, b) => {
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (reordered: Note[]) => {
+    // Update display_order only for notes that changed position
+    const updates = reordered
+      .map((note, index) => {
+        const currentNote = filteredNotes.find((n) => n.id === note.id);
+        const oldOrder = currentNote?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return notesService.update(note.id, { display_order: index });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Note> => p !== null);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
+    }
+  };
+
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredNotes, handleReorder);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -288,6 +325,32 @@ function Notes() {
 
       {/* Search and Tag Filter */}
       <div className="mb-6 flex gap-4">
+        {/* View Mode Toggle */}
+        <div className="flex rounded-lg border border-distillery-200 overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "grid"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Kartenansicht"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "list"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Listenansicht"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+
         <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
@@ -328,130 +391,235 @@ function Notes() {
       )}
 
       {/* Notes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredNotes.map((note) => {
-          const Icon = typeIcons[note.type as NoteType];
-          const project = note.project_id
-            ? projects.find((p) => p.id === note.project_id)
-            : null;
-          // TODO: Tag assignments temporarily disabled (needs async refactor)
-          const noteTags: Tag[] = [];
-
-          return (
-            <div
-              key={note.id}
-              className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all group"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <span
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border-vintage font-body ${
-                    typeColors[note.type as NoteType]
-                  }`}
-                >
-                  <Icon className="w-3 h-3" />
-                  {typeLabels[note.type as NoteType]}
-                </span>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-slate-400">
-                    {formatDate(note.created_at)}
-                  </span>
-                  <button
-                    onClick={async () => {
-                      const existing = await favoritesService.getByEntity(
-                        "note",
-                        note.id,
-                      );
-                      if (existing) {
-                        await favoritesService.delete(existing.id);
-                      } else {
-                        await favoritesService.create({
-                          entity_type: "note",
-                          entity_id: note.id,
-                        });
-                      }
-                      await loadData();
-                    }}
-                    className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Favorit"
-                  >
-                    <Star className="w-4 h-4 text-slate-400" />
-                  </button>
-                  <button
-                    onClick={async () => await share(note, "note")}
-                    className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Teilen"
-                  >
-                    <Share2 className="w-4 h-4 text-slate-500" />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(note)}
-                    className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Bearbeiten"
-                  >
-                    <Edit2 className="w-4 h-4 text-slate-500" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(note.id)}
-                    className="p-1 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Löschen"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-              <h3 className="font-medium text-slate-800 mb-2">{note.title}</h3>
-
-              {/* URL Link */}
-              {note.url && (
-                <a
-                  href={note.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-gurktaler-600 hover:text-gurktaler-700 mb-2"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  {note.url}
-                </a>
-              )}
-
-              {/* Image Preview entfernt - Images werden async geladen */}
-
-              <div className="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none">
-                <ReactMarkdown>{note.content}</ReactMarkdown>
-              </div>
-
-              {noteTags.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {noteTags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                      style={{
-                        backgroundColor: tag.color,
-                        color: getTextColor(tag.color),
-                      }}
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {project ? (
-                <div className="mt-3 pt-3 border-t border-slate-100">
-                  <span className="text-xs text-slate-500">
-                    📁 {project.name}
-                  </span>
-                </div>
-              ) : (
-                <div className="mt-3 pt-3 border-t border-slate-100">
-                  <span className="text-xs text-amber-600">📁 Chaosablage</span>
-                </div>
-              )}
+      {viewMode === "grid" && (
+        <>
+          {filteredNotes.length > 0 && (
+            <div className="mb-2 text-xs text-distillery-500 italic font-body">
+              💡 Tipp: Karten können per Drag & Drop sortiert werden
             </div>
-          );
-        })}
-      </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredNotes.map((note, index) => {
+              const Icon = typeIcons[note.type as NoteType];
+              const project = note.project_id
+                ? projects.find((p) => p.id === note.project_id)
+                : null;
+              // TODO: Tag assignments temporarily disabled (needs async refactor)
+              const noteTags: Tag[] = [];
+
+              return (
+                <div
+                  key={note.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-4 hover:shadow-vintage-lg hover:border-gurktaler-300 transition-all group ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <span
+                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border-vintage font-body ${
+                        typeColors[note.type as NoteType]
+                      }`}
+                    >
+                      <Icon className="w-3 h-3" />
+                      {typeLabels[note.type as NoteType]}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400">
+                        {formatDate(note.created_at)}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          const existing = await favoritesService.getByEntity(
+                            "note",
+                            note.id,
+                          );
+                          if (existing) {
+                            await favoritesService.delete(existing.id);
+                          } else {
+                            await favoritesService.create({
+                              entity_type: "note",
+                              entity_id: note.id,
+                            });
+                          }
+                          await loadData();
+                        }}
+                        className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Favorit"
+                      >
+                        <Star className="w-4 h-4 text-slate-400" />
+                      </button>
+                      <button
+                        onClick={async () => await share(note, "note")}
+                        className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Teilen"
+                      >
+                        <Share2 className="w-4 h-4 text-slate-500" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(note)}
+                        className="p-1 hover:bg-slate-100 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Bearbeiten"
+                      >
+                        <Edit2 className="w-4 h-4 text-slate-500" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(note.id)}
+                        className="p-1 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Löschen"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+                  <h3 className="font-medium text-slate-800 mb-2">
+                    {note.title}
+                  </h3>
+
+                  {/* URL Link */}
+                  {note.url && (
+                    <a
+                      href={note.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-gurktaler-600 hover:text-gurktaler-700 mb-2"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      {note.url}
+                    </a>
+                  )}
+
+                  {/* Image Preview entfernt - Images werden async geladen */}
+
+                  <div className="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none">
+                    <ReactMarkdown>{note.content}</ReactMarkdown>
+                  </div>
+
+                  {noteTags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {noteTags.map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: tag.color,
+                            color: getTextColor(tag.color),
+                          }}
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {project ? (
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <span className="text-xs text-slate-500">
+                        📁 {project.name}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <span className="text-xs text-amber-600">
+                        📁 Chaosablage
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Notes List */}
+      {viewMode === "list" && (
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-distillery-50 border-b border-distillery-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Titel
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Typ
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Projekt
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Erstellt
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-distillery-900">
+                  Aktionen
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-distillery-100">
+              {filteredNotes.map((note, index) => {
+                const project = note.project_id
+                  ? projects.find((p) => p.id === note.project_id)
+                  : null;
+                return (
+                  <tr
+                    key={note.id}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`hover:bg-distillery-25 transition-all ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "bg-gurktaler-50" : ""}`}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-distillery-900">
+                        {note.title}
+                      </div>
+                      {note.content && (
+                        <div className="text-sm text-distillery-600 truncate max-w-md">
+                          {note.content.substring(0, 100)}...
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[note.type as NoteType]}`}
+                      >
+                        {typeLabels[note.type as NoteType]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-700">
+                      {project ? project.name : "Chaosablage"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {new Date(note.created_at).toLocaleDateString("de-DE")}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(note)}
+                          className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(note.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isModalOpen && (

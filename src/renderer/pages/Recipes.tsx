@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, FlaskConical } from "lucide-react";
+import {
+  Plus,
+  Search,
+  FlaskConical,
+  Grid3x3,
+  List,
+  Edit2,
+  Trash2,
+  GitBranch,
+} from "lucide-react";
 import {
   recipes as recipesService,
   recipeIngredients as recipeIngredientsService,
@@ -12,6 +21,7 @@ import RecipeForm from "@/renderer/components/RecipeForm";
 import RecipeCard from "@/renderer/components/RecipeCard";
 import Modal from "@/renderer/components/Modal";
 import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import type {
   Recipe,
   RecipeIngredient,
@@ -39,6 +49,7 @@ function Recipes() {
   const [versioningRecipe, setVersioningRecipe] = useState<Recipe | null>(null);
   const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
   const [quickUrlRecipe, setQuickUrlRecipe] = useState<Recipe | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     loadData();
@@ -56,7 +67,7 @@ function Recipes() {
     for (const recipe of allRecipes) {
       imagesMap[recipe.id] = await imagesService.getByEntity(
         "recipe",
-        recipe.id
+        recipe.id,
       );
     }
     setRecipeImages(imagesMap);
@@ -64,7 +75,7 @@ function Recipes() {
   };
 
   const handleSubmit = async (
-    data: Omit<Recipe, "id" | "created_at" | "updated_at">
+    data: Omit<Recipe, "id" | "created_at" | "updated_at">,
   ) => {
     if (editingRecipe) {
       await recipesService.update(editingRecipe.id, data);
@@ -162,19 +173,57 @@ function Recipes() {
   };
 
   // Simplified: Get flat filtered list instead of tree
-  const filteredRecipes = recipes.filter((recipe) => {
-    const matchesSearch = recipe.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+  const filteredRecipes = recipes
+    .filter((recipe) => {
+      const matchesSearch = recipe.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
 
-    let matchesTag = true;
-    if (selectedTagId) {
-      // TODO: Tag filtering temporarily disabled (needs async refactor)
-      matchesTag = true;
+      let matchesTag = true;
+      if (selectedTagId) {
+        // TODO: Tag filtering temporarily disabled (needs async refactor)
+        matchesTag = true;
+      }
+
+      return matchesSearch && matchesTag;
+    })
+    .sort((a, b) => {
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (reordered: Recipe[]) => {
+    // Update display_order only for recipes that changed position
+    const updates = reordered
+      .map((recipe, index) => {
+        const currentRecipe = filteredRecipes.find((r) => r.id === recipe.id);
+        const oldOrder = currentRecipe?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return recipesService.update(recipe.id, { display_order: index });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Recipe> => p !== null);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
     }
+  };
 
-    return matchesSearch && matchesTag;
-  });
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredRecipes, handleReorder);
 
   return (
     <div className="p-8">
@@ -198,6 +247,32 @@ function Recipes() {
 
       {/* Search & Tag Filter */}
       <div className="mb-6 flex gap-4">
+        {/* View Mode Toggle */}
+        <div className="flex rounded-lg border border-distillery-200 overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "grid"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Kartenansicht"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "list"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Listenansicht"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+
         <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
@@ -230,8 +305,8 @@ function Recipes() {
             editingRecipe
               ? "Rezeptur bearbeiten"
               : versioningRecipe
-              ? `Neue Version: ${versioningRecipe.name}`
-              : "Neue Rezeptur"
+                ? `Neue Version: ${versioningRecipe.name}`
+                : "Neue Rezeptur"
           }
           onClose={handleCancel}
         >
@@ -269,30 +344,120 @@ function Recipes() {
       )}
 
       {/* Recipe Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRecipes.map((recipe) => {
-          const isFavorite = false; // TODO: Async favorites check needed
-          return (
-            <RecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              images={recipeImages[recipe.id] || []}
-              documents={recipeDocuments[recipe.id] || []}
-              recipeIngredients={recipeIngredients}
-              ingredients={ingredients}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onToggleFavorite={handleToggleFavorite}
-              onCopy={() => handleCopyName(recipe.name)}
-              onCreateVersion={handleCreateVersion}
-              onUpdate={loadData}
-              onQuickAddUrl={handleQuickAddUrl}
-              onQuickAddDocument={handleQuickAddDocument}
-              isFavorite={isFavorite}
-            />
-          );
-        })}
-      </div>
+      {viewMode === "grid" && (
+        <>
+          {filteredRecipes.length > 0 && (
+            <div className="mb-2 text-xs text-distillery-500 italic font-body">
+              💡 Tipp: Karten können per Drag & Drop sortiert werden
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRecipes.map((recipe, index) => {
+              const isFavorite = false; // TODO: Async favorites check needed
+              return (
+                <div
+                  key={recipe.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`transition-opacity ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+                >
+                  <RecipeCard
+                    recipe={recipe}
+                    images={recipeImages[recipe.id] || []}
+                    documents={recipeDocuments[recipe.id] || []}
+                    recipeIngredients={recipeIngredients}
+                    ingredients={ingredients}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onToggleFavorite={handleToggleFavorite}
+                    onCopy={() => handleCopyName(recipe.name)}
+                    onCreateVersion={handleCreateVersion}
+                    onUpdate={loadData}
+                    onQuickAddUrl={handleQuickAddUrl}
+                    onQuickAddDocument={handleQuickAddDocument}
+                    isFavorite={isFavorite}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Recipe List */}
+      {viewMode === "list" && (
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-distillery-50 border-b border-distillery-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Version
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Erstellt
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-distillery-900">
+                  Aktionen
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-distillery-100">
+              {filteredRecipes.map((recipe, index) => (
+                <tr
+                  key={recipe.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`hover:bg-distillery-25 transition-all ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "bg-gurktaler-50" : ""}`}
+                >
+                  <td className="px-4 py-3 font-medium text-distillery-900">
+                    {recipe.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-distillery-600">
+                    {recipe.version}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-distillery-600">
+                    {new Date(recipe.created_at).toLocaleDateString("de-DE")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleEdit(recipe)}
+                        className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                        title="Bearbeiten"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleCreateVersion(recipe)}
+                        className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                        title="Neue Version"
+                      >
+                        <GitBranch className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(recipe.id)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Löschen"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Quick Add URL Dialog */}
       {showQuickUrlDialog && quickUrlRecipe && (

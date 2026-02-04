@@ -47,6 +47,9 @@ const sections: Section[] = [
         "Mobile PWA (iOS/Android) mit vollständiger Schreibfunktion",
         "Projekt- und Produktverwaltung mit Versionierung",
         "Zeitplanung (Gantt-Chart) mit Abhängigkeiten und Kapazitätsauslastung",
+        "Timeline mit Drag & Drop: Strg+Drag für horizontale Verschiebung (Startdatum ändern)",
+        "Universelle Drag & Drop Sortierung in allen Card-basierten Ansichten",
+        "Listen-Ansichten für Zutaten (mit Kategorie-Sortierung) und Tags",
         "Rezepturverwaltung mit Zutatendatenbank",
         "Gebindeverwaltung (Flaschen, Etiketten, Verschlüsse)",
         "Notizen mit Markdown-Support",
@@ -744,6 +747,80 @@ const sections: Section[] = [
       tips: [
         "Quick-Entry immer oben auf Notizen-Seite",
         "Formulare mit Tab navigieren",
+      ],
+    },
+  },
+  {
+    id: "ui-interactions",
+    title: "UI-Interaktionen",
+    icon: BookOpen,
+    content: {
+      subtitle: "Drag & Drop, Listen-Ansichten und Timeline-Bedienung",
+      description:
+        "Universelle Interaktionsmuster für effizientes Arbeiten mit der Anwendung. Drag & Drop Sortierung, Listen/Grid Toggle und Timeline-Manipulation.",
+      howTo: [
+        {
+          title: "Drag & Drop Sortierung (Universal)",
+          steps: [
+            "Verfügbar in: Produkte, Rezepte, Zutaten, Notizen, Dokumente, Recherche, Gebinde, Tags",
+            "Karte anklicken und halten (oder antippen und halten auf Mobile)",
+            "An neue Position ziehen",
+            "Loslassen zum Speichern",
+            "Sortierreihenfolge wird automatisch in display_order gespeichert",
+            "Funktioniert sowohl in Grid- als auch in List-Ansicht",
+          ],
+        },
+        {
+          title: "Timeline (Projekt-Timeline) - Horizontale Verschiebung",
+          steps: [
+            "Navigation → Timeline öffnen",
+            "Strg-Taste gedrückt halten",
+            "Mit Maus auf Projekt-Balken klicken und halten",
+            "Bei gedrückter Strg-Taste horizontal ziehen",
+            "Projekt bewegt sich visuell in der Timeline",
+            "Maustaste loslassen",
+            "Startdatum wird automatisch neu berechnet und gespeichert",
+            "Projekt bleibt an neuer Position",
+          ],
+        },
+        {
+          title: "Timeline - Vertikale Neuordnung",
+          steps: [
+            "OHNE Strg-Taste: Projekt-Balken anklicken und halten",
+            "Vertikal nach oben oder unten ziehen",
+            "Ändert Reihenfolge der Projekte in der Timeline",
+            "Keine Datums-Änderung, nur visuelle Sortierung",
+          ],
+        },
+        {
+          title: "Listen-Ansicht (Ingredients & Tags)",
+          steps: [
+            "Seite Zutaten oder Tags öffnen",
+            "Oben rechts: Grid/List Toggle-Buttons",
+            "Grid-Icon: Karten-Ansicht (Standard)",
+            "List-Icon: Kompakte Tabellen-Ansicht",
+            "Umschaltung behält Filter und Sortierung",
+          ],
+        },
+        {
+          title: "Kategorie-Sortierung (Ingredients)",
+          steps: [
+            "Zutaten-Seite öffnen",
+            'Toggle "Nach Kategorie sortieren" aktivieren',
+            "Zutaten werden nach Kategorie gruppiert",
+            "Innerhalb jeder Kategorie alphabetisch sortiert",
+            "Drag & Drop weiterhin möglich für manuelle Sortierung",
+          ],
+        },
+      ],
+      tips: [
+        "Timeline-Tooltip zeigt: 'Doppelklick zum Öffnen • Ctrl+Drag zum horizontal Verschieben'",
+        "Strg-Taste ist essentiell für horizontale Timeline-Verschiebung",
+        "Listen-Ansicht ideal für schnelles Scannen vieler Einträge",
+        "Grid-Ansicht bietet mehr Details und Vorschaubilder",
+        "Drag & Drop funktioniert überall gleich - einheitliche Bedienung",
+        "Display_order wird automatisch verwaltet (Default: 9999)",
+        "Workspace-Filter in Timeline beeinflusst auch Projekt-Seite",
       ],
     },
   },

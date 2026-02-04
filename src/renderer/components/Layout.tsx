@@ -12,7 +12,6 @@ import {
   Globe,
   Tag,
   Search,
-  Bot,
   BookOpen,
   Settings,
   Leaf,
@@ -39,7 +38,6 @@ const navItems = [
   { to: "/research", icon: Globe, label: "Recherche" },
   { to: "/documents", icon: FileText, label: "Dokumente" },
   { to: "/gallery", icon: Image, label: "Bildergalerie" },
-  { to: "/ai-assistant", icon: Bot, label: "KI-Assistent" },
   { to: "/tags", icon: Tag, label: "Tags" },
   { to: "/search", icon: Search, label: "Suche" },
   { to: "/documentation", icon: BookOpen, label: "Anleitungen" },
@@ -246,8 +244,8 @@ function Layout() {
                   {serverStatus === "online"
                     ? "NAS Online"
                     : serverStatus === "offline"
-                    ? "NAS Offline"
-                    : "Prüfe..."}
+                      ? "NAS Offline"
+                      : "Prüfe..."}
                 </span>
                 {lastCheck && (
                   <div className="text-xs text-distillery-500">

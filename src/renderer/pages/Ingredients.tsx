@@ -6,6 +6,10 @@ import {
   FileSpreadsheet,
   Download,
   Upload,
+  Grid3x3,
+  List,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import {
   ingredients as ingredientsService,
@@ -25,6 +29,7 @@ import {
   generateTemplate,
   exportIngredients,
 } from "@/renderer/services/ingredientImport";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import type { Ingredient, Image, Tag, Document } from "@/shared/types";
 
 function Ingredients() {
@@ -35,13 +40,15 @@ function Ingredients() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTagId, setSelectedTagId] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [categorySort, setCategorySort] = useState<"name" | "category">("name");
   const [showForm, setShowForm] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showQuickUrlDialog, setShowQuickUrlDialog] = useState(false);
   const [quickUrlIngredient, setQuickUrlIngredient] =
     useState<Ingredient | null>(null);
   const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(
-    null
+    null,
   );
   const [formData, setFormData] = useState<Partial<Ingredient>>({
     name: "",
@@ -102,7 +109,7 @@ function Ingredients() {
     for (const ingredient of allIngredients) {
       imageMap[ingredient.id] = await imagesService.getByEntity(
         "ingredient",
-        ingredient.id
+        ingredient.id,
       );
     }
     setIngredientImages(imageMap);
@@ -119,7 +126,7 @@ function Ingredients() {
       resetForm(); // This closes the form
     } else {
       const newIngredient = await ingredientsService.create(
-        formData as Omit<Ingredient, "id" | "created_at">
+        formData as Omit<Ingredient, "id" | "created_at">,
       );
       setToast({ message: "Zutat erfolgreich erstellt", type: "success" });
       // Open the newly created ingredient for editing (to add images/tags)
@@ -211,24 +218,73 @@ function Ingredients() {
     setShowForm(false);
   };
 
-  const filteredIngredients = ingredients.filter((ing) => {
-    const matchesSearch =
-      ing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ing.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ing.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredIngredients = ingredients
+    .filter((ing) => {
+      const matchesSearch =
+        ing.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ing.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ing.notes?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    let matchesTag = true;
-    // TODO: Tag filtering disabled (needs async refactor with pre-loaded assignments)
-    // if (selectedTagId) {
-    //   const assignments = await tagAssignmentsService.getByEntity(
-    //     "ingredient",
-    //     ing.id
-    //   );
-    //   matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
-    // }
+      let matchesTag = true;
+      // TODO: Tag filtering disabled (needs async refactor with pre-loaded assignments)
+      // if (selectedTagId) {
+      //   const assignments = await tagAssignmentsService.getByEntity(
+      //     "ingredient",
+      //     ing.id
+      //   );
+      //   matchesTag = assignments.some((a) => a.tag_id === selectedTagId);
+      // }
 
-    return matchesSearch && matchesTag;
-  });
+      return matchesSearch && matchesTag;
+    })
+    .sort((a, b) => {
+      if (categorySort === "category") {
+        // Sort by category first, then by name
+        const catA = a.category || "Zzz";
+        const catB = b.category || "Zzz";
+        if (catA !== catB) return catA.localeCompare(catB);
+        return a.name.localeCompare(b.name);
+      }
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (reordered: Ingredient[]) => {
+    // Update display_order only for ingredients that changed position
+    const updates = reordered
+      .map((ingredient, index) => {
+        const currentIngredient = filteredIngredients.find(
+          (i) => i.id === ingredient.id,
+        );
+        const oldOrder = currentIngredient?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return ingredientsService.update(ingredient.id, {
+            display_order: index,
+          });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Ingredient> => p !== null);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
+    }
+  };
+
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredIngredients, handleReorder);
 
   return (
     <div className="p-8">
@@ -290,6 +346,16 @@ function Ingredients() {
           />
         </div>
         <select
+          value={categorySort}
+          onChange={(e) =>
+            setCategorySort(e.target.value as "name" | "category")
+          }
+          className="px-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
+        >
+          <option value="name">Sortierung: Manuell</option>
+          <option value="category">Sortierung: Kategorie</option>
+        </select>
+        <select
           value={selectedTagId}
           onChange={(e) => setSelectedTagId(e.target.value)}
           className="px-4 py-2 border-vintage border-distillery-200 rounded-vintage focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-body"
@@ -301,6 +367,30 @@ function Ingredients() {
             </option>
           ))}
         </select>
+        <div className="flex border border-distillery-200 rounded-vintage overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 transition-colors ${
+              viewMode === "grid"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Kartenansicht"
+          >
+            <Grid3x3 className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-2 transition-colors ${
+              viewMode === "list"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Listenansicht"
+          >
+            <List className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Import Dialog */}
@@ -503,28 +593,126 @@ function Ingredients() {
       )}
 
       {/* Ingredients Grid */}
-      {filteredIngredients.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredIngredients.map((ingredient) => (
-            <IngredientCard
-              key={ingredient.id}
-              ingredient={ingredient}
-              image={ingredientImages[ingredient.id]?.[0]}
-              isFavorite={false}
-              onToggleFavorite={() => {
-                favoritesService.toggle("ingredient", ingredient.id);
-                loadData();
-              }}
-              onEdit={() => handleEdit(ingredient)}
-              onDelete={() => handleDelete(ingredient.id)}
-              onAddUrl={() => handleQuickAddUrl(ingredient)}
-              onAddDocument={() => handleQuickAddDocument(ingredient)}
-              onAddImage={() => handleQuickAddImage(ingredient)}
-              onCopy={handleCopyName}
-              onUpdate={loadData}
-            />
-          ))}
-        </div>
+      {filteredIngredients.length > 0 && viewMode === "grid" && (
+        <>
+          <div className="mb-2 text-xs text-distillery-500 italic font-body">
+            💡 Tipp: Karten können per Drag & Drop sortiert werden
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredIngredients.map((ingredient, index) => (
+              <div
+                key={ingredient.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`transition-opacity ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+              >
+                <IngredientCard
+                  ingredient={ingredient}
+                  image={ingredientImages[ingredient.id]?.[0]}
+                  isFavorite={false}
+                  onToggleFavorite={() => {
+                    favoritesService.toggle("ingredient", ingredient.id);
+                    loadData();
+                  }}
+                  onEdit={() => handleEdit(ingredient)}
+                  onDelete={() => handleDelete(ingredient.id)}
+                  onAddUrl={() => handleQuickAddUrl(ingredient)}
+                  onAddDocument={() => handleQuickAddDocument(ingredient)}
+                  onAddImage={() => handleQuickAddImage(ingredient)}
+                  onCopy={handleCopyName}
+                  onUpdate={loadData}
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Ingredients List */}
+      {filteredIngredients.length > 0 && viewMode === "list" && (
+        <>
+          <div className="mb-2 text-xs text-distillery-500 italic font-body">
+            💡 Tipp: Zeilen können per Drag & Drop sortiert werden
+          </div>
+          <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-distillery-50 border-b border-distillery-200">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Kategorie
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Alkohol
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                    Preis/Einheit
+                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-distillery-900">
+                    Aktionen
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-distillery-100">
+                {filteredIngredients.map((ingredient, index) => (
+                  <tr
+                    key={ingredient.id}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`hover:bg-distillery-25 transition-colors cursor-move ${
+                      draggedIndex === index ? "opacity-50" : ""
+                    } ${
+                      dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3 font-medium text-distillery-900">
+                      {ingredient.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-700">
+                      {ingredient.category || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {ingredient.alcohol_percentage
+                        ? `${ingredient.alcohol_percentage}%`
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {ingredient.price_per_unit
+                        ? `€ ${ingredient.price_per_unit.toFixed(2)}/${ingredient.unit}`
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(ingredient)}
+                          className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ingredient.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Quick Add URL Dialog */}

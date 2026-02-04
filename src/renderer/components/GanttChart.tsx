@@ -39,6 +39,11 @@ export default function GanttChart({
 }: GanttChartProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isDraggingHorizontal, setIsDraggingHorizontal] = useState(false);
+  const [tempDragPosition, setTempDragPosition] = useState<{
+    projectId: string;
+    startX: number;
+  } | null>(null);
 
   const chartData = useMemo(() => {
     // Timeline-Berechnung
@@ -135,6 +140,8 @@ export default function GanttChart({
     e.stopPropagation();
     e.preventDefault();
 
+    setIsDraggingHorizontal(true);
+
     const container = (e.target as HTMLElement).closest(
       ".gantt-chart-container",
     );
@@ -155,13 +162,11 @@ export default function GanttChart({
         Math.min(100 - bar.width, initialStartX + deltaPercent),
       );
 
-      // Temporäre visuelle Aktualisierung
-      const barElement = document.querySelector(
-        `[data-bar-id="${bar.project.id}"]`,
-      ) as HTMLElement;
-      if (barElement) {
-        barElement.style.left = `${newStartX}%`;
-      }
+      // Temporäre visuelle Aktualisierung über State
+      setTempDragPosition({
+        projectId: bar.project.id,
+        startX: newStartX,
+      });
     };
 
     const handleMouseUp = (upEvent: MouseEvent) => {
@@ -178,10 +183,17 @@ export default function GanttChart({
       newStartDate.setDate(newStartDate.getDate() + Math.round(daysFromStart));
 
       // Callback mit neuem Datum
-      onDateChange(bar.project.id, newStartDate);
+      if (onDateChange) {
+        onDateChange(bar.project.id, newStartDate);
+      }
 
+      // Entferne Event Listener
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+
+      // Setze States zurück
+      setIsDraggingHorizontal(false);
+      setTempDragPosition(null);
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -189,7 +201,13 @@ export default function GanttChart({
   };
 
   return (
-    <div style={{ minHeight: CHART_HEIGHT }}>
+    <div
+      className="gantt-chart-container"
+      style={{
+        minHeight: CHART_HEIGHT,
+        cursor: isDraggingHorizontal ? "ew-resize" : "default",
+      }}
+    >
       {/* Timeline Header */}
       <div className="relative h-12 border-b border-slate-300 mb-4">
         <div className="relative h-full">
@@ -269,8 +287,15 @@ export default function GanttChart({
                 isDragging ? "opacity-50" : ""
               } ${isDragOver ? "bg-gurktaler-50" : "hover:bg-slate-50"}`}
               style={{ height: ROW_HEIGHT }}
-              draggable
-              onDragStart={() => setDraggedIndex(index)}
+              draggable={true}
+              onDragStart={(e) => {
+                // Verhindere Drag wenn Ctrl gedrückt (für horizontales Verschieben)
+                if (e.ctrlKey) {
+                  e.preventDefault();
+                  return;
+                }
+                setDraggedIndex(index);
+              }}
               onDragEnd={() => {
                 setDraggedIndex(null);
                 setDragOverIndex(null);
@@ -306,13 +331,14 @@ export default function GanttChart({
               {/* Timeline Bar */}
               <div
                 data-bar-id={bar.project.id}
-                className="absolute top-1/2 -translate-y-1/2 h-10 rounded-md shadow-sm hover:shadow-lg transition-all cursor-move group overflow-visible"
+                className="absolute top-1/2 -translate-y-1/2 h-10 rounded-md shadow-sm hover:shadow-lg transition-all group overflow-visible"
                 style={{
-                  left: `${bar.startX}%`,
+                  left: `${tempDragPosition?.projectId === bar.project.id ? tempDragPosition.startX : bar.startX}%`,
                   width: `${bar.width}%`,
                   backgroundColor: bar.color,
                   minWidth: "40px",
                   border: `3px solid ${bar.project.color || bar.color}`,
+                  cursor: "move",
                 }}
                 onDoubleClick={() => onProjectClick?.(bar.project)}
                 onMouseDown={(e) => handleTimelineMouseDown(e, index)}

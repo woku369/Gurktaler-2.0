@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Upload, X, Image as ImageIcon, Link2, Camera } from "lucide-react";
 import { images as imagesService } from "@/renderer/services/storage";
+import { getThumbnailUrl } from "@/renderer/services/imageUrl";
 import type { Image } from "@/shared/types";
 
 interface ImageUploadProps {
@@ -39,7 +40,7 @@ export default function ImageUpload({
   const loadImages = async () => {
     const existingImages = await imagesService.getByEntity(
       entityType,
-      entityId
+      entityId,
     );
     setImages(existingImages);
   };
@@ -130,7 +131,7 @@ export default function ImageUpload({
     } catch (error) {
       console.error("Failed to load image from URL:", error);
       alert(
-        "Bild konnte nicht von der URL geladen werden. Stelle sicher, dass die URL öffentlich zugänglich ist."
+        "Bild konnte nicht von der URL geladen werden. Stelle sicher, dass die URL öffentlich zugänglich ist.",
       );
       setIsLoadingUrl(false);
     }
@@ -280,9 +281,10 @@ export default function ImageUpload({
               <div className="flex gap-3">
                 <div className="flex-shrink-0 w-20 h-20 bg-slate-100 rounded overflow-hidden">
                   <img
-                    src={image.data_url}
+                    src={getThumbnailUrl(image)}
                     alt={image.caption || "Hochgeladenes Bild"}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <div className="flex-1">

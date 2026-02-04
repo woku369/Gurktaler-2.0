@@ -18,6 +18,7 @@ import {
   projects as projectsService,
   favorites as favoritesService,
 } from "@/renderer/services/storage";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import type { Weblink, Project } from "@/shared/types";
 
 const typeIcons = {
@@ -83,16 +84,54 @@ function Research() {
     }
   };
 
-  const filteredWeblinks = weblinks.filter((weblink) => {
-    const matchesSearch =
-      weblink.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      weblink.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      weblink.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredWeblinks = weblinks
+    .filter((weblink) => {
+      const matchesSearch =
+        weblink.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        weblink.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        weblink.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesType = filterType === "all" || weblink.type === filterType;
+      const matchesType = filterType === "all" || weblink.type === filterType;
 
-    return matchesSearch && matchesType;
-  });
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (reordered: Weblink[]) => {
+    // Update display_order only for weblinks that changed position
+    const updates = reordered
+      .map((weblink, index) => {
+        const currentWeblink = filteredWeblinks.find((w) => w.id === weblink.id);
+        const oldOrder = currentWeblink?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return weblinksService.update(weblink.id, { display_order: index });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Weblink> => p !== null);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
+    }
+  };
+
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredWeblinks, handleReorder);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -196,8 +235,13 @@ function Research() {
       )}
 
       {/* Weblinks Grid */}
+      {filteredWeblinks.length > 0 && (
+        <div className="mb-2 text-xs text-distillery-500 italic font-body">
+          💡 Tipp: Karten können per Drag & Drop sortiert werden
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredWeblinks.map((weblink) => {
+        {filteredWeblinks.map((weblink, index) => {
           const Icon = typeIcons[weblink.type];
           const project = weblink.project_id
             ? projects.find((p) => p.id === weblink.project_id)
@@ -205,7 +249,12 @@ function Research() {
           return (
             <div
               key={weblink.id}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-colors group"
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDrop={(e) => handleDrop(e, index)}
+              className={`bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-all group ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
             >
               <div className="flex items-start justify-between mb-3">
                 <span

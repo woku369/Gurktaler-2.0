@@ -1,9 +1,11 @@
 const http = require('http');
 const fs = require('fs').promises;
 const path = require('path');
+const sharp = require('sharp');
 
 const BASE_PATH = '/volume1/Gurktaler/zweipunktnull';
 const PORT = 3002;
+const THUMBNAIL_SIZE = 200; // Thumbnail size in pixels (200x200)
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -110,21 +112,45 @@ const server = http.createServer(async (req, res) => {
         };
         const ext = extensions[mimeType] || 'jpg';
         
-        // Generate filename and path
+        // Generate filename and paths
         const filename = `${entityId}_${index}.${ext}`;
+        const thumbnailFilename = `${entityId}_${index}_thumb.${ext}`;
         const relativePath = `images/${entityType}/${filename}`;
+        const thumbnailRelativePath = `images/${entityType}/${thumbnailFilename}`;
         const fullPath = path.join(BASE_PATH, relativePath);
+        const thumbnailFullPath = path.join(BASE_PATH, thumbnailRelativePath);
         
         // Convert base64 to binary
         const base64Data = dataUrl.replace(/^data:[^;]+;base64,/, '');
         const buffer = Buffer.from(base64Data, 'base64');
         
-        // Create directory and write file
+        // Create directory
         await fs.mkdir(path.dirname(fullPath), { recursive: true });
+        
+        // Write original image
         await fs.writeFile(fullPath, buffer);
         
+        // Generate thumbnail using sharp
+        await sharp(buffer)
+          .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
+            fit: 'cover',
+            position: 'center'
+          })
+          .jpeg({ quality: 80 }) // Convert all thumbnails to JPEG for consistency
+          .toFile(thumbnailFullPath);
+        
+        // Get image metadata
+        const metadata = await sharp(buffer).metadata();
+        
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, relativePath: relativePath.replace(/\\/g, '/') }));
+        res.end(JSON.stringify({ 
+          success: true, 
+          file_path: relativePath.replace(/\\/g, '/'),
+          thumbnail_path: thumbnailRelativePath.replace(/\\/g, '/'),
+          width: metadata.width,
+          height: metadata.height,
+          size_bytes: buffer.length
+        }));
       });
     }
     else if (req.method === 'GET' && url.pathname === '/api/image') {
@@ -143,20 +169,33 @@ const server = http.createServer(async (req, res) => {
       };
       const mimeType = mimeTypes[ext] || 'image/jpeg';
       
-      // Read file and convert to base64
+      // Read and serve image file directly
       const buffer = await fs.readFile(fullPath);
-      const base64 = buffer.toString('base64');
-      const dataUrl = `data:${mimeType};base64,${base64}`;
       
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, dataUrl }));
+      res.writeHead(200, { 
+        'Content-Type': mimeType,
+        'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'Content-Length': buffer.length
+      });
+      res.end(buffer);
     }
     
-    // DELETE /api/image - Delete image
+    // DELETE /api/image - Delete image (and thumbnail)
     else if (req.method === 'DELETE' && url.pathname === '/api/image') {
       const relativePath = url.searchParams.get('path') || '';
       const fullPath = path.join(BASE_PATH, relativePath);
+      
+      // Delete original
       await fs.unlink(fullPath);
+      
+      // Delete thumbnail if exists
+      const thumbnailPath = fullPath.replace(/(\.\w+)$/, '_thumb$1');
+      try {
+        await fs.unlink(thumbnailPath);
+      } catch (e) {
+        // Thumbnail might not exist (legacy images)
+      }
+      
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true }));
     }
@@ -309,6 +348,6 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`🚀 Gurktaler API Server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Gurktaler API Server running on port ${PORT} (accessible on all interfaces)`);
 });

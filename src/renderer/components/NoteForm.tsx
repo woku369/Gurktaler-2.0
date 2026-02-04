@@ -262,9 +262,13 @@ export default function NoteForm({
       {note && (
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
-            Tags
+            Tags / Eigene Kategorien
           </label>
           <TagSelector entityType="note" entityId={note.id} />
+          <p className="text-xs text-slate-500 mt-1">
+            Nutze Tags um eigene Kategorien über die Standard-Typen (Idee,
+            Notiz, Aufgabe, Recherche) hinaus zu definieren
+          </p>
         </div>
       )}
 

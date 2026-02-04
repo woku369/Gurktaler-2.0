@@ -7,6 +7,7 @@ import {
   type GalleryImage,
 } from "@/renderer/services/gallery";
 import { tagAssignments } from "@/renderer/services/storage";
+import { getFullImageUrl } from "@/renderer/services/imageUrl";
 import type { Tag } from "@/shared/types";
 
 interface GalleryImageModalProps {
@@ -110,7 +111,7 @@ export default function GalleryImageModal({
             {/* Image Preview */}
             <div>
               <img
-                src={image.data_url}
+                src={getFullImageUrl(image)}
                 alt={image.file_name}
                 className="w-full rounded-vintage border-vintage border-distillery-200"
               />
@@ -121,6 +122,11 @@ export default function GalleryImageModal({
                 Hochgeladen:{" "}
                 {new Date(image.created_at).toLocaleDateString("de-DE")}
               </p>
+              {image.width && image.height && (
+                <p className="text-xs text-distillery-500 font-body">
+                  Auflösung: {image.width} × {image.height}px
+                </p>
+              )}
             </div>
 
             {/* Edit Form */}

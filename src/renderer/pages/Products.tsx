@@ -1,11 +1,22 @@
 import { useState, useEffect } from "react";
-import { Plus, Search, Package } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Package,
+  Grid3x3,
+  List,
+  Edit2,
+  Trash2,
+  GitBranch,
+} from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import ProductForm from "@/renderer/components/ProductForm";
 import ProductCard from "@/renderer/components/ProductCard";
 import QuickAddUrlDialog from "@/renderer/components/QuickAddUrlDialog";
 import BatchPrintView from "@/renderer/components/BatchPrintView";
+import TagBadgeList from "@/renderer/components/TagBadgeList";
 import { useDragSort } from "@/renderer/hooks/useDragSort";
+import { getThumbnailUrl } from "@/renderer/services/imageUrl";
 import {
   products as productsService,
   projects as projectsService,
@@ -13,7 +24,28 @@ import {
   images as imagesService,
   favorites as favoritesService,
 } from "@/renderer/services/storage";
-import type { Product, Project, Image, Tag, Document } from "@/shared/types";
+import type {
+  Product,
+  Project,
+  Image,
+  Tag,
+  Document,
+  ProductStatus,
+} from "@/shared/types";
+
+const statusColors: Record<ProductStatus, string> = {
+  draft: "bg-distillery-100 text-distillery-800",
+  testing: "bg-bronze-100 text-bronze-800",
+  approved: "bg-green-100 text-green-800",
+  archived: "bg-slate-100 text-slate-700",
+};
+
+const statusLabels: Record<ProductStatus, string> = {
+  draft: "Entwurf",
+  testing: "In Test",
+  approved: "Freigegeben",
+  archived: "Archiviert",
+};
 
 function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,6 +67,7 @@ function Products() {
     new Set(),
   );
   const [showBatchPrint, setShowBatchPrint] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     loadData();
@@ -192,25 +225,25 @@ function Products() {
       );
     });
 
-  const handleReorder = async (productId: string, newIndex: number) => {
-    // Reorder logic: update display_order for all affected products
-    const sorted = [...filteredProducts];
-    const draggedItem = sorted.find((p) => p.id === productId);
-    const oldIndex = sorted.findIndex((p) => p.id === productId);
+  const handleReorder = async (reordered: Product[]) => {
+    // Update display_order only for products that changed position
+    const updates = reordered
+      .map((product, index) => {
+        const currentProduct = filteredProducts.find(
+          (p) => p.id === product.id,
+        );
+        const oldOrder = currentProduct?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return productsService.update(product.id, { display_order: index });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Product> => p !== null);
 
-    if (!draggedItem || oldIndex === -1) return;
-
-    // Remove from old position and insert at new position
-    sorted.splice(oldIndex, 1);
-    sorted.splice(newIndex, 0, draggedItem);
-
-    // Update display_order for all affected products
-    const updates = sorted.map((product, index) =>
-      productsService.update(product.id, { display_order: index }),
-    );
-
-    await Promise.all(updates);
-    await loadData();
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
+    }
   };
 
   const {
@@ -245,6 +278,32 @@ function Products() {
 
       {/* Search and Tag Filter */}
       <div className="mb-6 flex gap-4">
+        {/* View Mode Toggle */}
+        <div className="flex rounded-lg border border-distillery-200 overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "grid"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Kartenansicht"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "list"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Listenansicht"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+
         <div className="relative flex-1 max-w-md">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-distillery-400" />
           <input
@@ -345,42 +404,167 @@ function Products() {
             )}
           </div>
 
-          <div className="mb-4 text-sm text-slate-600 italic">
-            💡 Tipp: Karten können per Drag & Drop sortiert werden
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredProducts.map((product, index) => (
-              <div
-                key={product.id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragEnd={handleDragEnd}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDrop={(e) => handleDrop(e, index)}
-                className={`transition-opacity ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
-              >
-                <ProductCard
-                  product={product}
-                  image={productImages[product.id]?.[0]}
-                  isFavorite={false}
-                  onToggleFavorite={() => {
-                    favoritesService.toggle("product", product.id);
-                    loadData();
-                  }}
-                  onEdit={() => handleEdit(product)}
-                  onDelete={() => handleDelete(product.id)}
-                  onCreateVersion={() => handleCreateVersion(product)}
-                  onAddUrl={() => handleQuickAddUrl(product)}
-                  onAddDocument={() => handleQuickAddDocument(product)}
-                  onAddImage={() => handleQuickAddImage(product)}
-                  onCopy={handleCopyName}
-                  onUpdate={loadData}
-                  isSelected={selectedProducts.has(product.id)}
-                  onToggleSelect={() => handleToggleSelect(product.id)}
-                />
-              </div>
-            ))}
-          </div>
+          {viewMode === "grid" && (
+            <div className="mb-4 text-sm text-slate-600 italic">
+              💡 Tipp: Karten können per Drag & Drop sortiert werden
+            </div>
+          )}
+
+          {/* Grid View */}
+          {viewMode === "grid" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`transition-opacity ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+                >
+                  <ProductCard
+                    product={product}
+                    image={productImages[product.id]?.[0]}
+                    isFavorite={false}
+                    onToggleFavorite={() => {
+                      favoritesService.toggle("product", product.id);
+                      loadData();
+                    }}
+                    onEdit={() => handleEdit(product)}
+                    onDelete={() => handleDelete(product.id)}
+                    onCreateVersion={() => handleCreateVersion(product)}
+                    onAddUrl={() => handleQuickAddUrl(product)}
+                    onAddDocument={() => handleQuickAddDocument(product)}
+                    onAddImage={() => handleQuickAddImage(product)}
+                    onCopy={handleCopyName}
+                    onUpdate={loadData}
+                    isSelected={selectedProducts.has(product.id)}
+                    onToggleSelect={() => handleToggleSelect(product.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* List View */}
+          {viewMode === "list" && (
+            <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-distillery-50 border-b border-distillery-200">
+                  <tr>
+                    <th className="w-10 px-4 py-3"></th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                      Name
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                      Tags
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                      Erstellt
+                    </th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-distillery-900">
+                      Aktionen
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-distillery-100">
+                  {filteredProducts.map((product, index) => (
+                    <tr
+                      key={product.id}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                      className={`hover:bg-distillery-25 transition-colors cursor-move ${
+                        draggedIndex === index ? "opacity-50" : ""
+                      } ${dragOverIndex === index ? "bg-gurktaler-50" : ""}`}
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.has(product.id)}
+                          onChange={() => handleToggleSelect(product.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-gurktaler-600 focus:ring-2 focus:ring-gurktaler-500"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {productImages[product.id]?.[0] && (
+                            <img
+                              src={getThumbnailUrl(
+                                productImages[product.id][0],
+                              )}
+                              alt={product.name}
+                              className="w-10 h-10 rounded object-cover"
+                            />
+                          )}
+                          <div>
+                            <div className="font-medium text-distillery-900">
+                              {product.name}
+                            </div>
+                            {product.description && (
+                              <div className="text-sm text-distillery-600 truncate max-w-md">
+                                {product.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[product.status]}`}
+                        >
+                          {statusLabels[product.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <TagBadgeList
+                          entityType="product"
+                          entityId={product.id}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-distillery-600">
+                        {new Date(product.created_at).toLocaleDateString(
+                          "de-DE",
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                            title="Bearbeiten"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleCreateVersion(product)}
+                            className="p-1.5 text-distillery-600 hover:bg-distillery-100 rounded transition-colors"
+                            title="Neue Version"
+                          >
+                            <GitBranch className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Löschen"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </>
       )}
 

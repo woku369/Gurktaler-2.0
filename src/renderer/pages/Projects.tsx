@@ -296,17 +296,6 @@ function Projects() {
         </div>
       )}
 
-      {/* Quick Add URL Dialog */}
-      <QuickAddUrlDialog
-        isOpen={showQuickUrlDialog}
-        onClose={() => {
-          setShowQuickUrlDialog(false);
-          setQuickUrlProject(null);
-        }}
-        onAdd={handleAddQuickUrl}
-        entityName={quickUrlProject?.name || ""}
-      />
-
       {/* Empty State */}
       {filteredProjects.length === 0 && (
         <div className="text-center py-12">
@@ -331,6 +320,17 @@ function Projects() {
           )}
         </div>
       )}
+
+      {/* Quick Add URL Dialog */}
+      <QuickAddUrlDialog
+        isOpen={showQuickUrlDialog}
+        onClose={() => {
+          setShowQuickUrlDialog(false);
+          setQuickUrlProject(null);
+        }}
+        onAdd={handleAddQuickUrl}
+        entityName={quickUrlProject?.name || ""}
+      />
 
       {/* Modal */}
       <Modal

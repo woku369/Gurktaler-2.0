@@ -172,8 +172,8 @@ export default function ProjectTimeline() {
       },
     });
 
-    // Reload data
-    loadData();
+    // Reload data - MUSS await sein!
+    await loadData();
   };
 
   const handleToggleWorkspaceVisibility = (workspaceId: string) => {

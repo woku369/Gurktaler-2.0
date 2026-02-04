@@ -12,6 +12,7 @@ import {
   Printer,
 } from "lucide-react";
 import { share } from "@/renderer/services/shareService";
+import { getThumbnailUrl } from "@/renderer/services/imageUrl";
 import TagBadgeList from "@/renderer/components/TagBadgeList";
 import ProductPrintView from "@/renderer/components/ProductPrintView";
 import type { Product, Image, Document, ProductStatus } from "@/shared/types";
@@ -180,11 +181,21 @@ export default function ProductCard({
       <div className="flex gap-4 px-4 pb-4">
         {/* Thumbnail-Bereich */}
         <div className="flex-shrink-0 w-24 h-24 bg-distillery-50 rounded-vintage border-vintage border-distillery-200 overflow-hidden">
-          {image ? (
+          {image &&
+          (image.thumbnail_path || image.file_path || image.data_url) ? (
             <img
-              src={image.data_url}
+              src={getThumbnailUrl(image)}
               alt={product.name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error(
+                  "[ProductCard] Bild konnte nicht geladen werden:",
+                  image,
+                );
+                (e.target as HTMLImageElement).style.display = "none";
+                (e.target as HTMLImageElement).parentElement!.innerHTML =
+                  '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-distillery-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+              }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

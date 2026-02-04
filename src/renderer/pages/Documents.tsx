@@ -11,6 +11,8 @@ import {
   File as FileIcon,
   ExternalLink,
   Star,
+  Grid3x3,
+  List,
 } from "lucide-react";
 import Modal from "@/renderer/components/Modal";
 import DocumentForm from "@/renderer/components/DocumentForm";
@@ -19,6 +21,7 @@ import {
   projects as projectsService,
   documentCategories as categoriesService,
 } from "@/renderer/services/storage";
+import { useDragSort } from "@/renderer/hooks/useDragSort";
 import type { Document, Project, DocumentCategoryEntity } from "@/shared/types";
 
 function Documents() {
@@ -29,6 +32,7 @@ function Documents() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   useEffect(() => {
     loadData();
@@ -41,7 +45,7 @@ function Documents() {
   };
 
   const handleSubmit = async (
-    data: Omit<Document, "id" | "created_at" | "updated_at">
+    data: Omit<Document, "id" | "created_at" | "updated_at">,
   ) => {
     if (editingDocument) {
       await documentsService.update(editingDocument.id, data);
@@ -83,16 +87,56 @@ function Documents() {
     link.click();
   };
 
-  const filteredDocuments = documents.filter((doc) => {
-    const matchesSearch =
-      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredDocuments = documents
+    .filter((doc) => {
+      const matchesSearch =
+        doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory =
-      filterCategory === "all" || doc.category === filterCategory;
+      const matchesCategory =
+        filterCategory === "all" || doc.category === filterCategory;
 
-    return matchesSearch && matchesCategory;
-  });
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      // Sort by display_order if set, otherwise by created_at
+      const orderA = a.display_order ?? 9999;
+      const orderB = b.display_order ?? 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    });
+
+  const handleReorder = async (reordered: Document[]) => {
+    // Update display_order only for documents that changed position
+    const updates = reordered
+      .map((document, index) => {
+        const currentDocument = filteredDocuments.find(
+          (d) => d.id === document.id,
+        );
+        const oldOrder = currentDocument?.display_order ?? 9999;
+        if (oldOrder !== index) {
+          return documentsService.update(document.id, { display_order: index });
+        }
+        return null;
+      })
+      .filter((p): p is Promise<Document> => p !== null);
+
+    if (updates.length > 0) {
+      await Promise.all(updates);
+      await loadData();
+    }
+  };
+
+  const {
+    draggedIndex,
+    dragOverIndex,
+    handleDragStart,
+    handleDragEnd,
+    handleDragOver,
+    handleDrop,
+  } = useDragSort(filteredDocuments, handleReorder);
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return "–";
@@ -139,7 +183,33 @@ function Documents() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex gap-2 mb-6 flex-wrap items-center">
+        {/* View Mode Toggle */}
+        <div className="flex rounded-lg border border-distillery-200 overflow-hidden mr-2">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "grid"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Kartenansicht"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-3 py-2 flex items-center gap-2 transition-colors ${
+              viewMode === "list"
+                ? "bg-gurktaler-500 text-white"
+                : "bg-white text-distillery-600 hover:bg-distillery-50"
+            }`}
+            title="Listenansicht"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+
         <button
           onClick={() => setFilterCategory("all")}
           className={`px-4 py-2 rounded-vintage transition-all font-body font-semibold ${
@@ -209,117 +279,249 @@ function Documents() {
       )}
 
       {/* Documents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredDocuments.map((document) => {
-          const category = categories.find(
-            (c) => c.value === document.category
-          );
-          const FileTypeIcon = getFileIcon(document.mime_type);
-          const project = document.project_id
-            ? projects.find((p) => p.id === document.project_id)
-            : null;
-
-          return (
-            <div
-              key={document.id}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-colors group"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <span
-                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-50 text-slate-700 border-slate-200"
-                  style={
-                    category?.color
-                      ? {
-                          backgroundColor: `${category.color}15`,
-                          color: category.color,
-                          borderColor: `${category.color}40`,
-                        }
-                      : undefined
-                  }
-                >
-                  {category?.icon && <span>{category.icon}</span>}
-                  {category?.name || document.category}
-                </span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={async () => {
-                      // TODO: Add document to Favorite entity_type union
-                      // For now: Skip favorites for documents
-                      console.log("Favorites for documents: Coming soon");
-                    }}
-                    className="p-1 hover:bg-slate-100 rounded"
-                    title="Favorit (bald verfügbar)"
-                  >
-                    <Star className="w-4 h-4 text-slate-400" />
-                  </button>
-                  <button
-                    onClick={() => handleEdit(document)}
-                    className="p-1 hover:bg-slate-100 rounded"
-                    title="Bearbeiten"
-                  >
-                    <Edit2 className="w-4 h-4 text-slate-500" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(document.id)}
-                    className="p-1 hover:bg-red-50 rounded"
-                    title="Löschen"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 mb-3">
-                <FileTypeIcon className="w-10 h-10 text-gurktaler-600" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-800 truncate">
-                    {document.name}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    {formatFileSize(document.file_size)}
-                  </p>
-                </div>
-              </div>
-
-              {document.description && (
-                <p className="text-sm text-slate-600 mb-3 line-clamp-2">
-                  {document.description}
-                </p>
-              )}
-
-              {project && (
-                <div className="mb-2">
-                  <span className="text-xs text-slate-500">
-                    📁 {project.name}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-                <button
-                  onClick={() => handleDownload(document)}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-gurktaler-50 text-gurktaler-700 rounded-lg hover:bg-gurktaler-100 transition-colors text-sm font-medium"
-                >
-                  {document.type === "url" ? (
-                    <>
-                      <ExternalLink className="w-4 h-4" />
-                      Öffnen
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Download
-                    </>
-                  )}
-                </button>
-                <span className="text-xs text-slate-400 ml-auto">
-                  {formatDate(document.created_at)}
-                </span>
-              </div>
+      {viewMode === "grid" && (
+        <>
+          {filteredDocuments.length > 0 && (
+            <div className="mb-2 text-xs text-distillery-500 italic font-body">
+              💡 Tipp: Karten können per Drag & Drop sortiert werden
             </div>
-          );
-        })}
-      </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredDocuments.map((document, index) => {
+              const category = categories.find(
+                (c) => c.value === document.category,
+              );
+              const FileTypeIcon = getFileIcon(document.mime_type);
+              const project = document.project_id
+                ? projects.find((p) => p.id === document.project_id)
+                : null;
+
+              return (
+                <div
+                  key={document.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  className={`bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:border-gurktaler-300 transition-all group ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "ring-2 ring-gurktaler-500" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <span
+                      className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border bg-slate-50 text-slate-700 border-slate-200"
+                      style={
+                        category?.color
+                          ? {
+                              backgroundColor: `${category.color}15`,
+                              color: category.color,
+                              borderColor: `${category.color}40`,
+                            }
+                          : undefined
+                      }
+                    >
+                      {category?.icon && <span>{category.icon}</span>}
+                      {category?.name || document.category}
+                    </span>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={async () => {
+                          // TODO: Add document to Favorite entity_type union
+                          // For now: Skip favorites for documents
+                          console.log("Favorites for documents: Coming soon");
+                        }}
+                        className="p-1 hover:bg-slate-100 rounded"
+                        title="Favorit (bald verfügbar)"
+                      >
+                        <Star className="w-4 h-4 text-slate-400" />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(document)}
+                        className="p-1 hover:bg-slate-100 rounded"
+                        title="Bearbeiten"
+                      >
+                        <Edit2 className="w-4 h-4 text-slate-500" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(document.id)}
+                        className="p-1 hover:bg-red-50 rounded"
+                        title="Löschen"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-3">
+                    <FileTypeIcon className="w-10 h-10 text-gurktaler-600" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-slate-800 truncate">
+                        {document.name}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        {formatFileSize(document.file_size)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {document.description && (
+                    <p className="text-sm text-slate-600 mb-3 line-clamp-2">
+                      {document.description}
+                    </p>
+                  )}
+
+                  {project && (
+                    <div className="mb-2">
+                      <span className="text-xs text-slate-500">
+                        📁 {project.name}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => handleDownload(document)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-gurktaler-50 text-gurktaler-700 rounded-lg hover:bg-gurktaler-100 transition-colors text-sm font-medium"
+                    >
+                      {document.type === "url" ? (
+                        <>
+                          <ExternalLink className="w-4 h-4" />
+                          Öffnen
+                        </>
+                      ) : (
+                        <>
+                          <Download className="w-4 h-4" />
+                          Download
+                        </>
+                      )}
+                    </button>
+                    <span className="text-xs text-slate-400 ml-auto">
+                      {formatDate(document.created_at)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {/* Documents List */}
+      {viewMode === "list" && (
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-distillery-50 border-b border-distillery-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Kategorie
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Größe
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-distillery-900">
+                  Erstellt
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-distillery-900">
+                  Aktionen
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-distillery-100">
+              {filteredDocuments.map((document, index) => {
+                const category = categories.find(
+                  (c) => c.value === document.category,
+                );
+                const FileTypeIcon = getFileIcon(document.mime_type);
+                return (
+                  <tr
+                    key={document.id}
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    className={`hover:bg-distillery-25 transition-all ${draggedIndex === index ? "opacity-50" : ""} ${dragOverIndex === index ? "bg-gurktaler-50" : ""}`}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <FileTypeIcon className="w-5 h-5 text-slate-400" />
+                        <div>
+                          <div className="font-medium text-distillery-900">
+                            {document.name}
+                          </div>
+                          {document.description && (
+                            <div className="text-sm text-distillery-600">
+                              {document.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="px-2 py-1 rounded-full text-xs font-medium border"
+                        style={
+                          category?.color
+                            ? {
+                                backgroundColor: `${category.color}15`,
+                                color: category.color,
+                                borderColor: `${category.color}40`,
+                              }
+                            : undefined
+                        }
+                      >
+                        {category?.icon && (
+                          <span className="mr-1">{category.icon}</span>
+                        )}
+                        {category?.name || document.category}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {formatFileSize(document.file_size)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-distillery-600">
+                      {formatDate(document.created_at)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleDownload(document)}
+                          className="p-1.5 hover:bg-slate-100 rounded transition-colors"
+                          title={
+                            document.type === "url" ? "Öffnen" : "Download"
+                          }
+                        >
+                          {document.type === "url" ? (
+                            <ExternalLink className="w-4 h-4 text-slate-600" />
+                          ) : (
+                            <Download className="w-4 h-4 text-slate-600" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(document)}
+                          className="p-1.5 hover:bg-slate-100 rounded transition-colors"
+                          title="Bearbeiten"
+                        >
+                          <Edit2 className="w-4 h-4 text-slate-600" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(document.id)}
+                          className="p-1.5 hover:bg-red-100 rounded transition-colors"
+                          title="Löschen"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Modal */}
       {isModalOpen && (
