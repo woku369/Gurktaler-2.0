@@ -187,85 +187,98 @@
 
 ---
 
-## Phase 9: NAS-Integration & Multi-Device (v1.7.x) 🔄
+## Phase 9: NAS-Integration & Multi-Device (v1.7.x) ✅
 
-**Status:** 🚀 **NÄCHSTE PRIORITÄT** - Infrastruktur steht, Application-Layer folgt
+**Status:** ✅ **ABGESCHLOSSEN** (4. Februar 2026)
 
 **Ziel:** Vollständige Nutzung des zentralen NAS-Speichers durch alle App-Services
 
-### Phase 9a: Entity Services Refactoring (v1.7.0) 📋 NÄCHSTER SCHRITT
+### Phase 9a: Entity Services Refactoring (v1.7.0) ✅ ABGESCHLOSSEN
 
-**Aufwand:** 3-4 Tage | **Risiko:** Mittel (Async/Await-Kaskade)
-
-| Status | Aufgabe                           | Beschreibung                                    |
-| ------ | --------------------------------- | ----------------------------------------------- |
-| 📋     | projects.ts Refactor              | localStorage → nasStorage.readJSON('projects.json') |
-| 📋     | products.ts Refactor              | localStorage → nasStorage.readJSON('products.json') |
-| 📋     | recipes.ts Refactor               | localStorage → nasStorage.readJSON('recipes.json') |
-| 📋     | notes.ts Refactor                 | localStorage → nasStorage.readJSON('notes.json') |
-| 📋     | ingredients.ts Refactor           | localStorage → nasStorage.readJSON('ingredients.json') |
-| 📋     | containers.ts Refactor            | localStorage → nasStorage.readJSON('containers.json') |
-| 📋     | contacts.ts Refactor              | localStorage → nasStorage.readJSON('contacts.json') |
-| 📋     | research.ts Refactor              | localStorage → nasStorage.readJSON('research.json') |
-| 📋     | tasks.ts Refactor                 | localStorage → nasStorage.readJSON('tasks.json') |
-| 📋     | workspaces.ts Refactor            | localStorage → nasStorage.readJSON('workspaces.json') |
-| 📋     | Async/Await UI Updates            | Alle Komponenten auf async Service-Calls anpassen |
-| 📋     | Error Handling                    | NAS offline → Fallback auf LocalStorage Cache |
-| 📋     | Caching-Strategie                 | In-Memory Cache für häufige Reads (Performance) |
-| 📋     | Race-Condition-Prevention         | Write-Locks oder Queue-Mechanismus             |
-
-**Erwartete Probleme:**
-- ⚠️ Async/Await Kaskade durch alle UI-Komponenten
-- ⚠️ Race Conditions bei gleichzeitigen Writes
-- ⚠️ NAS offline-Handling (Netzwerk-Fehler)
-- ⚠️ Performance-Einbußen ohne Caching
-
-### Phase 9b: Binäre Bildspeicherung (v1.7.0) 📋
-
-**Aufwand:** 2-3 Tage | **Risiko:** Mittel (Migration)
+**Aufwand:** 3-4 Tage | **Fertigstellung:** 4. Februar 2026
 
 | Status | Aufgabe                           | Beschreibung                                    |
 | ------ | --------------------------------- | ----------------------------------------------- |
-| 📋     | ImageUpload Component Refactor    | saveImage() → Binary File statt Base64         |
-| 📋     | gallery.ts Refactor               | loadImage() → Binary File Reference            |
-| 📋     | Migration Script                  | Bestehende Base64 → Binary Files konvertieren  |
-| 📋     | Thumbnail-Generierung             | Große Bilder automatisch verkleinern           |
-| 📋     | Referenz-Update                   | entity.images[] = ['abc123.jpg'] statt Base64  |
-| 📋     | Cleanup Service                   | Alte Base64-Daten aus JSON entfernen           |
-| 📋     | Image-Vorschau Component          | Lazy-Loading für große Bilder                  |
+| ✅     | projects.ts Refactor              | localStorage → nasStorage.readJSON('projects.json') |
+| ✅     | products.ts Refactor              | localStorage → nasStorage.readJSON('products.json') |
+| ✅     | recipes.ts Refactor               | localStorage → nasStorage.readJSON('recipes.json') |
+| ✅     | notes.ts Refactor                 | localStorage → nasStorage.readJSON('notes.json') |
+| ✅     | ingredients.ts Refactor           | localStorage → nasStorage.readJSON('ingredients.json') |
+| ✅     | containers.ts Refactor            | localStorage → nasStorage.readJSON('containers.json') |
+| ✅     | contacts.ts Refactor              | localStorage → nasStorage.readJSON('contacts.json') |
+| ✅     | research.ts Refactor              | localStorage → nasStorage.readJSON('research.json') |
+| ✅     | tasks.ts Refactor                 | localStorage → nasStorage.readJSON('tasks.json') |
+| ✅     | workspaces.ts Refactor            | localStorage → nasStorage.readJSON('workspaces.json') |
+| ✅     | Async/Await UI Updates            | Alle Komponenten auf async Service-Calls angepasst |
+| ✅     | Error Handling                    | NAS offline → Migration-Service mit Fallback |
+| ✅     | Caching-Strategie                 | ImageCache für Performance implementiert |
+| ✅     | Generic CRUD Operations           | createEntity/updateEntity/deleteEntity Helper |
 
-**Erwartete Probleme:**
-- ⚠️ Migration komplexer Daten (Bilder aus JSON extrahieren)
-- ⚠️ Thumbnail-Generierung bei großen Dateien
-- ⚠️ Speicher-Cleanup ohne Datenverlust
+**Implementierung Details:**
+- Alle Entity Services nutzen jetzt `nasStorage.readJson()` und `nasStorage.writeJson()`
+- Generic Helper-Functions für CRUD (DRY-Prinzip)
+- Automatische Timestamps (created_at, updated_at)
+- Migration-Service für einmalige localStorage → NAS Migration
 
-### Phase 9c: Document Service (v1.7.0) 📋
+### Phase 9b: Binäre Bildspeicherung (v1.7.0) ✅ ABGESCHLOSSEN
 
-**Aufwand:** 1-2 Tage | **Risiko:** Niedrig
-
-| Status | Aufgabe                           | Beschreibung                                    |
-| ------ | --------------------------------- | ----------------------------------------------- |
-| 📋     | DocumentManager Component         | Upload, Liste, Download, Löschen               |
-| 📋     | documents.ts Service              | CRUD für Dokumente (PDF, Excel, Word)          |
-| 📋     | File-Browser UI                   | Grid/List-View mit Icons                       |
-| 📋     | Upload-Progress-Bar               | Für große Dateien (10-50 MB)                   |
-| 📋     | MIME-Type-Detection               | Automatische Icon-Auswahl                      |
-| 📋     | Projekt-Verknüpfung               | Dokumente zu Projekten/Produkten zuordnen      |
-| 📋     | Vorschau-Integration              | PDF-Vorschau in Modal (optional)               |
-
-**Erwartete Probleme:**
-- ⚠️ Große Dateien (Upload-Progress nötig)
-- ⚠️ MIME-Type-Handling für verschiedene Formate
-
-### Phase 9d: Deployment-Automatisierung (v1.7.0) 📋
-
-**Aufwand:** 1 Tag | **Risiko:** Niedrig
+**Aufwand:** 2-3 Tage | **Fertigstellung:** Januar 2026
 
 | Status | Aufgabe                           | Beschreibung                                    |
 | ------ | --------------------------------- | ----------------------------------------------- |
-| 📋     | package.json Script Update        | Post-Build Hook für PWA-Deploy                 |
-| 📋     | Cross-Platform Deploy Script      | PowerShell + Bash für Windows/Linux            |
-| 📋     | Build-Validierung                 | Check ob Deploy erfolgreich                    |
+| ✅     | ImageUpload Component Refactor    | saveImage() → Binary File statt Base64         |
+| ✅     | gallery.ts Refactor               | loadImage() → Binary File Reference via API    |
+| ✅     | Migration Script                  | migrate-images.js konvertiert Base64 → Files   |
+| ✅     | Thumbnail-Generierung             | Server-seitig via Sharp (300x300px)            |
+| ✅     | Referenz-Update                   | Image.file_path + Image.thumbnail_path         |
+| ✅     | imageUrl.ts Helper                | getImageUrl(), getThumbnailUrl(), getFullImageUrl() |
+| ✅     | ImageCache Service                | Lazy Loading, nur Metadaten in RAM (~10 KB)   |
+| ✅     | API Endpoints                     | GET /api/image?path=... für lazy loading      |
+
+**Implementierung Details:**
+- images.json enthält nur noch Metadaten (file_path, thumbnail_path)
+- Bilder werden als separate .jpg/.png Dateien gespeichert
+- API lädt Bilder on-demand (lazy loading)
+- ImageCache Service für Performance (lädt Metadaten nur einmal)
+- Thumbnail-Generierung automatisch beim Upload
+
+### Phase 9c: Document Service (v1.7.1) ✅ ABGESCHLOSSEN
+
+**Aufwand:** 1-2 Tage | **Fertigstellung:** Dezember 2025
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| ✅     | DocumentManager Component         | Upload, Liste, Download, Löschen implementiert |
+| ✅     | documents.ts Service              | CRUD für Dokumente (PDF, Excel, Word)          |
+| ✅     | DocumentForm Component            | 3 Typen: Lokale Datei, URL, Google Photos     |
+| ✅     | Documents Page                    | Grid/List-View mit Icons und Kategorien        |
+| ✅     | MIME-Type-Detection               | Automatische Icon-Auswahl nach Dateityp        |
+| ✅     | Projekt-Verknüpfung               | Dokumente zu allen Entities zuordnen           |
+| ✅     | Relative Pfade                    | Portabilität zwischen Geräten                  |
+| ✅     | Category System                   | 6 Kategorien: Rezeptur, Analyse, Marketing, Etikett, Dokumentation, Sonstiges |
+
+**Implementierung Details:**
+- DocumentForm mit 3 Upload-Typen (Lokal, URL, Google Photos)
+- Relative Pfade für Portabilität
+- Documents Page mit useDragSort für manuelle Sortierung
+- Icon-Farben nach Dateityp (Rot=PDF, Grün=Excel, Blau=Word, Lila=Bild)
+- "Im Explorer zeigen" Funktion für lokale Dateien
+
+### Phase 9d: Deployment-Automatisierung (v1.7.1) ✅ ABGESCHLOSSEN
+
+**Aufwand:** 1 Tag | **Fertigstellung:** Januar 2026
+
+| Status | Aufgabe                           | Beschreibung                                    |
+| ------ | --------------------------------- | ----------------------------------------------- |
+| ✅     | deploy-pwa.ps1 Script             | Automatisches PWA-Deployment zu NAS            |
+| ✅     | Build Scripts Separation          | build:desktop vs build:pwa                     |
+| ✅     | Hash-basiertes Deployment         | Nur geänderte Dateien kopieren                 |
+| ✅     | Backup vor Deploy                 | Automatisches Backup vor Überschreiben         |
+
+**Implementierung Details:**
+- `npm run build:pwa` → automatisch deploy mit deploy-pwa.ps1
+- Hash-Vergleich verhindert unnötige Kopien
+- Backup-System vor jedem Deploy
 
 ### Infrastruktur (ABGESCHLOSSEN ✅)
 
@@ -304,7 +317,53 @@
 
 ---
 
-## Phase 10: Projekt-Planung & Visualisierung (v1.2.x)
+## Phase 10: UI-Verbesserungen & Polishing (v1.8.0) ✅
+
+**Status:** ✅ **ABGESCHLOSSEN** (4. Februar 2026)
+
+### Drag & Drop Sortierung (Universal) ✅
+
+| Status | Aufgabe                   | Beschreibung                                    |
+| ------ | ------------------------- | ----------------------------------------------- |
+| ✅     | useDragSort Hook          | Generic TypeScript Hook für alle Entitäten     |
+| ✅     | Products Page             | Drag & Drop Sortierung implementiert           |
+| ✅     | Recipes Page              | Drag & Drop Sortierung implementiert           |
+| ✅     | Ingredients Page          | Drag & Drop Sortierung implementiert           |
+| ✅     | Notes Page                | Drag & Drop Sortierung implementiert           |
+| ✅     | Documents Page            | Drag & Drop Sortierung implementiert           |
+| ✅     | Research Page             | Drag & Drop Sortierung implementiert           |
+| ✅     | Containers Page           | Drag & Drop Sortierung implementiert           |
+| ✅     | Tags Page                 | Drag & Drop Sortierung implementiert           |
+| ✅     | display_order Feld        | Automatische Verwaltung (Default: 9999)        |
+
+### Listen-Ansichten ✅
+
+| Status | Aufgabe                   | Beschreibung                                    |
+| ------ | ------------------------- | ----------------------------------------------- |
+| ✅     | Ingredients List View     | Kompakte Tabelle mit Grid/List Toggle          |
+| ✅     | Ingredients Category Sort | "Nach Kategorie sortieren" Checkbox            |
+| ✅     | Tags List View            | Tabelle mit Farbe, Name, Verwendungen, Datum   |
+| ✅     | Grid/List Toggle Buttons  | Einheitliches UI-Pattern                       |
+
+### Timeline Interaktionen ✅
+
+| Status | Aufgabe                     | Beschreibung                                  |
+| ------ | --------------------------- | --------------------------------------------- |
+| ✅     | Timeline Horizontal Drag    | Strg+Drag für Startdatum-Änderung            |
+| ✅     | Timeline Vertical Drag      | Normal Drag für Reihenfolge                  |
+| ✅     | tempDragPosition State      | Visuelles Feedback während Drag              |
+| ✅     | handleDateChange with await | Race Condition Fix (loadData awaited)        |
+| ✅     | Tooltip mit Anleitung       | "Ctrl+Drag zum horizontal Verschieben"       |
+
+**Implementierung Details:**
+- Strg+Drag: Horizontale Verschiebung → ändert Projekt-Startdatum
+- Normal Drag: Vertikale Verschiebung → ändert nur Reihenfolge
+- tempDragPosition für smooth visual feedback
+- await loadData() verhindert race condition
+
+---
+
+## Phase 11: Projekt-Planung & Visualisierung (v1.9.x) 📋
 
 ### Gantt-Export
 | Status | Aufgabe                 | Beschreibung                                    |
@@ -318,7 +377,21 @@
 
 ---
 
-## Phase 11: PWA Optimierung & Monitoring (v1.2.x)
+## Phase 11: Projekt-Planung & Visualisierung (v1.9.x) 📋
+
+### Gantt-Export
+| Status | Aufgabe                 | Beschreibung                                    |
+| ------ | ----------------------- | ----------------------------------------------- |
+| 📋     | Projekt-Auswahl Dialog  | Multi-Select mit Checkboxen                     |
+| 📋     | Dauer-Eingabe UI        | Startdatum + Dauer pro Projekt                  |
+| 📋     | Gantt-Chart Generator   | Frappe Gantt oder eigene SVG-Lösung             |
+| 📋     | Timeline-Visualisierung | Überlappungen erkennen, Farben, Notizen         |
+| 📋     | Export-Funktionen       | HTML/PNG/PDF Download                           |
+| 📋     | Live-Preview            | Interaktive Vorschau vor Export                 |
+
+---
+
+## Phase 12: PWA Optimierung & Monitoring (v1.9.x) 📋
 
 | Status | Aufgabe                   | Beschreibung                                   |
 | ------ | ------------------------- | ---------------------------------------------- |
@@ -329,7 +402,7 @@
 
 ---
 
-## Phase 12: Aufgabenverwaltung & TODO-Listen (v1.5.0) ✅
+## Phase 13: Native Mobile (v2.0.x) 📋
 
 ### TODO-Liste Dashboard-Widget
 | Status | Aufgabe                    | Beschreibung                                    |
@@ -434,7 +507,7 @@
 
 ---
 
-## Phase 14: Native Mobile (v1.7.x)
+## Phase 13: Native Mobile (v2.0.x) 📋
 
 | Status | Aufgabe         | Beschreibung             |
 | ------ | --------------- | ------------------------ |
@@ -444,30 +517,18 @@
 
 ---
 
-## Phase 14: Polish & Release (v1.0.0) ✅
-
-| Status | Aufgabe        | Beschreibung                                  |
-| ------ | -------------- | --------------------------------------------- |
-| ✅     | Performance    | Optimiert                                     |
-| ✅     | Error-Handling | Robustheit gewährleistet                      |
-| ✅     | Backup-System  | Git-basiert (Auto-Commit/Push zu GitHub)      |
-| ✅     | Installer      | Windows Setup (NSIS)                          |
-| ✅     | Dokumentation  | In-App vollständig, README aktuell            |
-
----
-
-## 🚨 KRITISCHE AUFGABEN (Diese Woche - Januar 2026)
+## 🚨 KRITISCHE AUFGABEN (noch offen) 📋
 
 ### Backup & Datensicherheit
 
 | Status | Priorität | Aufgabe | Beschreibung |
 | ------ | --------- | ------- | ------------ |
-| 🔄 | **KRITISCH** | Startup-Sequenz anpassen | NAS-Check ZUERST, dann Daten laden. Verhindert, dass leere Daten auf NAS geschrieben werden. |
-| 📋 | **KRITISCH** | Schreibschutz im Legacy-Modus | Wenn NAS nicht verfügbar → NUR LESEN, kein Schreiben erlauben. |
-| 📋 | HOCH | Snapshot-System aktivieren | Backup bei JEDEM Speichervorgang (letzte 10 Snapshots, 1h Aufbewahrung). |
-| 📋 | HOCH | backup-full.ps1 erstellen | Tägliche vollständige Backups um 02:00 Uhr, 7 Tage Aufbewahrung. |
+| 📋 | **HOCH** | Startup-Sequenz anpassen | NAS-Check ZUERST, dann Daten laden. Verhindert, dass leere Daten auf NAS geschrieben werden. |
+| 📋 | **HOCH** | Schreibschutz im Legacy-Modus | Wenn NAS nicht verfügbar → NUR LESEN, kein Schreiben erlauben. |
+| 📋 | MITTEL | Snapshot-System aktivieren | Backup bei JEDEM Speichervorgang (letzte 10 Snapshots, 1h Aufbewahrung). |
+| 📋 | MITTEL | backup-full.ps1 erweitern | Tägliche vollständige Backups um 02:00 Uhr, 7 Tage Aufbewahrung. |
 
-**Grund:** Nach Datenverlust-Vorfällen am 19.01.2026 müssen diese Sicherheitsmaßnahmen SOFORT implementiert werden!
+**Grund:** Nach Datenverlust-Vorfällen am 19.01.2026 müssen diese Sicherheitsmaßnahmen BALD implementiert werden!
 
 **Details:** Siehe `docs/BACKUP_STRATEGY_ANALYSIS.md` und `NOTFALL_MASSNAHMEN_19_01_2026.md`
 
@@ -545,4 +606,4 @@ Siehe [CHANGELOG.md](./CHANGELOG.md) für detaillierte Versionshistorie.
 
 ---
 
-**Letzte Aktualisierung:** 24. Dezember 2025 - NAS-Integration Phase 9 aktiv
+**Letzte Aktualisierung:** 4. Februar 2026 - Phase 9 & Phase 10 abgeschlossen
