@@ -92,9 +92,9 @@ function App() {
 
   useEffect(() => {
     const performNasSetup = async () => {
-      // NAS-Setup beim App-Start (nur wenn noch nicht migriert)
+      // 🔒 SICHERHEIT: NAS-Setup VOR dem Laden irgendwelcher Daten
       try {
-        console.log("🚀 Prüfe NAS-Setup...");
+        console.log("🚀 [STARTUP] Phase 1: NAS-Verbindung prüfen...");
 
         // Prüfe ob Y: Laufwerk verfügbar ist (nur in Electron)
         if (window.electron) {
@@ -104,26 +104,35 @@ function App() {
 
           if (driveCheck.success && !driveCheck.available) {
             // Y: ist NICHT verfügbar → Mount-Dialog anzeigen
-            console.warn("⚠️ Laufwerk Y: nicht verfügbar - zeige Mount-Dialog");
+            console.warn("⚠️ [STARTUP] Laufwerk Y: nicht verfügbar - zeige Mount-Dialog");
             setShowNasMountDialog(true);
-            return;
+            return; // Stoppe Setup bis User Y: mounted
           }
         }
 
+        // Teste NAS-Verbindung
         const connected = await setupService.testConnection();
+        console.log(`🔍 [STARTUP] NAS-Verbindungstest: ${connected ? '✅ OK' : '❌ FEHLER'}`);
 
         if (connected) {
-          console.log("✅ NAS-Verbindung OK");
-          await setupService.runFullSetup();
-
+          console.log("✅ [STARTUP] Phase 2: NAS-Verbindung erfolgreich");
+          
+          // Konfiguriere nasStorage für Read-Write
           setReadOnlyMode(false);
           if (typeof nasStorage.setReadOnlyMode === "function") {
             nasStorage.setReadOnlyMode(false);
           }
-        } else {
-          console.warn("⚠️ NAS nicht erreichbar - Offline-Modus");
-          setReadOnlyMode(true);
 
+          // Führe vollständiges Setup durch (Verzeichnisse, Migration etc.)
+          console.log("⚙️ [STARTUP] Phase 3: Vollständiges Setup ausführen...");
+          await setupService.runFullSetup();
+          
+          console.log("🎉 [STARTUP] Setup abgeschlossen - App bereit!");
+        } else {
+          // NAS nicht erreichbar → Read-Only Mode
+          console.warn("⚠️ [STARTUP] NAS nicht erreichbar - Aktiviere Offline-Modus");
+          
+          setReadOnlyMode(true);
           if (typeof nasStorage.setReadOnlyMode === "function") {
             nasStorage.setReadOnlyMode(true);
           }
@@ -133,11 +142,14 @@ function App() {
             type: "error",
             message: "⚠️ Offline-Modus - Änderungen werden lokal gespeichert",
           });
+          
+          console.log("💾 [STARTUP] Offline-Modus aktiv - LocalStorage wird verwendet");
         }
       } catch (error) {
-        console.error("❌ NAS-Setup fehlgeschlagen:", error);
+        console.error("❌ [STARTUP] NAS-Setup fehlgeschlagen:", error);
+        
+        // Bei Fehler: Sicherer Read-Only Mode
         setReadOnlyMode(true);
-
         if (typeof nasStorage.setReadOnlyMode === "function") {
           nasStorage.setReadOnlyMode(true);
         }
@@ -147,6 +159,8 @@ function App() {
           type: "error",
           message: "❌ NAS-Fehler - Offline-Modus aktiv",
         });
+        
+        console.log("🔒 [STARTUP] Fehler aufgetreten - Sicherer Read-Only Mode aktiviert");
       }
     };
 

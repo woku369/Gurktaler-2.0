@@ -292,31 +292,66 @@ export class NasStorageProvider implements StorageProvider {
   }
 
   /**
-   * Erstelle inkrementelles Backup vor Schreibvorgang
+   * Erstelle inkrementelles Backup vor Schreibvorgang (Snapshot-System)
+   * Behält die letzten 10 Snapshots, löscht ältere automatisch
    */
   private async createIncrementalBackup(filePath: string, newDataCount: number): Promise<void> {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T').join('_').substring(0, 19);
       const fileName = filePath.split('\\').pop()?.replace('.json', '');
-      const backupDir = `${this.config.basePath}\\backups\\incremental_${timestamp}`;
+      const backupDir = `${this.config.basePath}\\backups\\snapshots`;
+      const snapshotFile = `${backupDir}\\${fileName}_${timestamp}.json`;
       
       // Lese aktuelle Daten
       const currentData = await this.readJson(filePath);
       
       if (currentData.length > 0 || newDataCount > 0) {
         console.log(
-          `[NasStorage] 💾 Backup: ${fileName} (${currentData.length} → ${newDataCount} Einträge)`
+          `[NasStorage] 💾 Snapshot: ${fileName} (${currentData.length} → ${newDataCount} Einträge)`
         );
         
-        // Erstelle Backup-Verzeichnis
-        await window.electronAPI.fileWriteJson(
-          `${backupDir}\\${fileName}.json`,
-          currentData
-        );
+        // Erstelle Snapshot
+        await window.electronAPI.fileWriteJson(snapshotFile, currentData);
+        
+        // Cleanup: Behalte nur die letzten 10 Snapshots pro Datei
+        await this.cleanupOldSnapshots(fileName, 10);
       }
     } catch (error) {
-      console.warn('[NasStorage] ⚠️ Backup-Erstellung fehlgeschlagen:', error);
-      // Fehler beim Backup sollte Hauptoperation nicht blockieren
+      console.warn('[NasStorage] ⚠️ Snapshot-Erstellung fehlgeschlagen:', error);
+      // Fehler beim Snapshot sollte Hauptoperation nicht blockieren
+    }
+  }
+
+  /**
+   * Lösche alte Snapshots, behalte nur die neuesten N
+   */
+  private async cleanupOldSnapshots(fileName: string, keepCount: number): Promise<void> {
+    try {
+      const backupDir = `${this.config.basePath}\\backups\\snapshots`;
+      const result = await window.electronAPI.fileListDirectory(backupDir);
+      
+      if (!result.success || !result.files) return;
+      
+      // Filtere Snapshots für diese Datei
+      const snapshots = result.files
+        .filter(f => !f.isDirectory && f.name.startsWith(`${fileName}_`) && f.name.endsWith('.json'))
+        .sort((a, b) => b.modified.localeCompare(a.modified)); // Neueste zuerst
+      
+      // Lösche alte Snapshots
+      if (snapshots.length > keepCount) {
+        const toDelete = snapshots.slice(keepCount);
+        console.log(`[NasStorage] 🧹 Lösche ${toDelete.length} alte Snapshots für ${fileName}`);
+        
+        for (const snapshot of toDelete) {
+          try {
+            await window.electronAPI.fileDelete(snapshot.path);
+          } catch (error) {
+            console.warn(`[NasStorage] ⚠️ Konnte Snapshot nicht löschen: ${snapshot.name}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[NasStorage] ⚠️ Snapshot-Cleanup fehlgeschlagen:', error);
     }
   }
 
