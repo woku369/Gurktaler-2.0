@@ -66,6 +66,17 @@ function Settings() {
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [serverHealth, setServerHealth] = useState<any>(null);
 
+  // Google Calendar State
+  const [googleClientId, setGoogleClientId] = useState(
+    localStorage.getItem("google_client_id") || "",
+  );
+  const [googleApiKey, setGoogleApiKey] = useState(
+    localStorage.getItem("google_api_key") || "",
+  );
+  const [googleCalendarConfigured, setGoogleCalendarConfigured] =
+    useState(false);
+  const [savingGoogleCreds, setSavingGoogleCreds] = useState(false);
+
   // Git-Integration State
   const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
   const [gitConfig, setGitConfig] = useState<GitConfig>(getGitConfig());
@@ -92,7 +103,57 @@ function Settings() {
     loadGitStatus();
     loadRemotes();
     checkServerStatus();
+    checkGoogleCalendarConfig();
   }, []);
+
+  // Google Calendar Config prüfen
+  const checkGoogleCalendarConfig = () => {
+    const hasClientId = !!localStorage.getItem("google_client_id");
+    const hasApiKey = !!localStorage.getItem("google_api_key");
+    setGoogleCalendarConfigured(hasClientId && hasApiKey);
+  };
+
+  const saveGoogleCalendarConfig = () => {
+    setSavingGoogleCreds(true);
+    try {
+      localStorage.setItem("google_client_id", googleClientId.trim());
+      localStorage.setItem("google_api_key", googleApiKey.trim());
+
+      // Setze Umgebungsvariablen (für Vite)
+      (window as any).VITE_GOOGLE_CLIENT_ID = googleClientId.trim();
+      (window as any).VITE_GOOGLE_API_KEY = googleApiKey.trim();
+
+      setGoogleCalendarConfigured(true);
+      setImportStatus("success");
+      setStatusMessage(
+        "✅ Google Calendar Credentials gespeichert! App neu laden für Aktivierung.",
+      );
+
+      setTimeout(() => {
+        setImportStatus("idle");
+        setStatusMessage("");
+      }, 5000);
+    } catch (error) {
+      setImportStatus("error");
+      setStatusMessage("❌ Fehler beim Speichern der Credentials");
+    } finally {
+      setSavingGoogleCreds(false);
+    }
+  };
+
+  const clearGoogleCalendarConfig = () => {
+    localStorage.removeItem("google_client_id");
+    localStorage.removeItem("google_api_key");
+    setGoogleClientId("");
+    setGoogleApiKey("");
+    setGoogleCalendarConfigured(false);
+    setImportStatus("success");
+    setStatusMessage("Google Calendar Credentials gelöscht");
+    setTimeout(() => {
+      setImportStatus("idle");
+      setStatusMessage("");
+    }, 3000);
+  };
 
   // Server-Status prüfen
   const checkServerStatus = async () => {
@@ -804,6 +865,170 @@ function Settings() {
 
         {/* Contact Category Management */}
         <ContactCategoryManager />
+
+        {/* Google Calendar Integration */}
+        <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gurktaler-100 rounded-vintage flex items-center justify-center">
+              <Cloud className="w-5 h-5 text-gurktaler-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-800">
+                Google Calendar Integration
+              </h2>
+              <p className="text-sm text-slate-500">
+                TODOs automatisch mit Google Calendar synchronisieren
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Status Overview */}
+            <div
+              className={`rounded-lg p-4 ${googleCalendarConfigured ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"}`}
+            >
+              <div className="flex items-center gap-2">
+                {googleCalendarConfigured ? (
+                  <>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-medium text-green-900">
+                      OAuth-Credentials konfiguriert
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-5 h-5 text-yellow-600" />
+                    <span className="font-medium text-yellow-900">
+                      Noch nicht konfiguriert
+                    </span>
+                  </>
+                )}
+              </div>
+              {googleCalendarConfigured && (
+                <p className="text-xs text-green-700 mt-1">
+                  Die App kann sich mit Google Calendar verbinden. Login im
+                  Dashboard verfügbar.
+                </p>
+              )}
+            </div>
+
+            {/* Setup Instructions */}
+            {!googleCalendarConfigured && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2">
+                  📋 Setup-Anleitung
+                </h3>
+                <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                  <li>
+                    Google Cloud Console öffnen:{" "}
+                    <a
+                      href="https://console.cloud.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline"
+                    >
+                      console.cloud.google.com
+                    </a>
+                  </li>
+                  <li>Neues Projekt erstellen: "Gurktaler TODO Sync"</li>
+                  <li>
+                    APIs & Services → Library → "Google Calendar API" aktivieren
+                  </li>
+                  <li>Anmeldedaten erstellen → OAuth 2.0-Client-ID</li>
+                  <li>
+                    Autorisierte JavaScript-Ursprünge: http://localhost:5173,
+                    http://100.121.103.107
+                  </li>
+                  <li>Autorisierte Weiterleitungs-URIs: (leer lassen)</li>
+                  <li>API-Schlüssel erstellen (für öffentliche Daten)</li>
+                  <li>Credentials hier eintragen ↓</li>
+                </ol>
+              </div>
+            )}
+
+            {/* Credentials Form */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Google Client ID
+                </label>
+                <input
+                  type="text"
+                  value={googleClientId}
+                  onChange={(e) => setGoogleClientId(e.target.value)}
+                  placeholder="123456789-abc.apps.googleusercontent.com"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-mono text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Google API Key
+                </label>
+                <input
+                  type="password"
+                  value={googleApiKey}
+                  onChange={(e) => setGoogleApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gurktaler-500 font-mono text-xs"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={saveGoogleCalendarConfig}
+                  disabled={
+                    savingGoogleCreds ||
+                    !googleClientId.trim() ||
+                    !googleApiKey.trim()
+                  }
+                  className="flex-1 px-4 py-2 bg-gurktaler-600 text-white rounded-lg hover:bg-gurktaler-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  {savingGoogleCreds ? "Speichere..." : "Credentials speichern"}
+                </button>
+
+                {googleCalendarConfigured && (
+                  <button
+                    onClick={clearGoogleCalendarConfig}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 flex items-center gap-2"
+                  >
+                    <AlertCircle className="w-4 h-4" />
+                    Löschen
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Info Box */}
+            <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+              <h3 className="text-sm font-semibold text-slate-800">
+                💡 Wichtige Hinweise
+              </h3>
+              <ul className="text-xs text-slate-600 space-y-1">
+                <li>
+                  • Credentials werden nur lokal gespeichert (LocalStorage)
+                </li>
+                <li>• Nach Speichern: App neu laden (F5) für Aktivierung</li>
+                <li>• Login-Button erscheint dann im Dashboard</li>
+                <li>• Nur TODOs mit Fälligkeitsdatum werden synchronisiert</li>
+                <li>
+                  • Änderungen in der App werden automatisch zu Google Calendar
+                  gepusht
+                </li>
+                <li>• Löschen in der App löscht auch den Calendar-Event</li>
+              </ul>
+            </div>
+
+            {/* Documentation Link */}
+            <div className="pt-3 border-t border-slate-200">
+              <p className="text-xs text-slate-500">
+                📚 <strong>Dokumentation:</strong> Siehe Anleitungen → "Google
+                Calendar Integration" für Details
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Data Management */}
         <div className="bg-white rounded-vintage shadow-vintage border-vintage border-distillery-200 p-6">

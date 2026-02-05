@@ -7,6 +7,48 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.7.4] - 2026-02-04
+
+### ✨ Neue Features
+
+#### ☁️ Google Calendar Integration ABGESCHLOSSEN ✅
+
+**Settings UI für OAuth-Credentials:**
+- Google Calendar Integration Section in Einstellungen
+- Input-Felder für Client-ID und API-Key
+- Status-Anzeige: Konfiguriert ✅ / Nicht konfiguriert ⚠️
+- Save/Clear Buttons für Credential-Management
+- LocalStorage-Persistierung (Vorrang vor .env)
+- Setup-Anleitung mit Links zu Google Cloud Console
+
+**Umfassende Dokumentation:**
+- Neue Anleitungen-Sektion: "Google Calendar Integration"
+- 6 detaillierte How-To Guides:
+  1. Google Cloud Projekt erstellen
+  2. OAuth 2.0 Client-ID erstellen
+  3. API-Schlüssel erstellen
+  4. Credentials in der App konfigurieren
+  5. Bei Google anmelden
+  6. TODOs synchronisieren
+- Troubleshooting-Guide für häufige Fehler
+- 12 Tipps & Best Practices
+
+**Features (bereits vorhanden, jetzt vollständig dokumentiert):**
+- OAuth 2.0 Login/Logout über Dashboard
+- Automatische Synchronisation: App → Google Calendar
+- Nur TODOs mit Fälligkeitsdatum werden synchronisiert
+- Event-Prefix: '[Gurktaler]' im Titel
+- CRUD-Operationen: Erstellen/Ändern/Löschen synchronisiert
+- Bidirektionale Sync: App ist Master, Google ist Slave
+
+### 📚 Dokumentation
+- ROADMAP.md: Google Calendar Sync als ✅ ABGESCHLOSSEN markiert (v1.7.4)
+- Documentation.tsx: Vollständiger Anleitungs-Abschnitt hinzugefügt
+- .env.example: Bereits vorhanden mit Google Credentials Template
+- README.md: Feature-Liste aktualisiert (siehe unten)
+
+---
+
 ## [1.7.3] - 2026-02-04
 
 ### ✨ Neue Features
