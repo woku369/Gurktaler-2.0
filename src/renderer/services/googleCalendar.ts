@@ -213,3 +213,133 @@ export const isGoogleCalendarLoggedIn = (): boolean => {
   if (!(window as any).gapi || !(window as any).gapi.client) return false;
   return (window as any).gapi.client.getToken() !== null;
 };
+
+/**
+ * Lädt alle Events aus Google Calendar für einen Zeitraum
+ */
+export const getGoogleCalendarEvents = async (
+  startDate: Date,
+  endDate: Date
+): Promise<any[]> => {
+  try {
+    const response = await (window as any).gapi.client.calendar.events.list({
+      calendarId: 'primary',
+      timeMin: startDate.toISOString(),
+      timeMax: endDate.toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 250,
+      orderBy: 'startTime',
+    });
+
+    return response.result.items || [];
+  } catch (error) {
+    console.error('Fehler beim Laden der Google Calendar Events:', error);
+    throw error;
+  }
+};
+
+/**
+ * Erstellt ein neues Event in Google Calendar
+ */
+export const createGoogleCalendarEvent = async (eventData: {
+  title: string;
+  description?: string;
+  date: string; // YYYY-MM-DD
+  startTime?: string; // HH:MM
+  endTime?: string; // HH:MM
+}): Promise<any> => {
+  try {
+    const event: any = {
+      summary: eventData.title,
+      description: eventData.description || '',
+    };
+
+    if (eventData.startTime && eventData.endTime) {
+      // Zeitbasiertes Event
+      event.start = {
+        dateTime: `${eventData.date}T${eventData.startTime}:00`,
+        timeZone: 'Europe/Vienna',
+      };
+      event.end = {
+        dateTime: `${eventData.date}T${eventData.endTime}:00`,
+        timeZone: 'Europe/Vienna',
+      };
+    } else {
+      // Ganztägiges Event
+      event.start = { date: eventData.date };
+      event.end = { date: eventData.date };
+    }
+
+    const response = await (window as any).gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+    });
+
+    return response.result;
+  } catch (error) {
+    console.error('Fehler beim Erstellen des Google Calendar Events:', error);
+    throw error;
+  }
+};
+
+/**
+ * Aktualisiert ein bestehendes Google Calendar Event
+ */
+export const updateGoogleCalendarEvent = async (
+  eventId: string,
+  eventData: {
+    title: string;
+    description?: string;
+    date: string;
+    startTime?: string;
+    endTime?: string;
+  }
+): Promise<any> => {
+  try {
+    const event: any = {
+      summary: eventData.title,
+      description: eventData.description || '',
+    };
+
+    if (eventData.startTime && eventData.endTime) {
+      event.start = {
+        dateTime: `${eventData.date}T${eventData.startTime}:00`,
+        timeZone: 'Europe/Vienna',
+      };
+      event.end = {
+        dateTime: `${eventData.date}T${eventData.endTime}:00`,
+        timeZone: 'Europe/Vienna',
+      };
+    } else {
+      event.start = { date: eventData.date };
+      event.end = { date: eventData.date };
+    }
+
+    const response = await (window as any).gapi.client.calendar.events.update({
+      calendarId: 'primary',
+      eventId: eventId,
+      resource: event,
+    });
+
+    return response.result;
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren des Google Calendar Events:', error);
+    throw error;
+  }
+};
+
+/**
+ * Löscht ein Google Calendar Event
+ */
+export const deleteGoogleCalendarEvent = async (eventId: string): Promise<void> => {
+  try {
+    await (window as any).gapi.client.calendar.events.delete({
+      calendarId: 'primary',
+      eventId: eventId,
+    });
+  } catch (error) {
+    console.error('Fehler beim Löschen des Google Calendar Events:', error);
+    throw error;
+  }
+};

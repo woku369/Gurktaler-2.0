@@ -71,7 +71,7 @@ Die Anwendung unterstützt die Entwicklung und regionale Markttests von Kräuter
 - **Data Sync**: JSON-Export/Import für Git-basierte Synchronisation
 - **PWA (Android/Mobile)**: Installierbare Web-App, Offline-Funktionalität, Quick-Note Button, Bilder in Notizen
 - **PWA Server-Monitoring**: Live-Status-Anzeige, Log-Viewer mit Farbcodierung, Health-Metriken (Memory/Uptime/PID), Auto-Check alle 30s
-- **Google Calendar Integration**: OAuth 2.0 Login, TODO-Sync mit Settings-UI (v1.7.4, Setup erforderlich)
+- **Google Calendar Integration**: OAuth 2.0 Login, Vollständiges Event-Management (Erstellen/Bearbeiten/Löschen), TODO-Sync, Dashboard-Widget mit Kalenderansicht, Vergangene Events sichtbar (6 Monate zurück), Settings-UI (v1.7.5, Setup erforderlich)
 - **UI/UX**: Globaler Loading-Spinner, Auto-Close Modals, Mobile Button-Layouts
 
 ### In Entwicklung 🔄

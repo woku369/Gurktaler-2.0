@@ -7,6 +7,51 @@ und das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ---
 
+## [1.7.5] - 2026-02-06
+
+### ✨ Neue Features
+
+#### 📅 Google Calendar Event-Management VOLLSTÄNDIG ✅
+
+**Dashboard Kalender-Widget mit vollständiger CRUD-Funktionalität:**
+- Interaktive Kalenderansicht: Klick auf beliebigen Tag öffnet DateTasksModal
+- **Neuer Termin Button**: Erstellen von Google Calendar Events direkt aus der App
+- **Event-Formular**: Titel, Beschreibung, Ganztägig/Zeitgesteuert, Start-/Endzeit
+- **Bearbeiten-Funktion**: Click auf Event → Formular wird vorausgefüllt → Update
+- **Löschen-Funktion**: Trash-Button mit Bestätigungsdialog
+- **Separate Sections**: Google Calendar Events (lila) und TODOs getrennt angezeigt
+- **Event-Historie**: 6 Monate zurück + 6 Monate voraus (vorher nur 1+3 Monate)
+
+**Neue Komponenten:**
+- `DateTasksModal.tsx`: Umfassendes Modal für Datum-spezifische Tasks & Events
+- `GoogleEventCard.tsx`: Wiederverwendbare Event-Display-Komponente
+- Formular-State-Management: `showEventForm`, `editingEvent`, `newEvent`
+
+**API-Funktionen erweitert:**
+- `createGoogleCalendarEvent()`: Ganztägige und zeitgesteuerte Events
+- `updateGoogleCalendarEvent()`: Event-Updates mit ID
+- `deleteGoogleCalendarEvent()`: Event-Löschung
+- Timezone-Support: Europe/Vienna für zeitgesteuerte Events
+
+**UX-Verbesserungen:**
+- Click auf **jeden Tag** im Kalender möglich (nicht nur Tage mit Events)
+- Empty-State: "Keine Termine" mit Hinweis zum Erstellen
+- Color-Coding: TODOs nach Priorität (rot/amber/blau), Google Events lila
+- Badge-Anzeige: 1 TODO + 1 Event pro Tag, "+X weitere" bei mehr
+
+**Bugfixes:**
+- OAuth COOP-Warnung behoben (Header entfernt, Google setzt eigene Policy)
+- CalendarWidget: Click-Handler für alle Tage im aktuellen Monat
+- Event-Zeitbereich erweitert für bessere Historie-Ansicht
+
+### 📚 Dokumentation
+- Documentation.tsx: OAuth-Credentials hinzugefügt (Client-ID, API-Key)
+- Anleitung erweitert: Event-Management vollständig dokumentiert
+- README.md: Feature-Liste aktualisiert mit allen CRUD-Operationen
+- ROADMAP.md: Google Calendar v1.7.5 als vollständig markiert
+
+---
+
 ## [1.7.4] - 2026-02-04
 
 ### ✨ Neue Features

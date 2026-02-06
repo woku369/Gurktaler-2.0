@@ -437,7 +437,7 @@
 | ✅     | E-Mail-Integration         | Einzelne TODOs per Mail versenden (mailto:)     |
 | ✅     | iCal Export                | .ics Datei für Kalender-Import (einzeln & alle) |
 | ✅     | Filter & Sortierung        | Nach Projekt, Person, Status, Datum, Priorität  |
-| ✅     | Google Calendar Sync       | OAuth2-basierte Synchronisierung mit Settings-UI (v1.7.4) |
+| ✅     | Google Calendar Sync       | OAuth2-basierte Synchronisierung mit vollständigem Event-Management (v1.7.5) |
 
 ### Implementierte Features
 - ✅ Quick-Add mit Enter-Taste
@@ -449,7 +449,9 @@
 - ✅ PDF-Export mit professionellem Layout
 - ✅ iCal-Export für Kalender-Apps
 - ✅ E-Mail-Sharing mit allen Details
-- ✅ Google Calendar API Integration (Optional, Setup erforderlich)
+- ✅ Google Calendar API Integration mit vollständigem CRUD (Create/Read/Update/Delete)
+- ✅ Dashboard Kalender-Widget mit Event-Formular
+- ✅ Vergangene Events sichtbar (6 Monate Zeitbereich)
 
 ---
 

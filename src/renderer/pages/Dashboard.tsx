@@ -8,6 +8,10 @@ import {
   syncAllTasksToGoogleCalendar,
   addTaskToGoogleCalendar,
   isGoogleCalendarLoggedIn,
+  getGoogleCalendarEvents,
+  createGoogleCalendarEvent,
+  updateGoogleCalendarEvent,
+  deleteGoogleCalendarEvent,
 } from "@/renderer/services/googleCalendar";
 import {
   FolderKanban,
@@ -28,6 +32,8 @@ import {
   Globe,
   FileText,
 } from "lucide-react";
+import { CalendarWidget } from "@/renderer/components/CalendarWidget";
+import { DateTasksModal } from "@/renderer/components/DateTasksModal";
 import {
   projects as projectsStorage,
   products,
@@ -92,6 +98,19 @@ function Dashboard() {
   // Google Calendar
   const [googleCalendarReady, setGoogleCalendarReady] = useState(false);
   const [googleCalendarLoggedIn, setGoogleCalendarLoggedIn] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showDateTasksModal, setShowDateTasksModal] = useState(false);
+  const [googleCalendarEvents, setGoogleCalendarEvents] = useState<any[]>([]);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    description: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    isAllDay: true,
+  });
 
   useEffect(() => {
     loadDashboardData();
@@ -444,6 +463,7 @@ function Dashboard() {
     try {
       await loginGoogleCalendar();
       setGoogleCalendarLoggedIn(true);
+      await loadGoogleCalendarEvents();
       alert("✅ Erfolgreich mit Google Calendar verbunden!");
     } catch (error) {
       console.error("Google Calendar Login fehlgeschlagen:", error);
@@ -453,10 +473,91 @@ function Dashboard() {
     }
   };
 
+  const loadGoogleCalendarEvents = async () => {
+    try {
+      // Lade Events von 6 Monaten in der Vergangenheit bis 6 Monate in der Zukunft
+      const startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 6);
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 6);
+
+      const events = await getGoogleCalendarEvents(startDate, endDate);
+      setGoogleCalendarEvents(events);
+    } catch (error) {
+      console.error("Fehler beim Laden der Google Calendar Events:", error);
+    }
+  };
+
   const handleGoogleCalendarLogout = () => {
     logoutGoogleCalendar();
     setGoogleCalendarLoggedIn(false);
+    setGoogleCalendarEvents([]);
     alert("✅ Von Google Calendar abgemeldet.");
+  };
+
+  const handleCreateEvent = async () => {
+    try {
+      await createGoogleCalendarEvent({
+        title: newEvent.title,
+        description: newEvent.description,
+        date: newEvent.date,
+        startTime: newEvent.isAllDay ? undefined : newEvent.startTime,
+        endTime: newEvent.isAllDay ? undefined : newEvent.endTime,
+      });
+      await loadGoogleCalendarEvents();
+      setShowEventForm(false);
+      setNewEvent({
+        title: "",
+        description: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        isAllDay: true,
+      });
+      alert("✅ Termin erstellt!");
+    } catch (error) {
+      console.error("Fehler beim Erstellen des Termins:", error);
+      alert("❌ Fehler beim Erstellen des Termins");
+    }
+  };
+
+  const handleUpdateEvent = async () => {
+    if (!editingEvent) return;
+    try {
+      await updateGoogleCalendarEvent(editingEvent.id, {
+        title: newEvent.title,
+        description: newEvent.description,
+        date: newEvent.date,
+        startTime: newEvent.isAllDay ? undefined : newEvent.startTime,
+        endTime: newEvent.isAllDay ? undefined : newEvent.endTime,
+      });
+      await loadGoogleCalendarEvents();
+      setShowEventForm(false);
+      setEditingEvent(null);
+      setNewEvent({
+        title: "",
+        description: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        isAllDay: true,
+      });
+      alert("✅ Termin aktualisiert!");
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Termins:", error);
+      alert("❌ Fehler beim Aktualisieren des Termins");
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteGoogleCalendarEvent(eventId);
+      await loadGoogleCalendarEvents();
+      alert("✅ Termin gelöscht!");
+    } catch (error) {
+      console.error("Fehler beim Löschen des Termins:", error);
+      alert("❌ Fehler beim Löschen des Termins");
+    }
   };
 
   // Prevent unused warning (function wird bei Logout-Button verwendet, aber nicht alle Branches nutzen es)
@@ -1050,7 +1151,7 @@ function Dashboard() {
             {googleCalendarReady ? (
               googleCalendarLoggedIn ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-vintage">
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-vintage mb-4">
                     <div className="flex items-center gap-2">
                       <svg
                         className="w-5 h-5 text-green-600"
@@ -1074,11 +1175,18 @@ function Dashboard() {
                       Trennen
                     </button>
                   </div>
-                  <p className="text-sm text-distillery-600 font-body">
-                    Deine Aufgaben werden mit Google Calendar synchronisiert.
-                    Nutze die Sync-Buttons bei den Aufgaben.
-                  </p>
-                  <div className="pt-3 border-t border-distillery-100">
+
+                  {/* Kalender Widget */}
+                  <CalendarWidget
+                    tasks={allTasks}
+                    googleEvents={googleCalendarEvents}
+                    onDateClick={(date) => {
+                      setSelectedDate(date);
+                      setShowDateTasksModal(true);
+                    }}
+                  />
+
+                  <div className="pt-3 border-t border-distillery-100 mt-4">
                     <a
                       href="https://calendar.google.com"
                       target="_blank"
@@ -1554,6 +1662,78 @@ function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal: TODOs & Events für gewähltes Datum */}
+      {showDateTasksModal && selectedDate && (
+        <DateTasksModal
+          selectedDate={selectedDate}
+          allTasks={allTasks}
+          googleCalendarEvents={googleCalendarEvents}
+          availableProjects={availableProjects}
+          showEventForm={showEventForm}
+          editingEvent={editingEvent}
+          newEvent={newEvent}
+          onClose={() => {
+            setShowDateTasksModal(false);
+            setSelectedDate(null);
+            setShowEventForm(false);
+            setEditingEvent(null);
+          }}
+          onNewEventClick={() => {
+            setNewEvent({
+              title: "",
+              description: "",
+              date: selectedDate.toISOString().split("T")[0],
+              startTime: "09:00",
+              endTime: "10:00",
+              isAllDay: true,
+            });
+            setEditingEvent(null);
+            setShowEventForm(true);
+          }}
+          onTaskStatusToggle={async (
+            taskId: string,
+            currentStatus: TaskStatus,
+          ) => {
+            const newStatus: TaskStatus =
+              currentStatus === "completed" ? "in-progress" : "completed";
+            await tasks.update(taskId, { status: newStatus });
+            loadDashboardData();
+          }}
+          onTaskEdit={(task) => {
+            setEditingTask(task);
+            setShowEditModal(true);
+            setShowDateTasksModal(false);
+          }}
+          onEventEdit={(event) => {
+            setEditingEvent(event);
+            setShowEventForm(true);
+          }}
+          onEventDelete={handleDeleteEvent}
+          onEventChange={(field, value) => {
+            setNewEvent((prev) => ({ ...prev, [field]: value }));
+          }}
+          onEventSave={() => {
+            if (editingEvent) {
+              handleUpdateEvent();
+            } else {
+              handleCreateEvent();
+            }
+          }}
+          onEventFormCancel={() => {
+            setShowEventForm(false);
+            setEditingEvent(null);
+            setNewEvent({
+              title: "",
+              description: "",
+              date: "",
+              startTime: "",
+              endTime: "",
+              isAllDay: true,
+            });
+          }}
+        />
       )}
     </div>
   );
